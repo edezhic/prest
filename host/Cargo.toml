@@ -23,7 +23,7 @@ tower = "*"
 tower-http = { version = "*", features = ["trace", "compression-br", "catch-panic"] } 
 tokio = { version = "*", features = ["full"] }
 hyper = { version = "*", features = ["full"] }
-axum = { git = "https://github.com/tokio-rs/axum", default-features = false, features = ["json", "query"] }
+axum = { git = "https://github.com/tokio-rs/axum", default-features = false, features = ["json", "query", "form"] }
 axum-extra = { git = "https://github.com/tokio-rs/axum", features = ["cookie", "cookie-private"] }
 rust-embed = "*" # for assets
 mime_guess = "*"
@@ -39,6 +39,7 @@ gluesql = { git = "https://github.com/gluesql/gluesql", default-features = false
 futures = "*"
 chrono = "*"
 rand = { version = "0.8.5", features = ["min_const_gen"] }
+async-trait = "*"
 # fork to swtich axum to the latest main like here
 axum-login = { git = "https://github.com/edezhic/axum-login" }
 openidconnect = { version = "*", optional = true }

@@ -1,15 +1,11 @@
-use crate::auth::{user::*, AuthContext};
+use crate::auth::AuthContext;
 
-use openidconnect::{core::*, reqwest::async_http_client, *};
 use axum::{
     extract::Query,
     response::{IntoResponse, Redirect},
 };
-use axum_login::{
-    axum_sessions::{
-        extractors::{ReadableSession, WritableSession},
-    },
-};
+use axum_login::axum_sessions::extractors::{ReadableSession, WritableSession};
+use openidconnect::{core::*, reqwest::async_http_client, *};
 
 lazy_static! {
     static ref GCLIENT: GoogleOAuthClient = tokio::task::block_in_place(|| {
@@ -32,7 +28,6 @@ pub async fn callback(
     Query(query): Query<OAuthQuery>,
     mut auth: AuthContext,
 ) -> impl IntoResponse {
-    tracing::info!("callback: {:?}", session);
     let Some(initial_csrf) = session.get::<CsrfToken>("csrf") else { panic!("missing csrf!") };
     let Some(nonce) = session.get::<Nonce>("nonce") else { panic!("missing nonce!") };
 
@@ -49,7 +44,7 @@ pub async fn callback(
     let email = extract_openid_data(token, nonce);
 
     // authn as the only existing user
-    auth.login(USER_STORE.read().await.get(&1).unwrap())
+    auth.login(&crate::Storage::get_user_by_email(email).await.unwrap())
         .await
         .unwrap();
 
@@ -118,15 +113,15 @@ pub struct OAuthQuery {
 }
 
 type GoogleTokenResponse = StandardTokenResponse<
-IdTokenFields<
-    EmptyAdditionalClaims,
-    EmptyExtraTokenFields,
-    CoreGenderClaim,
-    CoreJweContentEncryptionAlgorithm,
-    CoreJwsSigningAlgorithm,
-    CoreJsonWebKeyType,
->,
-CoreTokenType,
+    IdTokenFields<
+        EmptyAdditionalClaims,
+        EmptyExtraTokenFields,
+        CoreGenderClaim,
+        CoreJweContentEncryptionAlgorithm,
+        CoreJwsSigningAlgorithm,
+        CoreJsonWebKeyType,
+    >,
+    CoreTokenType,
 >;
 
 type GoogleOAuthClient = Client<

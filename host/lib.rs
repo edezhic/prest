@@ -5,13 +5,14 @@ extern crate lazy_static;
 
 mod assets;
 pub mod auth;
-pub mod storage;
+mod storage;
+pub use storage::Storage;
 
 //use axum::response::IntoResponse;
 use axum::{routing::get, Router};
 
 pub async fn service() -> Router {
-    storage::init().unwrap();
+    Storage::init().unwrap();
     
     let (auth_svc, session, authn) = auth::init().await;
     

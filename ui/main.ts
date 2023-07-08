@@ -1,1 +1,1 @@
-console.log("ui script loaded")
+import './scripts/inline_svgs';

@@ -1,22 +1,21 @@
-# For an overview visit [pwrs.app](https://pwrs.app/)
+# For an (outdated) overview visit [pwrs.app](https://pwrs.app/)
 
 To get started with the development you'll need the [rust toolchain](https://rustup.rs/), then you can start the host with `cargo run`
-Available features:
+Available features (to be added with `--features="FEATURE1 FEATURE2 ..."`):
 * `sw` - includes the service worker
 * `oauth` - replaces custom auth with google (requires env vars or `.env` with `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`!)  
 
 TODO:
-* user storage => gluesql?
 * custom + oauth registration
 * custom login
-* move + adjust content
 * built-in https (+ cert generation for debug?) 
 
-Notes:
+Notes about design choices:
 * WRY - awesome but I decided to focus on PWA thing, seems to have better platform support. 
 * WASI - awesome but early. Need wider library support and more system APIs(at least full TLS) to get real.
 * Maud - questionable but I love the rusty minimalistic syntax.
-* SCSS - simple to start and scalable for complex projects, does not enforce anything. 
-* TypeScript - type and memory safety all the way down.
+* Grass(SCSS) - simple to start and scalable for complex projects, does not enforce anything. 
+* TypeScript - type and memory safety all the way down, writing browser code in Rust is painful DX
 * Axum - elegance and possibility to use without runtime for the SW.
+* Tokio+Hyper - currently the most popular http server stack, but thanks to axum's flexibility can be replaced in the future
 * GlueSQL - uniform and familiar interface over any storage even on the client.

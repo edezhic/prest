@@ -6,6 +6,9 @@ pub use maud::{html, Markup, PreEscaped};
 pub fn service() -> Router {
     Router::new()
         .route("/", get(|| async { home::render().0 }))
+        .route("/platforms", get(|| async { platforms::render().0 }))
+        .route("/motivations", get(|| async { motivations::render().0 }))
+        .route("/internals", get(|| async { internals::render().0 }))
         .layer(from_fn(layout_wrapper))
         .layer(from_fn(add_content_type))
 }
@@ -25,8 +28,7 @@ async fn layout_wrapper(
     let content = if is_htmx_request {
         PreEscaped(content)
     } else {
-        //full_html(layout::render(PreEscaped(content)))
-        full_html(PreEscaped(content))
+        full_html(html!{main."slide-transition"{(PreEscaped(content))}})
     };
     parts.headers.remove(http::header::CONTENT_LENGTH);
     axum::response::Response::from_parts(parts, content.0)
