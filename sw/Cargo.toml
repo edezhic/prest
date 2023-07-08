@@ -1,0 +1,33 @@
+[package]
+name = "sw"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "sw"
+path = "./lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+ui = { path = "../ui" }
+http = "*"
+axum = { git = "https://github.com/tokio-rs/axum", default-features = false }
+bytes = "*"
+tower-service = "*"
+wasm-bindgen = "*"
+wasm-bindgen-futures = "*"
+js-sys = "*"
+console_error_panic_hook = "*"
+
+[dependencies.web-sys]
+version = "*"
+features = [
+    "console",
+    "FetchEvent", 
+    "Request", 
+    "ReadableStream", 
+    "ReadableStreamDefaultReader",
+    "Headers", 
+    "ResponseInit", 
+    "Response",
+]

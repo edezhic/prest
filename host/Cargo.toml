@@ -1,0 +1,45 @@
+[package]
+name = "host"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "host"
+path = "./lib.rs"
+
+[[bin]]
+name = "host"
+path = "./main.rs"
+
+[features]
+default = ["oauth"]
+oauth = ["dep:openidconnect"]
+
+[dependencies]
+ui = { path = "../ui" }
+http = "*" 
+url = "*"
+tower = "*" 
+tower-http = { version = "*", features = ["trace", "compression-br", "catch-panic"] } 
+tokio = { version = "*", features = ["full"] }
+hyper = { version = "*", features = ["full"] }
+axum = { git = "https://github.com/tokio-rs/axum", default-features = false, features = ["json", "query"] }
+axum-extra = { git = "https://github.com/tokio-rs/axum", features = ["cookie", "cookie-private"] }
+rust-embed = "*" # for assets
+mime_guess = "*"
+hex = "*"
+tracing = "*" 
+tracing-subscriber = { version = "*", features = ["fmt"] } 
+serde_json = "*" 
+anyhow = "*"
+lazy_static = "*"
+serde = "*"
+dotenv = "*"
+gluesql = { git = "https://github.com/gluesql/gluesql", default-features = false, features = ["shared-memory-storage", "sled-storage"] }
+futures = "*"
+chrono = "*"
+rand = { version = "0.8.5", features = ["min_const_gen"] }
+# fork to swtich axum to the latest main like here
+axum-login = { git = "https://github.com/edezhic/axum-login" }
+openidconnect = { version = "*", optional = true }
+

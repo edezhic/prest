@@ -1,0 +1,26 @@
+[package]
+name = "pwrs-app"
+version = "0.0.1"
+edition = "2021"
+
+[workspace]
+members = [
+    "tools",
+    "host",
+    "sw",
+    "ui",
+]
+
+[[bin]]
+name = "run"
+path = "./run.rs"
+
+[features]
+sw = []
+
+[build-dependencies]
+tools = { path = "./tools" }
+
+[profile.release]
+#lto = true
+#strip = true

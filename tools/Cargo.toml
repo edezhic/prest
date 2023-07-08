@@ -1,0 +1,27 @@
+[package]
+name = "tools"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "tools"
+path = "./lib.rs"
+
+[dependencies]
+anyhow = "*"
+regex = "*"
+grass = "*"
+wasm-bindgen-cli-support = "*"
+swc = { git = "https://github.com/swc-project/swc" }
+swc_atoms = { git = "https://github.com/swc-project/swc" }
+swc_bundler = { git = "https://github.com/swc-project/swc", features = ["concurrent"] }
+swc_common = { git = "https://github.com/swc-project/swc", features = ["tty-emitter"] }
+swc_config = { git = "https://github.com/swc-project/swc" }
+swc_ecma_parser = { git = "https://github.com/swc-project/swc", features = ["typescript"] }
+swc_ecma_ast = { git = "https://github.com/swc-project/swc" }
+swc_ecma_codegen = { git = "https://github.com/swc-project/swc" }
+swc_ecma_loader = { git = "https://github.com/swc-project/swc" }
+swc_ecma_minifier = { git = "https://github.com/swc-project/swc" }
+swc_ecma_transforms_base = { git = "https://github.com/swc-project/swc" }
+swc_ecma_transforms_typescript = { git = "https://github.com/swc-project/swc" }
+swc_ecma_visit = { git = "https://github.com/swc-project/swc" }
