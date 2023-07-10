@@ -42,5 +42,7 @@ rand = { version = "0.8.5", features = ["min_const_gen"] }
 async-trait = "*"
 # fork to swtich axum to the latest main like here
 axum-login = { git = "https://github.com/edezhic/axum-login" }
+email_address = "*"
+pbkdf2 = { version = "*", features = ["simple"] }
 openidconnect = { version = "*", optional = true }
 

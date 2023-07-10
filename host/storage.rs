@@ -1,4 +1,4 @@
-use crate::auth::{Role, User, UserId};
+use crate::auth::{Role, User, UserId, Email, PwHash};
 use anyhow::Result;
 use axum_login::UserStore;
 pub use gluesql::core::ast_builder::table;
@@ -19,49 +19,69 @@ impl Storage {
                 .create_table_if_not_exists()
                 .add_column("id UINT64 PRIMARY KEY")
                 .add_column("email TEXT UNIQUE NOT NULL")
-                .add_column("password_hash TEXT")
+                .add_column("pw_hash TEXT")
                 .add_column("role TEXT NOT NULL"),
         )?;
         Self::exec_sync(
             table(USER_TABLE)
                 .insert()
-                .values(vec!["1, 'edezhic@gmail.com', '', 'Admin'"])
+                .values(vec!["1, 'edezhic@gmail.com', '', 'Admin'"]),
         )?;
         Ok(())
     }
     pub async fn get_user_by_id(id: UserId) -> Option<User> {
-        let payload = Self::exec_inside_async(
+        let Ok(payload) = Self::exec_inside_async(
             table(USER_TABLE)
                 .select()
                 .filter(format!("id = {id}")),
-        ).unwrap();
+        ) else { return None };
         let Payload::Select {rows, ..} = payload else { return None };
         let Value::Str(email) = rows[0][1].clone() else { return None };
-        let Value::Str(password_hash) = rows[0][2].clone() else { return None };
+        let email = Email::new_unchecked(email);
         let Value::Str(role_str) = rows[0][3].clone() else { return None };
+        let pw_hash = match rows[0][2].clone() {
+            Value::Str(s) => PwHash(Some(s)),
+            Value::Null | _ => PwHash(None),
+        };
         Some(User {
             id,
             email,
-            password_hash,
-            role: role_str.into()
+            pw_hash,
+            role: role_str.into(),
         })
     }
-    pub async fn get_user_by_email(email: String) -> Option<User> {
-        let payload = Self::exec_inside_async(
+    pub async fn get_user_by_email(email: &Email) -> Option<User> {
+        let Ok(payload) = Self::exec_inside_async(
             table(USER_TABLE)
                 .select()
                 .filter(format!("email = '{email}'")),
-        ).unwrap();
+        ) else { return None };
         let Payload::Select {rows, ..} = payload else { return None };
         let Value::U64(id) = rows[0][0].clone() else { return None };
-        let Value::Str(password_hash) = rows[0][2].clone() else { return None };
         let Value::Str(role_str) = rows[0][3].clone() else { return None };
+        let pw_hash = match rows[0][2].clone() {
+            Value::Str(s) => PwHash(Some(s)),
+            Value::Null | _ => PwHash(None),
+        };
         Some(User {
-            id,
-            email,
-            password_hash,
-            role: role_str.into()
+            id: UserId(id),
+            email: email.clone(),
+            pw_hash,
+            role: role_str.into(),
         })
+    }
+
+    pub async fn insert_user(user: &User) -> Result<&User> {
+        let hash = match &user.pw_hash.0 {
+            Some(hash) => hash.as_str(),
+            None => "NULL",
+        };
+        let values = format!(
+            "{}, '{}', '{}', '{}'",
+            user.id, user.email, hash, Into::<String>::into(user.role)
+        );
+        Self::exec_inside_async(table(USER_TABLE).insert().values(vec![values]))?;
+        Ok(user)
     }
 
     // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1245

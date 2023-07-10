@@ -16,6 +16,11 @@ use axum_login::{
 
 pub type AuthContext = axum_login::extractors::AuthContext<UserId, User, crate::Storage, Role>;
 pub type RequireAuthzLayer = RequireAuthorizationLayer<UserId, User, Role>;
+#[derive(serde::Deserialize)]
+struct Credentials {
+    email: Email,
+    password: String,
+}
 
 pub async fn init() -> (
     Router,
@@ -24,33 +29,38 @@ pub async fn init() -> (
 ) {
     let secret = rand::Rng::gen::<[u8; 64]>(&mut rand::thread_rng());
     let session_store = MemoryStore::new();
-    let user_store = crate::Storage;
 
-    let svc = Router::new().route("/auth/logout", get(logout));
+    let svc = Router::new()
+        .route("/signup", get(signup))
+        .route("/login", get(login))
+        .route("/logout", get(logout));
 
     #[cfg(feature = "oauth")]
     let svc = svc
-        .route("/auth/login", get(oauth::login))
-        .route("/auth/signup", get(oauth::login))
-        .route("/auth/callback", get(oauth::callback));
-
-    #[cfg(not(feature = "oauth"))]
-    let svc = svc.route("/auth/signup", get(signup));
+        .route("/oauth/google", get(oauth::authorize))
+        .route("/oauth/google/callback", get(oauth::callback));
 
     (
         svc,
         SessionLayer::new(session_store, &secret).with_same_site_policy(SameSite::Lax),
-        AuthLayer::new(user_store, &secret),
+        AuthLayer::new(crate::Storage, &secret),
     )
 }
 
-#[derive(serde::Deserialize)]
-struct SignUp {
-    email: String,
-    password: String,
+async fn signup(mut auth: AuthContext, Form(creds): Form<Credentials>) -> impl IntoResponse {
+    let user = User::signup(creds.email, Some(creds.password)).await.unwrap();
+    auth.login(&user)
+        .await
+        .unwrap();
+    Redirect::to("/authorized")
 }
-async fn signup(Form(sign_up): Form<SignUp>) {
-    // ...
+
+async fn login(mut auth: AuthContext, Form(creds): Form<Credentials>) -> impl IntoResponse {
+    let user = crate::Storage::get_user_by_email(&creds.email).await.unwrap();
+    auth.login(&user)
+        .await
+        .unwrap();
+    Redirect::to("/authorized")
 }
 
 async fn logout(mut auth: AuthContext) -> impl IntoResponse {

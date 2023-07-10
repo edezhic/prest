@@ -2,12 +2,11 @@
 
 To get started with the development you'll need the [rust toolchain](https://rustup.rs/), then you can start the host with `cargo run`
 Available features (to be added with `--features="FEATURE1 FEATURE2 ..."`):
-* `sw` - includes the service worker
-* `oauth` - replaces custom auth with google (requires env vars or `.env` with `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`!)  
+* `sw` - include service worker
+* `oauth` - include google auth (requires env vars or `.env` with `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`!)  
 
 TODO:
-* custom + oauth registration
-* custom login
+* auth UI
 * built-in https (+ cert generation for debug?) 
 
 Notes about design choices:

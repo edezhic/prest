@@ -1,4 +1,4 @@
-use crate::auth::AuthContext;
+use crate::auth::{AuthContext, Email, User};
 
 use axum::{
     extract::Query,
@@ -14,7 +14,7 @@ lazy_static! {
     static ref GVERIFIER: CoreIdTokenVerifier<'static> = GCLIENT.id_token_verifier();
 }
 
-pub async fn login(mut session: WritableSession) -> impl IntoResponse {
+pub async fn authorize(mut session: WritableSession) -> impl IntoResponse {
     let (authz_url, csrf_token, nonce) = init_authz_request();
 
     session.insert("nonce", nonce).unwrap();
@@ -42,9 +42,16 @@ pub async fn callback(
 
     let token = get_oauth_token(query.code).await;
     let email = extract_openid_data(token, nonce);
+    let email = Email::new_unchecked(email);
 
-    // authn as the only existing user
-    auth.login(&crate::Storage::get_user_by_email(email).await.unwrap())
+    let user = match crate::Storage::get_user_by_email(&email).await {
+        Some(user) => user,
+        None => {
+            User::signup(email, None).await.unwrap()
+        }
+    };
+
+    auth.login(&user)
         .await
         .unwrap();
 
@@ -101,7 +108,7 @@ async fn init_client() -> GoogleOAuthClient {
         google_client_id,
         Some(google_client_secret),
     )
-    .set_redirect_uri(RedirectUrl::new(format!("http://localhost:{port}/auth/callback")).unwrap());
+    .set_redirect_uri(RedirectUrl::new(format!("http://localhost:{port}/oauth/google/callback")).unwrap());
 
     client
 }
