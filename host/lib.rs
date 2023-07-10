@@ -5,17 +5,16 @@ extern crate lazy_static;
 
 mod assets;
 pub mod auth;
+mod config;
+pub use config::*;
 mod storage;
 pub use storage::Storage;
 
 //use axum::response::IntoResponse;
 use axum::{routing::get, Router};
 
-pub async fn service() -> Router {
-    Storage::init().unwrap();
-    
-    let (auth_svc, session, authn) = auth::init().await;
-    
+pub fn service() -> Router {
+    let (auth_svc, session, authn) = auth::init();
     Router::new()
         .route("/authorized", get(|| async {"Authorized!"}))
         .route_layer(auth::RequireAuthzLayer::login())

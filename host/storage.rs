@@ -13,7 +13,7 @@ static USER_TABLE: &str = "Users";
 #[derive(Clone)]
 pub struct Storage;
 impl Storage {
-    pub fn init() -> Result<()> {
+    pub fn migrate() -> Result<()> {
         Self::exec_sync(
             table(USER_TABLE)
                 .create_table_if_not_exists()
@@ -82,13 +82,13 @@ impl Storage {
     }
 
     // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1245
-    pub fn exec_inside_async(stmt: impl Build) -> Result<Payload> {
+    fn exec_inside_async(stmt: impl Build) -> Result<Payload> {
         Ok(tokio::task::block_in_place(|| {
             tokio::runtime::Handle::current().block_on(Self::exec(stmt))
         })?)
     }
 
-    pub fn exec_sync(stmt: impl Build) -> Result<Payload> {
+    fn exec_sync(stmt: impl Build) -> Result<Payload> {
         Ok(futures::executor::block_on(Self::exec(stmt))?)
     }
 

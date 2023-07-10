@@ -1,4 +1,7 @@
-use crate::auth::{AuthContext, Email, User};
+use crate::{
+    auth::{AuthContext, Email, User},
+    ENV_GOOGLE_CLIENT_ID, ENV_GOOGLE_CLIENT_SECRET, ENV_ORIGIN,
+};
 
 use axum::{
     extract::Query,
@@ -46,14 +49,10 @@ pub async fn callback(
 
     let user = match crate::Storage::get_user_by_email(&email).await {
         Some(user) => user,
-        None => {
-            User::signup(email, None).await.unwrap()
-        }
+        None => User::signup(email, None).await.unwrap(),
     };
 
-    auth.login(&user)
-        .await
-        .unwrap();
+    auth.login(&user).await.unwrap();
 
     Redirect::to("/")
 }
@@ -90,14 +89,10 @@ fn extract_openid_data(token: GoogleTokenResponse, nonce: Nonce) -> String {
 
 async fn init_client() -> GoogleOAuthClient {
     use std::env::var;
-    let port = var("PORT")
-        .expect("PORT env variable")
-        .parse::<u16>()
-        .expect("valid PORT value");
-    let google_client_id =
-        ClientId::new(var("GOOGLE_CLIENT_ID").expect("GOOGLE_CLIENT_ID env variable"));
-    let google_client_secret =
-        ClientSecret::new(var("GOOGLE_CLIENT_SECRET").expect("GOOGLE_CLIENT_SECRET env variable"));
+    let origin = var(ENV_ORIGIN).unwrap();
+    let redirect_url = RedirectUrl::new(format!("{origin}/oauth/google/callback")).unwrap();
+    let google_client_id = ClientId::new(var(ENV_GOOGLE_CLIENT_ID).unwrap());
+    let google_client_secret = ClientSecret::new(var(ENV_GOOGLE_CLIENT_SECRET).unwrap());
     let issuer_url = IssuerUrl::new("https://accounts.google.com".to_string()).unwrap();
     let provider_metadata = CoreProviderMetadata::discover_async(issuer_url, async_http_client)
         .await
@@ -108,7 +103,7 @@ async fn init_client() -> GoogleOAuthClient {
         google_client_id,
         Some(google_client_secret),
     )
-    .set_redirect_uri(RedirectUrl::new(format!("http://localhost:{port}/oauth/google/callback")).unwrap());
+    .set_redirect_uri(redirect_url);
 
     client
 }

@@ -2,13 +2,16 @@
 
 To get started with the development you'll need the [rust toolchain](https://rustup.rs/), then you can start the host with `cargo run`
 Available features (to be added with `--features="FEATURE1 FEATURE2 ..."`):
-* `sw` - include service worker
+* `sw` - include service worker that can render UI in the browser 
 * (-p host) `oauth` - include google auth (requires env vars or `.env` with `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`!)  
+* (-p host) `https` - include TLS (optional env vars or `.env` with `TLS_CERT_PATH` and `TLS_KEY_PATH`, generated ones otherwise)
 
 TODO:
-* built-in https (+ cert generation for debug?) 
-* auth UI
+* auth UI - https://github.com/tokio-rs/axum/blob/main/examples/form/src/main.rs
 * other UIs?
+* anyhow errors in handlers? - https://github.com/tokio-rs/axum/tree/main/examples/anyhow-error-response
+* compression
+* tracing level env config
 
 Notes about architectural choices:
 * WRY - awesome but I decided to focus on PWA thing, seems to have better platform support and easier to use. 

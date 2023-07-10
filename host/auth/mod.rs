@@ -22,7 +22,7 @@ struct Credentials {
     password: String,
 }
 
-pub async fn init() -> (
+pub fn init() -> (
     Router,
     SessionLayer<MemoryStore>,
     AuthLayer<crate::Storage, UserId, User, Role>,

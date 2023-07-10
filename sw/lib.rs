@@ -8,8 +8,8 @@ pub async fn service(host: &str, fetch_event: web_sys::FetchEvent) {
     console_error_panic_hook::set_once();
     // convert web_sys::Request into http::Request with axum::Body
     let request = utils::axum_request_from_websys(fetch_event.request()).await;
-    // process only requests to our host without query parameters
-    if request.uri().host() != Some(host) || request.uri().query().is_some() {
+    // process only requests to our host
+    if request.uri().host() != Some(host) {
         return;
     }
     // pass the request to the ui service
