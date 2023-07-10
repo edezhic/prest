@@ -3,14 +3,15 @@
 To get started with the development you'll need the [rust toolchain](https://rustup.rs/), then you can start the host with `cargo run`
 Available features (to be added with `--features="FEATURE1 FEATURE2 ..."`):
 * `sw` - include service worker
-* `oauth` - include google auth (requires env vars or `.env` with `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`!)  
+* (-p host) `oauth` - include google auth (requires env vars or `.env` with `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`!)  
 
 TODO:
-* auth UI
 * built-in https (+ cert generation for debug?) 
+* auth UI
+* other UIs?
 
-Notes about design choices:
-* WRY - awesome but I decided to focus on PWA thing, seems to have better platform support. 
+Notes about architectural choices:
+* WRY - awesome but I decided to focus on PWA thing, seems to have better platform support and easier to use. 
 * WASI - awesome but early. Need wider library support and more system APIs(at least full TLS) to get real.
 * Maud - questionable but I love the rusty minimalistic syntax.
 * Grass(SCSS) - simple to start and scalable for complex projects, does not enforce anything. 

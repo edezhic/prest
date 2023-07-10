@@ -22,11 +22,6 @@ impl Storage {
                 .add_column("pw_hash TEXT")
                 .add_column("role TEXT NOT NULL"),
         )?;
-        Self::exec_sync(
-            table(USER_TABLE)
-                .insert()
-                .values(vec!["1, 'edezhic@gmail.com', '', 'Admin'"]),
-        )?;
         Ok(())
     }
     pub async fn get_user_by_id(id: UserId) -> Option<User> {
@@ -36,6 +31,7 @@ impl Storage {
                 .filter(format!("id = {id}")),
         ) else { return None };
         let Payload::Select {rows, ..} = payload else { return None };
+        if rows.len() == 0 { return None };
         let Value::Str(email) = rows[0][1].clone() else { return None };
         let email = Email::new_unchecked(email);
         let Value::Str(role_str) = rows[0][3].clone() else { return None };
@@ -57,6 +53,7 @@ impl Storage {
                 .filter(format!("email = '{email}'")),
         ) else { return None };
         let Payload::Select {rows, ..} = payload else { return None };
+        if rows.len() == 0 { return None };
         let Value::U64(id) = rows[0][0].clone() else { return None };
         let Value::Str(role_str) = rows[0][3].clone() else { return None };
         let pw_hash = match rows[0][2].clone() {
