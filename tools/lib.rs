@@ -34,23 +34,6 @@ pub fn bundle_and_compile_scss(name: &str) {
     bench(&f!("{name} styles compiled and bundled"), start);
 }
 
-pub fn build(name: &str) {
-    let start = Instant::now();
-    cargo::build(name, None);
-    bench(&f!("{name} built for the local platform"), start);
-}
-
-pub fn build_wasi(name: &str) {
-    let start = Instant::now();
-    cargo::build(name, Some(WASM_WASI));
-    rename(
-        &f!("target/{name}/{WASM_WASI}/{PROFILE}/{name}.wasm"),
-        &f!("{name}.wasm"),
-    )
-    .unwrap();
-    bench(&f!("{name} built as a wasi binary"), start);
-}
-
 pub fn bundle_and_transpile_ts(name: &str, register_sw: bool) {
     let start = Instant::now();
     let mut js = swc::run(name, false, false).unwrap();
@@ -96,6 +79,23 @@ pub fn build_wasm_with_bindings_and_combine_with_ts(name: &str) {
         &f!("{name} compiled into wasm and bundled with typescript"),
         start,
     );
+}
+
+pub fn build_wasi(name: &str) {
+    let start = Instant::now();
+    cargo::build(name, Some(WASM_WASI));
+    rename(
+        &f!("target/{name}/{WASM_WASI}/{PROFILE}/{name}.wasm"),
+        &f!("{name}.wasm"),
+    )
+    .unwrap();
+    bench(&f!("{name} built as a wasi binary"), start);
+}
+
+pub fn build(name: &str) {
+    let start = Instant::now();
+    cargo::build(name, None);
+    bench(&f!("{name} built for the local platform"), start);
 }
 
 fn bench(message: &str, start: Instant) {

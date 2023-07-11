@@ -5,8 +5,7 @@ extern crate lazy_static;
 
 mod assets;
 pub mod auth;
-mod config;
-pub use config::*;
+pub mod config;
 mod storage;
 pub use storage::Storage;
 

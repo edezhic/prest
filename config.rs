@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::Result;
 use tracing_subscriber::{
     filter::LevelFilter, fmt, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt,
     Layer,
@@ -17,7 +17,7 @@ static DEFAULT_TLS_CERT_PATH: &str = "./cert.pem";
 static DEFAULT_TLS_KEY_PATH: &str = "./key.pem";
 
 
-pub fn config_env() -> Result<()> {
+pub fn setup_env() -> Result<()> {
     use std::env::{var, set_var};
     // try to read .env variables into std::env::var
     dotenv::dotenv().ok();
@@ -44,7 +44,7 @@ pub fn config_env() -> Result<()> {
 
     #[cfg(feature = "oauth")]
     if var(ENV_GOOGLE_CLIENT_ID).is_err() || var(ENV_GOOGLE_CLIENT_SECRET).is_err() {
-        bail!("Missing Google OAuth credentials!")
+        anyhow::bail!("Missing Google OAuth credentials!")
     }
 
     // initialize log printing

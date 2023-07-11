@@ -1,6 +1,6 @@
 use crate::{
     auth::{AuthContext, Email, User},
-    ENV_GOOGLE_CLIENT_ID, ENV_GOOGLE_CLIENT_SECRET, ENV_ORIGIN,
+    config::{ENV_GOOGLE_CLIENT_ID, ENV_GOOGLE_CLIENT_SECRET, ENV_ORIGIN}
 };
 
 use axum::{

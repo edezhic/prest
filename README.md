@@ -3,8 +3,8 @@
 To get started with the development you'll need the [rust toolchain](https://rustup.rs/), then you can start the host with `cargo run`
 Available features (can be added with `--features="FEATURE1 FEATURE2 ..."`):
 * `sw` - include service worker that can render UI in the browser 
-* (-p host) `oauth` - include google auth (requires env vars or `.env` with `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`!)  
-* (-p host) `https` - include TLS (optional env vars or `.env` with `TLS_CERT_PATH` and `TLS_KEY_PATH`; otherwise cert and key will be generated)
+* `oauth` - include google auth (requires env vars or `.env` with `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`!)  
+* `https` - include TLS (optional env vars or `.env` with `TLS_CERT_PATH` and `TLS_KEY_PATH`; otherwise cert and key will be generated)
 
 TODO:
 * signup confirmation email - mail-send
