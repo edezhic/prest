@@ -23,30 +23,27 @@ url = "*"
 tower = "*" 
 tower-http = { version = "*", features = ["trace", "compression-br", "catch-panic"] } 
 tokio = { version = "*", features = ["full"] }
-hyper = { version = "*", features = ["full"] }
-hyper-rustls = "*"
 axum = { git = "https://github.com/tokio-rs/axum", default-features = false, features = ["json", "query", "form"] }
-axum-extra = { git = "https://github.com/tokio-rs/axum", features = ["cookie", "cookie-private"] }
 axum-server = "*"
+axum-login = { git = "https://github.com/edezhic/axum-login" } # fork to swtich axum to the latest main like here
 rust-embed = "*" # for assets
 mime_guess = "*"
 hex = "*"
 tracing = "*" 
 tracing-subscriber = { version = "*", features = ["fmt"] } 
-serde_json = "*" 
 anyhow = "*"
 lazy_static = "*"
 serde = "*"
+serde_json = "*" 
 dotenv = "*"
 gluesql = { git = "https://github.com/gluesql/gluesql", default-features = false, features = ["shared-memory-storage", "sled-storage"] }
 futures = "*"
 chrono = "*"
 rand = { version = "0.8.5", features = ["min_const_gen"] }
 async-trait = "*"
-# fork to swtich axum to the latest main like here
-axum-login = { git = "https://github.com/edezhic/axum-login" }
 email_address = "*"
 pbkdf2 = { version = "*", features = ["simple"] }
+
 openidconnect = { version = "*", optional = true }
 rcgen = { version = "*", optional = true }
 

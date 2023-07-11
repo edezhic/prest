@@ -13,8 +13,8 @@ pub static ENV_GOOGLE_CLIENT_ID: &str = "GOOGLE_CLIENT_ID";
 pub static ENV_GOOGLE_CLIENT_SECRET: &str = "GOOGLE_CLIENT_SECRET";
 
 static DEFAULT_HOSTNAME: &str = "localhost";
-static DEFAULT_TLS_CERT_PATH: &str = "./target/cert.pem";
-static DEFAULT_TLS_KEY_PATH: &str = "./target/key.pem";
+static DEFAULT_TLS_CERT_PATH: &str = "./cert.pem";
+static DEFAULT_TLS_KEY_PATH: &str = "./key.pem";
 
 
 pub fn config_env() -> Result<()> {

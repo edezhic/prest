@@ -6,4 +6,6 @@
 /pub/ui.js
 Cargo.lock
 .env
+/cert.pem
+/key.pem
 .DS_Store

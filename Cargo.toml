@@ -22,5 +22,5 @@ sw = []
 tools = { path = "./tools" }
 
 [profile.release]
-#lto = true
-#strip = true
+lto = true
+strip = true

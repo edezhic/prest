@@ -15,9 +15,7 @@ async fn main() -> Result<()> {
     #[cfg(feature = "https")]
     {
         let tls_config =
-            RustlsConfig::from_pem_file(var(ENV_TLS_CERT_PATH)?, var(ENV_TLS_KEY_PATH)?)
-                .await
-                .unwrap();
+            RustlsConfig::from_pem_file(var(ENV_TLS_CERT_PATH)?, var(ENV_TLS_KEY_PATH)?).await?;
 
         tokio::spawn(redirect_to_https(http_addr));
         let https_addr = SocketAddr::from(([0, 0, 0, 0], 443));
@@ -31,9 +29,9 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn redirect_to_https(http_addr: SocketAddr) {
+async fn redirect_to_https(http_addr: SocketAddr) -> Result<()> {
     use axum::handler::HandlerWithoutStateExt;
-    let origin = std::env::var("ORIGIN").unwrap();
+    let origin = var("ORIGIN")?;
 
     let redirect = |uri: Uri| async move {
         let path = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("/");
@@ -43,6 +41,7 @@ async fn redirect_to_https(http_addr: SocketAddr) {
 
     axum_server::bind(http_addr)
         .serve(redirect.into_make_service())
-        .await
-        .unwrap();
+        .await?;
+
+    Ok(())
 }
