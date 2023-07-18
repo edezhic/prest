@@ -7,9 +7,8 @@ Available features (can be added with `--features="FEATURE1 FEATURE2 ..."`):
 * `https` - include TLS (optional env vars or `.env` with `TLS_CERT_PATH` and `TLS_KEY_PATH`; otherwise cert and key will be generated)
 
 TODO:
-* signup confirmation email - mail-send
-* auth UI - https://github.com/tokio-rs/axum/blob/main/examples/form/src/main.rs
-* other UIs?
+* `persistent` feature for sled storage
+* auth UI? - https://github.com/tokio-rs/axum/blob/main/examples/form/src/main.rs
 * anyhow errors in handlers? - https://github.com/tokio-rs/axum/tree/main/examples/anyhow-error-response
 * compression
 * tracing level env config, ports env config?
