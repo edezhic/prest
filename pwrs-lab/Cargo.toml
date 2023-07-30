@@ -1,0 +1,63 @@
+[package]
+name = "pwrs-lab"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "lib"
+path = "./lib.rs"
+
+[[bin]]
+name = "run"
+path = "./run.rs"
+
+[features]
+default = []
+oauth = ["dep:openidconnect"]
+https = ["axum-server/tls-rustls", "dep:rcgen"]
+sw = []
+
+[dependencies]
+maud = "*"
+http = "*" 
+axum = { git = "https://github.com/tokio-rs/axum", default-features = false, features = ["json", "query", "form"] }
+bytes = "*"
+tower-service = "*"
+lazy_static = "*"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+url = "*"
+tower = "*" 
+tower-http = { version = "*", features = ["trace", "compression-br", "catch-panic"] } 
+tokio = { version = "*", features = ["full"] }
+axum-server = "*"
+axum-login = { git = "https://github.com/edezhic/axum-login" } # fork to swtich axum to the latest main like here
+rust-embed = "*" # for assets
+hex = "*"
+tracing = "*" 
+tracing-subscriber = { version = "*", features = ["fmt"] } 
+anyhow = "*"
+serde = "*"
+serde_json = "*" 
+dotenv = "*"
+gluesql = { git = "https://github.com/gluesql/gluesql", default-features = false, features = ["shared-memory-storage", "sled-storage"] }
+futures = "*"
+chrono = "*"
+rand = { version = "0.8.5", features = ["min_const_gen"] }
+async-trait = "*"
+email_address = "*"
+pbkdf2 = { version = "*", features = ["simple"] }
+
+openidconnect = { version = "*", optional = true }
+rcgen = { version = "*", optional = true }
+
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+pwrs-sw = { path = "../pwrs-sw" }
+wasm-bindgen = "*"
+wasm-bindgen-futures = "*"
+web-sys = { version = "*", features = ["FetchEvent"] }
+
+[build-dependencies]
+pwrs-build = { path = "../pwrs-build" }
+cfg_aliases = "0.1.1"

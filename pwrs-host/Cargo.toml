@@ -1,0 +1,15 @@
+[package]
+name = "pwrs-host"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "pwrs_host"
+path = "./lib.rs"
+
+[dependencies]
+http = "*" 
+tower = "*"
+axum = { git = "https://github.com/tokio-rs/axum", default-features = false }
+rust-embed = { version = "*", features = ["mime-guess"] }
+hex = "*"

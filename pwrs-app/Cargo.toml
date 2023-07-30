@@ -1,0 +1,44 @@
+[package]
+name = "pwrs-app"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "lib"
+path = "./lib.rs"
+
+[[bin]]
+name = "main"
+path = "./main.rs"
+
+[features]
+sw = []
+
+[dependencies]
+pwrs-ui = { path = "../pwrs-ui/" }
+maud = "*"
+http = "*" 
+tower = "*"
+axum = { git = "https://github.com/tokio-rs/axum", default-features = false }
+bytes = "*"
+anyhow = "*"
+url = "*"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+pwrs-host = { path = "../pwrs-host" }
+rust-embed = { version = "*", features = ["mime-guess"] }
+tokio = { version = "*", features = ["full"] }
+axum-server = "*"
+tower-http = { version = "*", features = ["trace"] } 
+tracing = "*" 
+tracing-subscriber = { version = "*", features = ["fmt"] } 
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+pwrs-sw = { path = "../pwrs-sw" }
+wasm-bindgen = "*"
+wasm-bindgen-futures = "*"
+web-sys = { version = "*", features = ["FetchEvent"] }
+
+[build-dependencies]
+pwrs-build = { path = "../pwrs-build" }
+cfg_aliases = "0.1.1"

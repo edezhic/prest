@@ -1,62 +1,13 @@
-[package]
-name = "pwrs-app"
-version = "0.0.1"
-edition = "2021"
-
 [workspace]
+resolver = "2"
 members = [
-    "tools",
-    "sw",
-    "ui",
+    "pwrs-app",
+    "pwrs-build",
+    "pwrs-host",
+    "pwrs-sw",
+    "pwrs-lab",
+    "pwrs-ui",
 ]
-
-[lib]
-name = "pwrs"
-path = "./lib.rs"
-
-[[bin]]
-name = "run"
-path = "./run.rs"
-
-[features]
-default = ["https"]
-oauth = ["dep:openidconnect"]
-https = ["axum-server/tls-rustls", "dep:rcgen"]
-sw = []
-
-[dependencies]
-ui = { path = "./ui" }
-http = "*" 
-url = "*"
-tower = "*" 
-tower-http = { version = "*", features = ["trace", "compression-br", "catch-panic"] } 
-tokio = { version = "*", features = ["full"] }
-axum = { git = "https://github.com/tokio-rs/axum", default-features = false, features = ["json", "query", "form"] }
-axum-server = "*"
-axum-login = { git = "https://github.com/edezhic/axum-login" } # fork to swtich axum to the latest main like here
-rust-embed = "*" # for assets
-mime_guess = "*"
-hex = "*"
-tracing = "*" 
-tracing-subscriber = { version = "*", features = ["fmt"] } 
-anyhow = "*"
-lazy_static = "*"
-serde = "*"
-serde_json = "*" 
-dotenv = "*"
-gluesql = { git = "https://github.com/gluesql/gluesql", default-features = false, features = ["shared-memory-storage", "sled-storage"] }
-futures = "*"
-chrono = "*"
-rand = { version = "0.8.5", features = ["min_const_gen"] }
-async-trait = "*"
-email_address = "*"
-pbkdf2 = { version = "*", features = ["simple"] }
-
-openidconnect = { version = "*", optional = true }
-rcgen = { version = "*", optional = true }
-
-[build-dependencies]
-tools = { path = "./tools" }
 
 [profile.release]
 lto = true
