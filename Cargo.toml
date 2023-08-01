@@ -16,11 +16,10 @@ tower = "*"
 
 [workspace]
 members = [
-    "pwrs-app",
+    "examples/*",
     "pwrs-build",
     "pwrs-host",
     "pwrs-sw",
-    "pwrs-lab",
 ]
 
 [profile.release]

@@ -1,5 +1,5 @@
 [package]
-name = "pwrs-app"
+name = "basic"
 version = "0.0.1"
 edition = "2021"
 
@@ -15,18 +15,18 @@ path = "./host.rs"
 sw = []
 
 [dependencies]
-pwrs = { path = "../" }
+pwrs = { path = "../../" }
 maud = "*"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-pwrs-host = { path = "../pwrs-host" }
+pwrs-host = { path = "../../pwrs-host" }
 tokio = { version = "*", features = ["full"] }
 rust-embed = "*"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-pwrs-sw = { path = "../pwrs-sw" }
+pwrs-sw = { path = "../../pwrs-sw" }
 wasm-bindgen = "*"
 wasm-bindgen-futures = "*"
 
 [build-dependencies]
-pwrs-build = { path = "../pwrs-build" }
+pwrs-build = { path = "../../pwrs-build" }

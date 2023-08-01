@@ -1,5 +1,5 @@
 [package]
-name = "pwrs-lab"
+name = "full"
 version = "0.0.1"
 edition = "2021"
 
@@ -53,11 +53,11 @@ rcgen = { version = "*", optional = true }
 
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-pwrs-sw = { path = "../pwrs-sw" }
+pwrs-sw = { path = "../../pwrs-sw" }
 wasm-bindgen = "*"
 wasm-bindgen-futures = "*"
 web-sys = { version = "*", features = ["FetchEvent"] }
 
 [build-dependencies]
-pwrs-build = { path = "../pwrs-build" }
+pwrs-build = { path = "../../pwrs-build" }
 cfg_aliases = "0.1.1"
