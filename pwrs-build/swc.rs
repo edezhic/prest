@@ -100,21 +100,21 @@ pub fn run(main: &str, minify: bool, tree_shaking: bool) -> Result<String, Error
                     })
                 })
                 .collect();
-        // if no minification - at least strip out typescript notations
-        } else {
-            bundles = bundles
-                .into_iter()
-                .map(|mut b| {
-                    GLOBALS.set(globals, || {
-                        b.module = Into::<Program>::into(b.module)
-                            .fold_with(&mut swc_ecma_transforms_typescript::strip(Mark::new()))
-                            .expect_module();
-                        b.module.visit_mut_with(&mut fixer(None));
-                        b
-                    })
-                })
-                .collect();
         }
+        // if no minification - at least strip out typescript notations
+        bundles = bundles
+            .into_iter()
+            .map(|mut b| {
+                GLOBALS.set(globals, || {
+                    b.module = Into::<Program>::into(b.module)
+                        .fold_with(&mut swc_ecma_transforms_typescript::strip(Mark::new()))
+                        .expect_module();
+                    b.module.visit_mut_with(&mut fixer(None));
+                    b
+                })
+            })
+            .collect();
+    
 
         // since we're building only 1 bundle
         let bundled = &bundles[0];
