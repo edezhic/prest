@@ -1,9 +1,10 @@
 mod swc;
 mod wasm_bindgen;
 use std::format as f;
+use std::io::Write;
 use std::process::Command;
 use std::{
-    fs::{remove_file, rename, write},
+    fs::{remove_file, rename, write, read_to_string, OpenOptions},
     time::Instant,
 };
 
@@ -25,21 +26,41 @@ pub fn track_non_rust_changes(paths: &[&str]) {
     }
 }
 
-pub fn bundle_and_transpile_ui(register_sw: bool) {
-    let start = Instant::now();
-    let mut js = swc::run("ui/main.ts", false, false).unwrap();
-    if register_sw {
-        js = SW_SNIPPET.to_owned() + js.as_str();
-    }
-    write(f!("pub/ui.js"), &js).unwrap();
-
-    let css = grass::from_path("ui/main.scss", &Default::default()).unwrap();
-    write(f!("pub/ui.css"), css).unwrap();
-    
-    bench(&f!("UI transpiled and bundled"), start);
+pub fn detect_sw_build() -> bool {
+    std::env::var("CARGO_CFG_TARGET_ARCH").unwrap() == "wasm32"
 }
 
-pub fn build_sw() {
+pub fn append_sw_registration(path: &str) {
+    let mut js_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+        .unwrap();
+
+    if read_to_string(path).unwrap().contains(SW_SNIPPET) { return }
+
+    js_file
+        .write(SW_SNIPPET.as_bytes())
+        .unwrap();
+}
+
+pub fn bundle_ts(input: &str, output_name: &str) {
+    let start = Instant::now();
+    let js = swc::run(input, false, false).unwrap();
+    let output = &f!("pub/{output_name}.js");
+    write(output, js).unwrap();
+    bench(&f!("{input} transpiled and bundled into {output}"), start);
+}
+
+pub fn bundle_scss(input: &str, output_name: &str) {
+    let start = Instant::now();
+    let css = grass::from_path(input, &Default::default()).unwrap();
+    let output = &f!("pub/{output_name}.css");
+    write(output, css).unwrap();
+    bench(&f!("{input} transpiled and bundled into {output}"), start);
+}
+
+pub fn bundle_sw() {
     let start = Instant::now();
     let mut cmd = Command::new("cargo");
     cmd.arg("rustc")
@@ -74,10 +95,10 @@ pub fn build_sw() {
     )
     .unwrap();
     // bundle and transpile main.ts
-    let js = swc::run("./main.ts", PROFILE == "release", true).unwrap();
+    let js = swc::run("./sw.ts", PROFILE == "release", true).unwrap();
     write(f!("pub/sw.js"), &js).unwrap();
 
-    // clean up lib.js bindings
+    // clean up generated lib.js bindings
     remove_file(&f!("./lib.js")).unwrap();
 
     bench(

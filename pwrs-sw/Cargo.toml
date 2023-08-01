@@ -8,9 +8,7 @@ name = "pwrs_sw"
 path = "./lib.rs"
 
 [dependencies]
-http = "*" 
-axum = { git = "https://github.com/tokio-rs/axum", default-features = false, features = ["json", "query", "form"] }
-bytes = "*"
+pwrs = { path = "../" }
 wasm-bindgen = "*"
 wasm-bindgen-futures = "*"
 js-sys = "*"

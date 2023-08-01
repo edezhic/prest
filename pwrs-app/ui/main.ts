@@ -1,1 +1,0 @@
-import './scripts/hello_world';

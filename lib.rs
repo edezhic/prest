@@ -1,33 +1,45 @@
-#![feature(allocator_api)]
+#![feature(allocator_api, type_alias_impl_trait)]
 
-use axum::{
-    response::Response,
+pub use axum::{
+    self,
     body::{Body, HttpBody},
-    http::Request,
+    extract::Request,
+    response::Response,
+    Router,
 };
-use tower::{Service, Layer};
-use std::{task::{Context, Poll}, pin::Pin, future::Future, alloc::Global};
-use maud::{Markup, PreEscaped};
+pub use bytes;
+pub use http::{self, header, StatusCode};
+pub use maud::{Markup, PreEscaped};
+pub use tower::{Layer, Service};
 
-pub async fn add_html_content_type(
-    request: http::Request<axum::body::Body>,
-    next: axum::middleware::Next,
-) -> impl axum::response::IntoResponse {
-    let mut response = next.run(request).await;
-    response.headers_mut().insert(
-        http::header::CONTENT_TYPE,
-        "text/html; charset=UTF-8".parse().unwrap(),
-    );
-    response
+#[macro_export]
+macro_rules! render {
+    ($template: ident) => {
+        axum::routing::get(|| async {
+            (
+                [(axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8")],
+                $template::render().0,
+            )
+        })
+    };
 }
+
+use std::{
+    alloc::Global,
+    future::Future,
+    pin::Pin,
+    task::{Context, Poll},
+};
+
+type Wrapper = fn(Markup) -> Markup;
 
 #[derive(Clone)]
 pub struct Htmxify {
-    pub wrapper: &'static fn(Markup) -> Markup
+    pub wrapper: Wrapper,
 }
 
 impl Htmxify {
-    pub fn wrap(wrapper: &'static fn(Markup) -> Markup) -> Self {
+    pub fn wrap(wrapper: Wrapper) -> Self {
         Self { wrapper }
     }
 }
@@ -36,13 +48,16 @@ impl<S> Layer<S> for Htmxify {
     type Service = HtmxMiddleware<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
-        HtmxMiddleware { wrapper: self.wrapper, inner }
+        HtmxMiddleware {
+            wrapper: self.wrapper,
+            inner,
+        }
     }
 }
 
 #[derive(Clone)]
 pub struct HtmxMiddleware<S> {
-    wrapper: &'static fn(Markup) -> Markup,
+    wrapper: Wrapper,
     inner: S,
 }
 
@@ -53,7 +68,8 @@ where
 {
     type Response = S::Response;
     type Error = S::Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'static, Global>>;
+    type Future =
+        Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'static, Global>>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.inner.poll_ready(cx)

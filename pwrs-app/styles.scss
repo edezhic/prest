@@ -1,6 +1,3 @@
-@import 'styles/view_transition.scss';
-@import 'styles/mixins.scss';
-
 body {
   margin: 0;
   padding: 0;
@@ -66,12 +63,6 @@ h1 {
   font-size: 4.5rem;
   line-height: 1;
   margin: 4rem 0;
-
-  @include mobile {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
-    margin: 3rem 0;
-  }
 }
 
 .highlight {
@@ -80,7 +71,4 @@ h1 {
   max-width: 768px;
   border-radius: 0.5rem;
   border-left: 4px solid #d946ef;
-  @include desktop {
-    letter-spacing: 0.025em;
-  }
 }

@@ -8,8 +8,12 @@ name = "pwrs_host"
 path = "./lib.rs"
 
 [dependencies]
-http = "*" 
-tower = "*"
-axum = { git = "https://github.com/tokio-rs/axum", default-features = false }
+pwrs = { path = "../" }
+anyhow = "*"
 rust-embed = { version = "*", features = ["mime-guess"] }
 hex = "*"
+tracing-subscriber = { version = "*", features = ["fmt"] } 
+axum-server = "*"
+tower-http = { version = "*", features = ["trace", "catch-panic", "cors"] }
+
+
