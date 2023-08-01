@@ -1,8 +1,26 @@
 extern crate console_error_panic_hook;
 pub use console_error_panic_hook::set_once as set_panic_hook;
 use js_sys::{Array, Reflect, Set, Uint8Array, Promise};
+pub use web_sys::FetchEvent;
 use wasm_bindgen::{JsCast, JsValue};
 use pwrs::*;
+
+pub async fn process_fetch_event(build_svc: fn() -> axum::Router, host: &str, event: FetchEvent) {
+    set_panic_hook();
+    let request = fetch_into_axum_request(&event).await;
+    // process only requests to our host
+    if request.uri().host() != Some(host) {
+        return;
+    }
+    // pass the request through the ui service
+    let Ok(response) = build_svc().call(request).await else { return };
+    // proceed only if OK
+    if response.status().as_u16() != 200 {
+        return;
+    }
+    let promise = axum_response_into_promise(response);
+    event.respond_with(&promise).unwrap();
+}
 
 pub async fn fetch_into_axum_request(fetch_event: &web_sys::FetchEvent) -> http::Request<Body> {
     let fetch_request = fetch_event.request();

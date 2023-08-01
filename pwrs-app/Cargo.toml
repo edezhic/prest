@@ -8,8 +8,8 @@ name = "lib"
 path = "./lib.rs"
 
 [[bin]]
-name = "server"
-path = "./server.rs"
+name = "host"
+path = "./host.rs"
 
 [features]
 sw = []
@@ -17,20 +17,16 @@ sw = []
 [dependencies]
 pwrs = { path = "../" }
 maud = "*"
-anyhow = "*"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pwrs-host = { path = "../pwrs-host" }
 tokio = { version = "*", features = ["full"] }
-tracing = "*" 
 rust-embed = "*"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 pwrs-sw = { path = "../pwrs-sw" }
 wasm-bindgen = "*"
 wasm-bindgen-futures = "*"
-web-sys = { version = "*", features = ["FetchEvent"] }
 
 [build-dependencies]
 pwrs-build = { path = "../pwrs-build" }
-cfg_aliases = "0.1.1"
