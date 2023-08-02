@@ -1,4 +1,4 @@
-# Powers for you apps 💪
+# Powers for apps 💪
 ### For an outdated overview visit [pwrs.app](https://pwrs.app/)
 
 **PWRS** is a **P**rogressive **W**eb **R**u**s**t framework designed to quickly start your cross-platform apps. Beware that it's an early WIP - I've verified that rust with the dependencies used here provide a nice development experience so I've decided to try to compose them in a easy-to-start way.
