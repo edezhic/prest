@@ -2,25 +2,25 @@ use pwrs::*;
 use rust_embed::RustEmbed;
 use std::{task::{Context, Poll}, pin::Pin, future::Future, alloc::Global};
 
-pub fn embed<T: RustEmbed + Copy>(assets: T) -> Embed<T> {
+pub fn embed<T: RustEmbed + Clone>(assets: T) -> Embed<T> {
     Embed { assets }
 }
 
 #[derive(Clone)]
-pub struct Embed<T> where T: RustEmbed + Copy {
+pub struct Embed<T> where T: RustEmbed + Clone {
     pub assets: T
 }
 
-impl<S, T: RustEmbed + Copy> Layer<S> for Embed<T> {
+impl<S, T: RustEmbed + Clone> Layer<S> for Embed<T> {
     type Service = EmbedMiddleware<S, T>;
 
     fn layer(&self, inner: S) -> Self::Service {
-        EmbedMiddleware { _assets: self.assets, inner }
+        EmbedMiddleware { _assets: self.assets.clone(), inner }
     }
 }
 
 #[derive(Clone)]
-pub struct EmbedMiddleware<S, T: RustEmbed + Copy> {
+pub struct EmbedMiddleware<S, T: RustEmbed + Clone> {
     _assets: T,
     inner: S,
 }
@@ -29,7 +29,7 @@ impl<S, T> Service<Request<Body>> for EmbedMiddleware<S, T>
 where
     S: Service<Request<Body>, Response = Response> + Send + 'static,
     S::Future: Send + 'static,
-    T: RustEmbed + Copy,
+    T: RustEmbed + Clone,
 {
     type Response = S::Response;
     type Error = S::Error;

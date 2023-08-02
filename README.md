@@ -1,21 +1,22 @@
-# For an (outdated) overview visit [pwrs.app](https://pwrs.app/)
+# Powers for you apps 💪
+### For an outdated overview visit [pwrs.app](https://pwrs.app/)
 
-To get started you'll need the nightly [rust toolchain](https://rustup.rs/)
+**PWRS** is a **P**rogressive **W**eb **R**u**s**t framework designed to quickly start your cross-platform apps. Beware that it's an early WIP - I've verified that rust with the dependencies used here provide a nice development experience so I've decided to try to compose them in a easy-to-start way.
 
-`pwrs-app` is a minimalistic boilerplate for a PWRS app. Can be started with the `cargo run -p pwrs-app` command. To include the service worker use the `--features="sw"` flag.
+Beside pwrs this repo contains a bunch of example apps which can be run with `cargo run -p NAME` and optional `--features="sw"` flag to include the service worker:
 
-`pwrs-lab` is a heavier experimental app boilerplate with additional features (can be added with `--features="FEATURE1 FEATURE2 ..."`):
-* `sw` - include service worker that can render UI in the browser 
-* `oauth` - include google auth (requires env vars or `.env` with `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`!)  
-* `https` - include TLS (optional env vars or `.env` with `TLS_CERT_PATH` and `TLS_KEY_PATH`; otherwise cert and key will be generated)
+- `basic` is a minimalistic boilerplate for a PWRS app
+- `with-tracing` ...
+- `with-oauth` ...
+- `with-htmx` ...
 
-Other crates are parts of the framework - small utils for PWRS applications development
+Before geting started you'll need the nightly [rust toolchain](https://rustup.rs/)
 
 TODO:
-* -host: anyhow errors in handlers? - https://github.com/tokio-rs/axum/tree/main/examples/anyhow-error-response
-* -host: compression?
-* -host: tracing level env config, ports env config?
-* -lab: use framework pieces
+- `with-tls` ...
+- `with-gluesql` ...
+- `native` wry/tauri stuff
+- -host: catch panic and compression layers, other tower-http middleware?
 
 Notes about architectural choices:
 * WRY - awesome but I decided to focus on PWA thing, seems to have better platform support and easier to use. 

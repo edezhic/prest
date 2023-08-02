@@ -3,8 +3,9 @@
 pub use axum::{
     self,
     body::{Body, HttpBody},
-    extract::Request,
-    response::Response,
+    extract::*,
+    response::{IntoResponse, Redirect, Response},
+    routing::{any, delete, get, patch, post, put},
     Router,
 };
 pub use bytes;
@@ -31,15 +32,15 @@ use std::{
     task::{Context, Poll},
 };
 
-type Wrapper = fn(Markup) -> Markup;
+type PageWrapper = fn(Markup) -> Markup;
 
 #[derive(Clone)]
 pub struct Htmxify {
-    pub wrapper: Wrapper,
+    pub wrapper: PageWrapper,
 }
 
 impl Htmxify {
-    pub fn wrap(wrapper: Wrapper) -> Self {
+    pub fn wrap(wrapper: PageWrapper) -> Self {
         Self { wrapper }
     }
 }
@@ -57,7 +58,7 @@ impl<S> Layer<S> for Htmxify {
 
 #[derive(Clone)]
 pub struct HtmxMiddleware<S> {
-    wrapper: Wrapper,
+    wrapper: PageWrapper,
     inner: S,
 }
 

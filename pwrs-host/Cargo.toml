@@ -12,8 +12,13 @@ pwrs = { path = "../" }
 anyhow = "*"
 rust-embed = { version = "*", features = ["mime-guess"] }
 hex = "*"
+rand = { version = "0.8.5", features = ["min_const_gen"] }
 tracing-subscriber = { version = "*", features = ["fmt"] } 
-axum-server = "*"
 tower-http = { version = "*", features = ["trace", "catch-panic", "cors"] }
+axum-server = "*"
+axum-login = { git = "https://github.com/edezhic/axum-login" } # fork to switch axum to the latest(unstable) main like here
+openidconnect = "*"
+serde = "*"
+dotenv = "*"
 
 

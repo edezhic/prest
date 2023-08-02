@@ -1,16 +1,3 @@
-[package]
-name = "full"
-version = "0.0.1"
-edition = "2021"
-
-[lib]
-name = "lib"
-path = "./lib.rs"
-
-[[bin]]
-name = "run"
-path = "./run.rs"
-
 [features]
 default = []
 oauth = ["dep:openidconnect"]

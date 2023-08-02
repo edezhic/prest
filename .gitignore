@@ -6,7 +6,7 @@ sw.wasm
 ui.css
 ui.js
 include_sw.js
-lib.d.ts
+*.d.ts
 .env
 cert.pem
 key.pem

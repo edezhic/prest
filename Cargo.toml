@@ -3,9 +3,17 @@ name = "pwrs"
 version = "0.0.1"
 edition = "2021"
 
+[workspace]
+members = [
+    "pwrs-build",
+    "pwrs-host",
+    "pwrs-sw",
+    "examples/*",
+]
+
 [lib]
 name = "pwrs"
-path = "./lib.rs"
+path = "./pwrs.rs"
 
 [dependencies]
 maud = "*"
@@ -13,14 +21,6 @@ http = "*"
 axum = { git = "https://github.com/tokio-rs/axum", default-features = false, features = ["json", "query", "form"] }
 bytes = "*"
 tower = "*"
-
-[workspace]
-members = [
-    "examples/*",
-    "pwrs-build",
-    "pwrs-host",
-    "pwrs-sw",
-]
 
 [profile.release]
 lto = true

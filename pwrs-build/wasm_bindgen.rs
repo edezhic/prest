@@ -4,15 +4,15 @@ use std::format as f;
 
 use wasm_bindgen_cli_support::Bindgen;
 
-pub fn run() -> Result<(), Error> {
+pub fn run(target_dir: &str, lib_name: &str) -> Result<(), Error> {
     let mut bindgen = Bindgen::new();
     bindgen
-        .input_path(f!("target/sw/{WASM_UNK}/{PROFILE}/lib.wasm"))
+        .input_path(f!("{target_dir}/{WASM_UNK}/{PROFILE}/{lib_name}.wasm"))
         .web(true)?
         .typescript(true)
         .remove_name_section(true)
         .remove_producers_section(true)
         .omit_default_module_path(true);
-    bindgen.generate(f!("target/sw/{WASM_UNK}/{PROFILE}"))?;
+    bindgen.generate(f!("{target_dir}/{WASM_UNK}/{PROFILE}"))?;
     Ok(())
 }

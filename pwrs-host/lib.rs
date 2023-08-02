@@ -1,7 +1,19 @@
 #![feature(allocator_api)]
 
 mod embed;
-pub use embed::*;
+pub use embed::embed;
+pub mod auth;
+
+pub fn set_dot_env_variables() {
+    dotenv::dotenv().unwrap();
+}
+
+use rand::{distributions::Standard, prelude::Distribution};
+pub fn generate_secret<T>() -> T 
+    where Standard: Distribution<T>
+{
+    rand::Rng::gen::<T>(&mut rand::thread_rng())
+}
 
 pub async fn serve(router: pwrs::Router, port: u16) -> anyhow::Result<()> {
     let svc = router.into_make_service();

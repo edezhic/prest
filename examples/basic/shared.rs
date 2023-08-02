@@ -1,11 +1,21 @@
 use pwrs::*;
+#[allow(dead_code)]
+pub fn service() -> Router {
+    Router::new().route("/", render!(homepage))
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub async fn serve(host: &str, event: pwrs_sw::FetchEvent) {
+    pwrs_sw::process_fetch_event(service, host, event).await
+}
 
 mod homepage {
-    pub fn render() -> maud::Markup {
+    pub fn render() -> pwrs::Markup {
         maud::html!(
             html {
                 head {
-                    title {"PWRS app"}
+                    title {"PWRS basic"}
                     link rel="icon" href="/favicon.ico" {}
                     link rel="manifest" href="/.webmanifest" {}
                     link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css" {}
@@ -23,27 +33,4 @@ mod homepage {
             }
         )
     }       
-}
-
-fn ui_service() -> Router {
-    Router::new().route("/", render!(homepage))
-}
-
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen::prelude::wasm_bindgen]
-pub async fn serve(host: &str, event: pwrs_sw::FetchEvent) {
-    pwrs_sw::process_fetch_event(ui_service, host, event).await
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-#[derive(rust_embed::RustEmbed, Clone, Copy)]
-#[folder = "./pub"]
-struct Assets;
-
-#[cfg(not(target_arch = "wasm32"))]
-pub fn service() -> Router {
-    Router::new()
-        .merge(ui_service())
-        .layer(pwrs_host::embed(Assets))
-        .layer(pwrs_host::http_tracing())
 }
