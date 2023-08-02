@@ -13,8 +13,8 @@ Beside pwrs this repo contains a bunch of example apps which can be run with `ca
 Before geting started you'll need the nightly [rust toolchain](https://rustup.rs/)
 
 TODO:
-- `with-tls` ...
-- `with-gluesql` ...
+- fix `with-tls`
+- fix `with-gluesql`
 - `native` wry/tauri stuff
 - -host: catch panic and compression layers, other tower-http middleware?
 

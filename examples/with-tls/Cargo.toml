@@ -1,0 +1,32 @@
+[package]
+name = "with-tls"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "shared"
+path = "./shared.rs"
+
+[[bin]]
+name = "host"
+path = "./host.rs"
+
+[features]
+sw = []
+
+[dependencies]
+pwrs = { path = "../../" }
+maud = "*"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+pwrs-host = { path = "../../pwrs-host" }
+tokio = { version = "*", features = ["full"] }
+rust-embed = "*"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+pwrs-sw = { path = "../../pwrs-sw" }
+wasm-bindgen = "*"
+wasm-bindgen-futures = "*"
+
+[build-dependencies]
+pwrs-build = { path = "../../pwrs-build" }
