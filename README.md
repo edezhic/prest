@@ -10,7 +10,7 @@ Beside PWRs this repo contains a bunch of example apps which can be run with `ca
 - `with-oauth` ...
 - `with-htmx` ...
 
-Before geting started you'll need the nightly [rust toolchain](https://rustup.rs/)
+Before getting started you'll need the nightly [rust toolchain](https://rustup.rs/)
 
 TODO:
 - fix `with-tls`
