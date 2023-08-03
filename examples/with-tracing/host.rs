@@ -4,11 +4,11 @@ struct Assets;
 
 #[tokio::main]
 async fn main() {
-    pwrs_host::init_logging();
+    pwrs::host::init_logging();
     let service = pwrs::Router::new()
         .merge(shared::service())
-        .layer(pwrs_host::embed(Assets))
-        .layer(pwrs_host::http_tracing());
-    pwrs_host::serve(service, 80).await.unwrap();
+        .layer(pwrs::host::embed(Assets))
+        .layer(pwrs::host::http_tracing());
+    pwrs::host::serve(service, 80).await.unwrap();
 }
 

@@ -1,4 +1,4 @@
-use pwrs::*;
+use crate::*;
 use rust_embed::RustEmbed;
 use std::{task::{Context, Poll}, pin::Pin, future::Future, alloc::Global};
 

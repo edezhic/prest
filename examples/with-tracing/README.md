@@ -2,9 +2,9 @@
 
 Basic app + a couple of lines in `host.rs` which provide tracing:
 ```rust
-pwrs_host::init_logging();
+pwrs::host::init_logging();
 ...
-    .layer(pwrs_host::http_tracing());
+    .layer(pwrs::host::http_tracing());
 ```
 
 TODO:

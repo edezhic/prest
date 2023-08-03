@@ -40,11 +40,11 @@ rcgen = { version = "*", optional = true }
 
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-pwrs-sw = { path = "../../pwrs-sw" }
+pwrs = { path = "../../", features = ["sw"] }
 wasm-bindgen = "*"
 wasm-bindgen-futures = "*"
 web-sys = { version = "*", features = ["FetchEvent"] }
 
 [build-dependencies]
-pwrs-build = { path = "../../pwrs-build" }
+pwrs = { path = "../../", features = ["build"] }
 cfg_aliases = "0.1.1"

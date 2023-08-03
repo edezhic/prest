@@ -19,14 +19,14 @@ pwrs = { path = "../../" }
 maud = "*"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-pwrs-host = { path = "../../pwrs-host" }
+pwrs = { path = "../../", features = ["host"] }
 tokio = { version = "*", features = ["full"] }
 rust-embed = "*"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-pwrs-sw = { path = "../../pwrs-sw" }
+pwrs = { path = "../../", features = ["sw"] }
 wasm-bindgen = "*"
 wasm-bindgen-futures = "*"
 
 [build-dependencies]
-pwrs-build = { path = "../../pwrs-build" }
+pwrs = { path = "../../", features = ["build"] }

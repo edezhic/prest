@@ -5,7 +5,7 @@
 struct Assets;
 
 use pwrs::*;
-use pwrs_host::auth::*;
+use pwrs::host::auth::*;
 use std::{
     collections::HashMap,
     sync::{Arc, LazyLock},
@@ -43,7 +43,7 @@ pub type RequireAuthzLayer = RequireAuthorizationLayer<u64, User>;
 
 #[tokio::main]
 async fn main() {
-    pwrs_host::set_dot_env_variables();
+    pwrs::host::set_dot_env_variables();
     let (auth_svc, session, authn) = init_auth::<u64, User>();
     let service = pwrs::Router::new()
         .route("/protected", get(|| async {"Authorized!"}))
@@ -52,8 +52,8 @@ async fn main() {
         .merge(auth_svc)
         .layer(authn)
         .layer(session)
-        .layer(pwrs_host::embed(Assets));
-    pwrs_host::serve(service, 80).await.unwrap();
+        .layer(pwrs::host::embed(Assets));
+    pwrs::host::serve(service, 80).await.unwrap();
 }
 
 use std::hash::Hash;
@@ -62,7 +62,7 @@ pub fn init_auth<Id: Hash + Eq + Clone + Send + Sync + 'static, User: AuthUser<I
     SessionLayer<SessionMemoryStore>,
     AuthLayer<AuthMemoryStore<Id, User>, Id, User>,
 ) {
-    let secret = pwrs_host::generate_secret::<[u8; 64]>();
+    let secret = pwrs::host::generate_secret::<[u8; 64]>();
     let session_store = SessionMemoryStore::new();
     let auth_store = Arc::new(RwLock::new(HashMap::new()));
 

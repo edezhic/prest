@@ -1,4 +1,4 @@
-use crate::{WASM_UNK, PROFILE};
+use super::{WASM_UNK, PROFILE};
 use anyhow::Error;
 use std::format as f;
 

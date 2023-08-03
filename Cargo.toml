@@ -4,12 +4,12 @@ version = "0.0.1"
 edition = "2021"
 
 [workspace]
-members = [
-    "pwrs-build",
-    "pwrs-host",
-    "pwrs-sw",
-    "examples/*",
-]
+members = ["examples/*"]
+
+[features]
+build = ["dep:grass", "dep:wasm-bindgen-cli-support", "dep:swc", "dep:swc_atoms", "dep:swc_bundler", "dep:swc_common", "dep:swc_config", "dep:swc_ecma_parser", "dep:swc_ecma_ast", "dep:swc_ecma_codegen", "dep:swc_ecma_loader", "dep:swc_ecma_minifier", "dep:swc_ecma_transforms_base", "dep:swc_ecma_transforms_typescript", "dep:swc_ecma_visit"]
+host = ["dep:rust-embed", "dep:rand", "dep:tracing-subscriber", "dep:tower-http", "dep:axum-server", "dep:axum-login", "dep:dotenv", "dep:openidconnect"]
+sw = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:js-sys", "dep:web-sys", "dep:console_error_panic_hook"]
 
 [lib]
 name = "pwrs"
@@ -21,6 +21,56 @@ http = "*"
 axum = { git = "https://github.com/tokio-rs/axum", default-features = false, features = ["json", "query", "form"] }
 bytes = "*"
 tower = "*"
+anyhow = "*"
+serde = "*"
+hex = "*"
+
+# Host deps:
+rust-embed = { version = "*", features = ["mime-guess"], optional = true }
+rand = { version = "0.8.5", features = ["min_const_gen"], optional = true }
+tracing-subscriber = { version = "*", features = ["fmt"], optional = true } 
+tower-http = { version = "*", features = ["trace", "catch-panic", "cors"], optional = true }
+axum-server = { version = "*", optional = true }
+# fork to switch axum to the latest(unstable) main like here
+axum-login = { git = "https://github.com/edezhic/axum-login", optional = true } 
+openidconnect = { version = "*", optional = true }
+dotenv = { version = "*", optional = true }
+
+# Build deps:
+grass = { version = "*", optional = true }
+wasm-bindgen-cli-support = { version = "*", optional = true }
+swc = { git = "https://github.com/swc-project/swc", optional = true }
+swc_atoms = { git = "https://github.com/swc-project/swc", optional = true }
+swc_bundler = { git = "https://github.com/swc-project/swc", features = ["concurrent"], optional = true }
+swc_common = { git = "https://github.com/swc-project/swc", features = ["tty-emitter"], optional = true }
+swc_config = { git = "https://github.com/swc-project/swc", optional = true }
+swc_ecma_parser = { git = "https://github.com/swc-project/swc", features = ["typescript"], optional = true }
+swc_ecma_ast = { git = "https://github.com/swc-project/swc", optional = true }
+swc_ecma_codegen = { git = "https://github.com/swc-project/swc", optional = true }
+swc_ecma_loader = { git = "https://github.com/swc-project/swc", optional = true }
+swc_ecma_minifier = { git = "https://github.com/swc-project/swc", optional = true }
+swc_ecma_transforms_base = { git = "https://github.com/swc-project/swc", optional = true }
+swc_ecma_transforms_typescript = { git = "https://github.com/swc-project/swc", optional = true }
+swc_ecma_visit = { git = "https://github.com/swc-project/swc", optional = true }
+
+# Service Worker deps:
+wasm-bindgen = { version = "*", optional = true }
+wasm-bindgen-futures = { version = "*", optional = true }
+js-sys = { version = "*", optional = true }
+console_error_panic_hook = { version = "*", optional = true }
+[dependencies.web-sys]
+version = "*"
+optional = true
+features = [
+    "console",
+    "FetchEvent", 
+    "Request", 
+    "ReadableStream", 
+    "ReadableStreamDefaultReader",
+    "Headers", 
+    "ResponseInit", 
+    "Response",
+]   
 
 [profile.release]
 lto = true

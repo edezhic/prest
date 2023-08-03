@@ -1,4 +1,4 @@
-#![feature(allocator_api)]
+use super::*;
 
 mod embed;
 pub use embed::embed;
@@ -15,7 +15,7 @@ pub fn generate_secret<T>() -> T
     rand::Rng::gen::<T>(&mut rand::thread_rng())
 }
 
-pub async fn serve(router: pwrs::Router, port: u16) -> anyhow::Result<()> {
+pub async fn serve(router: Router, port: u16) -> anyhow::Result<()> {
     let svc = router.into_make_service();
     let http_addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
     axum_server::bind(http_addr).serve(svc).await?;

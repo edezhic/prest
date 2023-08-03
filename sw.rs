@@ -1,9 +1,10 @@
+use super::*;
+
 extern crate console_error_panic_hook;
 pub use console_error_panic_hook::set_once as set_panic_hook;
 use js_sys::{Array, Reflect, Set, Uint8Array, Promise};
 pub use web_sys::FetchEvent;
 use wasm_bindgen::{JsCast, JsValue};
-use pwrs::*;
 
 pub async fn process_fetch_event(build_svc: fn() -> axum::Router, host: &str, event: FetchEvent) {
     set_panic_hook();
