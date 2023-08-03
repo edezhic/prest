@@ -18,6 +18,7 @@ TODO:
 - `with-language-models`
 - `with-scraper`
 - `with-diesel`
+- `with-blockchain`
 - `with-webrtc`?
 - combine pwrs into a single crate with build, host and sw features
 - tests
