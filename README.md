@@ -15,6 +15,13 @@ Before geting started you'll need the nightly [rust toolchain](https://rustup.rs
 TODO:
 - fix `with-tls`
 - fix `with-gluesql`
+- `with-language-models`
+- `with-scraper`
+- `with-diesel`
+- `with-webrtc`?
+- combine pwrs into a single crate with build, host and sw features
+- tests
+- docs
 - `native` wry/tauri stuff
 - -host: catch panic and compression layers, other tower-http middleware?
 
