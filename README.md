@@ -9,18 +9,17 @@ Beside PWRs this repo contains a bunch of example apps which can be run with `ca
 - `with-tracing` ...
 - `with-oauth` ...
 - `with-htmx` ...
+- `with-tls` ...
+- `with-gluesql` ...
 
 Before getting started you'll need the nightly [rust toolchain](https://rustup.rs/)
 
 TODO:
-- fix `with-tls`
-- fix `with-gluesql`
 - `with-language-models`
 - `with-scraper`
 - `with-diesel`
 - `with-blockchain`
 - `with-webrtc`?
-- combine pwrs into a single crate with build, host and sw features
 - tests
 - docs
 - `native` wry/tauri stuff

@@ -17,11 +17,15 @@ sw = []
 [dependencies]
 pwrs = { path = "../../" }
 maud = "*"
+serde = "*"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pwrs = { path = "../../", features = ["host"] }
 tokio = { version = "*", features = ["full"] }
 rust-embed = "*"
+gluesql = { git = "https://github.com/gluesql/gluesql", default-features = false, features = ["shared-memory-storage", "sled-storage"] }
+futures = "*"
+uuid = { version = "*", features = ["v4"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 pwrs = { path = "../../", features = ["sw"] }

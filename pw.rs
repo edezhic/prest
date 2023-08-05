@@ -1,4 +1,4 @@
-#![feature(allocator_api, type_alias_impl_trait)]
+#![feature(allocator_api, type_alias_impl_trait, lazy_cell)]
 
 #[cfg(feature = "build")]
 pub mod build;
@@ -7,6 +7,7 @@ pub mod host;
 #[cfg(feature = "sw")]
 pub mod sw;
 
+pub use anyhow::{self, Result};
 pub use axum::{
     self,
     body::{Body, HttpBody},
@@ -100,9 +101,9 @@ where
             } else {
                 wrapper(PreEscaped(content))
             };
-            let body = axum::body::Body::from(content.0);
-            parts.headers.remove(http::header::CONTENT_LENGTH);
-            let response = axum::response::Response::from_parts(parts, body);
+            let body = Body::from(content.0);
+            parts.headers.remove(header::CONTENT_LENGTH);
+            let response = Response::from_parts(parts, body);
             Ok(response)
         })
     }

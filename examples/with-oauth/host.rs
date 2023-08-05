@@ -103,7 +103,8 @@ pub async fn callback(
     }
     let (_token, claims) = GCLIENT.get_token_and_claims(query.code, nonce).await;
     let email = claims.email().unwrap().to_string();
-    let user = User {
+    
+    let dummy_user = User {
         id: 1,
         email,
         pw_hash: String::new()
@@ -114,7 +115,7 @@ pub async fn callback(
         None => User::signup(email, None).await.unwrap(),
     };
     */
-    auth.login(&user).await.unwrap();
+    auth.login(&dummy_user).await.unwrap();
 
     Redirect::to("/")
 }

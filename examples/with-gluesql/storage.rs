@@ -1,109 +1,73 @@
-use crate::auth::{Role, User, UserId, Email, PwHash};
-use anyhow::Result;
-use axum_login::UserStore;
-pub use gluesql::core::ast_builder::table;
-use gluesql::{core::ast_builder::Build, prelude::*};
+use std::sync::LazyLock;
 
-lazy_static! {
-    static ref STORE: SharedMemoryStorage = SharedMemoryStorage::new();
+use pwrs::*;
+pub use gluesql::core::ast_builder::table;
+use gluesql::{core::ast_builder::{Build as BuildSQL}, sled_storage::SledStorage, prelude::{Payload, Value, Glue}};
+
+static STORE: LazyLock<SledStorage> = LazyLock::new(|| { gluesql::sled_storage::SledStorage::new("sled_db").unwrap() });
+
+pub struct Todo {
+    pub uuid: String,
+    pub task: String,
 }
 
-static USER_TABLE: &str = "Users";
+pub struct Todos;
+impl Todos {
+    const TABLE_NAME: &str = "Todos";
 
-#[derive(Clone)]
-pub struct Storage;
-impl Storage {
     pub fn migrate() -> Result<()> {
         Self::exec_sync(
-            table(USER_TABLE)
+            table(Self::TABLE_NAME)
                 .create_table_if_not_exists()
-                .add_column("id UINT64 PRIMARY KEY")
-                .add_column("email TEXT UNIQUE NOT NULL")
-                .add_column("pw_hash TEXT")
-                .add_column("role TEXT NOT NULL"),
+                .add_column("uuid UUID PRIMARY KEY")
+                .add_column("task TEXT UNIQUE NOT NULL"),
         )?;
         Ok(())
     }
-    pub async fn get_user_by_id(id: UserId) -> Option<User> {
-        let Ok(payload) = Self::exec_inside_async(
-            table(USER_TABLE)
-                .select()
-                .filter(format!("id = {id}")),
-        ) else { return None };
-        let Payload::Select {rows, ..} = payload else { return None };
-        if rows.len() == 0 { return None };
-        let Value::Str(email) = rows[0][1].clone() else { return None };
-        let email = Email::new_unchecked(email);
-        let Value::Str(role_str) = rows[0][3].clone() else { return None };
-        let pw_hash = match rows[0][2].clone() {
-            Value::Str(s) => PwHash(Some(s)),
-            Value::Null | _ => PwHash(None),
-        };
-        Some(User {
-            id,
-            email,
-            pw_hash,
-            role: role_str.into(),
-        })
+    pub async fn get_todos() -> Vec<Todo> {
+        let Ok(payload) = Self::exec_inside_async(table(Self::TABLE_NAME).select()) 
+            else { return vec![] };
+        let Payload::Select {rows, ..} = payload else { return vec![] };
+        let mut todos = vec![];
+        for row in rows {
+            let Value::Uuid(uuid) = row[0].clone() else { continue; };
+            let uuid = uuid::Uuid::from_u128(uuid).to_string();
+            let Value::Str(task) = row[1].clone() else { continue; };
+            todos.push(Todo {
+                uuid,
+                task,
+            });
+        }
+        todos
     }
-    pub async fn get_user_by_email(email: &Email) -> Option<User> {
-        let Ok(payload) = Self::exec_inside_async(
-            table(USER_TABLE)
-                .select()
-                .filter(format!("email = '{email}'")),
-        ) else { return None };
-        let Payload::Select {rows, ..} = payload else { return None };
-        if rows.len() == 0 { return None };
-        let Value::U64(id) = rows[0][0].clone() else { return None };
-        let Value::Str(role_str) = rows[0][3].clone() else { return None };
-        let pw_hash = match rows[0][2].clone() {
-            Value::Str(s) => PwHash(Some(s)),
-            Value::Null | _ => PwHash(None),
-        };
-        Some(User {
-            id: UserId(id),
-            email: email.clone(),
-            pw_hash,
-            role: role_str.into(),
-        })
+    pub async fn delete_todo_by_id(uuid: String) -> Result<()> {
+        Self::exec_inside_async(
+            table(Self::TABLE_NAME)
+                .delete()
+                .filter(format!("uuid = '{uuid}'")),
+        )?;
+        Ok(())
     }
-
-    pub async fn insert_user(user: &User) -> Result<&User> {
-        let hash = match &user.pw_hash.0 {
-            Some(hash) => hash.as_str(),
-            None => "NULL",
-        };
-        let values = format!(
-            "{}, '{}', '{}', '{}'",
-            user.id, user.email, hash, Into::<String>::into(user.role)
-        );
-        Self::exec_inside_async(table(USER_TABLE).insert().values(vec![values]))?;
-        Ok(user)
+    pub async fn add_task(task: String) -> Result<()> {
+        let values = format!("GENERATE_UUID(), '{task}'");
+        Self::exec_inside_async(table(Self::TABLE_NAME).insert().values(vec![values]))?;
+        Ok(())
     }
 
     // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1245
-    fn exec_inside_async(stmt: impl Build) -> Result<Payload> {
+    fn exec_inside_async(stmt: impl BuildSQL) -> Result<Payload> {
         Ok(tokio::task::block_in_place(|| {
             tokio::runtime::Handle::current().block_on(Self::exec(stmt))
         })?)
     }
 
-    fn exec_sync(stmt: impl Build) -> Result<Payload> {
+    fn exec_sync(stmt: impl BuildSQL) -> Result<Payload> {
         Ok(futures::executor::block_on(Self::exec(stmt))?)
     }
 
-    async fn exec(stmt: impl Build) -> Result<Payload> {
+    async fn exec(stmt: impl BuildSQL) -> Result<Payload> {
         Ok(Glue::new(STORE.clone())
             .execute_stmt(&stmt.build()?)
             .await?)
-    }
-}
-
-#[async_trait::async_trait]
-impl UserStore<UserId, Role> for Storage {
-    type User = User;
-    type Error = std::convert::Infallible;
-    async fn load_user(&self, user_id: &UserId) -> Result<Option<User>, Self::Error> {
-        Ok(Storage::get_user_by_id(*user_id).await)
     }
 }

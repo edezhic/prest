@@ -8,12 +8,12 @@ members = ["examples/*"]
 
 [features]
 build = ["dep:grass", "dep:wasm-bindgen-cli-support", "dep:swc", "dep:swc_atoms", "dep:swc_bundler", "dep:swc_common", "dep:swc_config", "dep:swc_ecma_parser", "dep:swc_ecma_ast", "dep:swc_ecma_codegen", "dep:swc_ecma_loader", "dep:swc_ecma_minifier", "dep:swc_ecma_transforms_base", "dep:swc_ecma_transforms_typescript", "dep:swc_ecma_visit"]
-host = ["dep:rust-embed", "dep:rand", "dep:tracing-subscriber", "dep:tower-http", "dep:axum-server", "dep:axum-login", "dep:dotenv", "dep:openidconnect"]
+host = ["dep:tokio", "dep:rust-embed", "dep:rand", "dep:tracing-subscriber", "dep:tower-http", "dep:axum-server", "dep:axum-login", "dep:dotenv", "dep:openidconnect"]
 sw = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:js-sys", "dep:web-sys", "dep:console_error_panic_hook"]
 
 [lib]
 name = "pwrs"
-path = "./pwrs.rs"
+path = "./pw.rs"
 
 [dependencies]
 maud = "*"
@@ -26,11 +26,12 @@ serde = "*"
 hex = "*"
 
 # Host deps:
+tokio = { version = "*", features = ["full"], optional = true }
 rust-embed = { version = "*", features = ["mime-guess"], optional = true }
 rand = { version = "0.8.5", features = ["min_const_gen"], optional = true }
 tracing-subscriber = { version = "*", features = ["fmt"], optional = true } 
 tower-http = { version = "*", features = ["trace", "catch-panic", "cors"], optional = true }
-axum-server = { version = "*", optional = true }
+axum-server = { version = "*", features = ["tls-rustls"], optional = true }
 # fork to switch axum to the latest(unstable) main like here
 axum-login = { git = "https://github.com/edezhic/axum-login", optional = true } 
 openidconnect = { version = "*", optional = true }

@@ -10,3 +10,4 @@ include_sw.js
 .env
 cert.pem
 key.pem
+sled_db
