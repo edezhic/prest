@@ -11,12 +11,14 @@ Beside PWRs this repo contains a bunch of example apps which can be run with `ca
 - `with-htmx` ...
 - `with-tls` ...
 - `with-gluesql` ...
+- `with-scraping` ...
 
 Before getting started you'll need the nightly [rust toolchain](https://rustup.rs/)
 
 TODO:
-- `with-language-models`
-- `with-scraper`
+- try sw tracing https://github.com/old-storyai/tracing-wasm
+- make a single examples' assets folder
+- `with-language-model`
 - `with-diesel`
 - `with-blockchain`
 - `with-webrtc`?

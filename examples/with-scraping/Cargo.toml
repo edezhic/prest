@@ -1,0 +1,35 @@
+[package]
+name = "with-scraping"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "shared"
+path = "./shared.rs"
+
+[[bin]]
+name = "host"
+path = "./host.rs"
+
+[features]
+sw = []
+
+[dependencies]
+pwrs = { path = "../../" }
+maud = "*"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+pwrs = { path = "../../", features = ["host"] }
+tokio = { version = "*", features = ["full"] }
+rust-embed = "*"
+reqwest = { version = "*", default-features=false, features = ["rustls-tls"] }
+scraper = "*"
+futures = "*"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+pwrs = { path = "../../", features = ["sw"] }
+wasm-bindgen = "*"
+wasm-bindgen-futures = "*"
+
+[build-dependencies]
+pwrs = { path = "../../", features = ["build"] }
