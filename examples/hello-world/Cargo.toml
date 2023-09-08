@@ -1,0 +1,12 @@
+[package]
+name = "hello-world"
+version = "0.0.1"
+edition = "2021"
+
+[[bin]]
+name = "serve"
+path = "./serve.rs"
+
+[dependencies]
+pwrs = { path = "../../", features = ["host"] }
+tokio = { version = "*", features = ["full"] }

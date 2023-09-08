@@ -17,20 +17,42 @@ pub use axum::{
     Router,
 };
 pub use bytes;
-pub use http::{self, header, StatusCode};
+pub use http::{self, header, HeaderMap, StatusCode};
 pub use maud::{Markup, PreEscaped};
 pub use tower::{Layer, Service};
+
+pub static REGISTER_SW_SNIPPET: &str = "if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {type: 'module'});";
 
 #[macro_export]
 macro_rules! render {
     ($template: ident) => {
-        axum::routing::get(|| async {
+        pwrs::get(|| async {
             (
-                [(axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8")],
+                [(pwrs::header::CONTENT_TYPE, "text/html; charset=utf-8")],
                 $template::render().0,
             )
         })
     };
+}
+
+pub fn maud_to_response(markup: Markup) -> impl IntoResponse {
+    ([(header::CONTENT_TYPE, "text/html; charset=utf-8")], markup.0)
+}
+
+pub fn head(title: &str, other: Option<Markup>) -> Markup {
+    maud::html!(
+        head {
+            title {(title)}
+            link rel="icon" href="/favicon.ico" {}
+            link rel="manifest" href="/.webmanifest" {}
+            script {(REGISTER_SW_SNIPPET)}
+            meta name="viewport" content="width=device-width, initial-scale=1.0";
+            meta name="theme-color" content="#a21caf";
+            @if let Some(markup) = other {
+                (markup)
+            }
+        }
+    )
 }
 
 use std::{

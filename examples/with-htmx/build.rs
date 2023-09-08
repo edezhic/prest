@@ -3,7 +3,7 @@ fn main() {
     pwrs::build::track_non_rust_changes(&["main.ts", "ui"]);
 
     // trigger build of the assets only when building the host
-    if pwrs::build::detect_sw_build() { return }
+    if pwrs::build::detect_wasm_build() { return }
     
     pwrs::build::bundle_ts("ui/main.ts", "ui");
     pwrs::build::bundle_scss("ui/main.scss", "ui");

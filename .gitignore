@@ -1,6 +1,7 @@
 .DS_Store
 Cargo.lock
 target
+target_sw
 sw.js
 sw.wasm
 ui.css
