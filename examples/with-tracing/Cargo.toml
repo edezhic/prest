@@ -4,29 +4,25 @@ version = "0.0.1"
 edition = "2021"
 
 [lib]
-name = "shared"
-path = "./shared.rs"
+name = "serve"
+path = "./serve.rs"
 
 [[bin]]
-name = "host"
-path = "./host.rs"
+name = "serve"
+path = "./serve.rs"
 
 [features]
-sw = []
+default = ["host"]
+host = ["pwrs/host", "pwrs/build", "tokio/full", "rust-embed"]
+sw = ["pwrs/sw", "wasm-bindgen", "wasm-bindgen-futures"]
 
 [dependencies]
 pwrs = { path = "../../" }
 maud = "*"
-
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-pwrs = { path = "../../", features = ["host"] }
-tokio = { version = "*", features = ["full"] }
-rust-embed = "*"
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-pwrs = { path = "../../", features = ["sw"] }
-wasm-bindgen = "*"
-wasm-bindgen-futures = "*"
+tokio = { version = "*", optional = true }
+rust-embed = { version = "*", features = ["interpolate-folder-path"], optional = true }
+wasm-bindgen = { version = "*", optional = true }
+wasm-bindgen-futures = { version = "*", optional = true }
 
 [build-dependencies]
-pwrs = { path = "../../", features = ["build"] }
+pwrs = { path = "../../" }

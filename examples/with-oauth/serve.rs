@@ -1,13 +1,10 @@
 #![feature(lazy_cell)]
 
-#[derive(rust_embed::RustEmbed, Clone)]
-#[folder = "./pub"]
-struct Assets;
-
-use pwrs::*;
 use pwrs::host::auth::*;
+use pwrs::*;
 use std::{
     collections::HashMap,
+    hash::Hash,
     sync::{Arc, LazyLock},
 };
 use tokio::sync::RwLock;
@@ -46,17 +43,31 @@ async fn main() {
     pwrs::host::set_dot_env_variables();
     let (auth_svc, session, authn) = init_auth::<u64, User>();
     let service = pwrs::Router::new()
-        .route("/protected", get(|| async {"Authorized!"}))
-        .route_layer(RequireAuthzLayer::login())
-        .merge(shared::service())
+        .route("/protected", get(|| async { "Authorized!" }))
+        .route_layer(RequireAuthzLayer::login()) // routes above this layer require logged-in state
+        .route("/", get(homepage))
         .merge(auth_svc)
         .layer(authn)
-        .layer(session)
-        .layer(pwrs::host::embed(Assets));
+        .layer(session);
     pwrs::host::serve(service, 80).await.unwrap();
 }
 
-use std::hash::Hash;
+async fn homepage() -> impl pwrs::IntoResponse {
+    pwrs::maud_to_response(maud::html!(
+        html {
+            head {
+                title {"With OAuth"}
+                link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css" {}
+            }
+            body {
+                h1{"With OAuth"}
+                a href="/oauth/google" {"Click me to initiate Google OAuth flow"}
+                a href="/protected" {"Click me to go to the authorized route"}
+            }
+        }
+    ))
+}
+
 pub fn init_auth<Id: Hash + Eq + Clone + Send + Sync + 'static, User: AuthUser<Id>>() -> (
     Router,
     SessionLayer<SessionMemoryStore>,
@@ -77,7 +88,6 @@ pub fn init_auth<Id: Hash + Eq + Clone + Send + Sync + 'static, User: AuthUser<I
         AuthLayer::new(AuthMemoryStore::new(&auth_store), &secret),
     )
 }
-
 
 pub async fn init_oauth_flow(mut session: WritableSession) -> impl IntoResponse {
     let (authz_url, csrf_token, nonce) = GCLIENT.authz_request(&["email"]);
@@ -103,18 +113,13 @@ pub async fn callback(
     }
     let (_token, claims) = GCLIENT.get_token_and_claims(query.code, nonce).await;
     let email = claims.email().unwrap().to_string();
-    
+
+    // normally you would find the user in the DB by email or another claim, but for simplicity we're logging with a dummy one
     let dummy_user = User {
         id: 1,
         email,
-        pw_hash: String::new()
+        pw_hash: String::new(),
     };
-    /*
-    let user = match crate::Storage::get_user_by_email(&email).await {
-        Some(user) => user,
-        None => User::signup(email, None).await.unwrap(),
-    };
-    */
     auth.login(&dummy_user).await.unwrap();
 
     Redirect::to("/")

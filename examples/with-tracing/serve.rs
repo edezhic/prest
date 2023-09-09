@@ -3,9 +3,9 @@
 fn shared_routes() -> pwrs::Router {
     pwrs::Router::new().route("/", pwrs::get(|| async { pwrs::maud_to_response(
         maud::html!(
-            (pwrs::head("Prest app", Some(maud::html!(link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css"{}))))
+            (pwrs::head("Prest app with tracing", Some(maud::html!(link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css"{}))))
             body {
-                h1{"Progressive RESTful application"}
+                h1{"Progressive RESTful application with tracing (check out the terminal!)"}
             }
         )
     )}))
@@ -19,7 +19,10 @@ struct Assets;
 #[cfg(feature = "host")]
 #[tokio::main]
 async fn main() {
-    let service = shared_routes().layer(pwrs::host::embed(Assets));
+    pwrs::host::init_logging();
+    let service = shared_routes()
+        .layer(pwrs::host::embed(Assets))
+        .layer(pwrs::host::http_tracing());
     pwrs::host::serve(service, 80).await.unwrap();
 }
 

@@ -1,16 +1,7 @@
-#[derive(rust_embed::RustEmbed, Clone)]
-#[folder = "./pub"]
-struct Assets;
-
 use futures::future::join_all;
 use pwrs::Result;
 use reqwest::get;
 use scraper::{Html, Selector};
-
-struct Story {
-    pub title: String,
-    pub content: String,
-}
 struct Target {
     pub url: String,
     pub links: Selector,
@@ -30,10 +21,25 @@ async fn main() {
         })
     });
 
-    let service = pwrs::Router::new()
-        .merge(shared::service())
-        .layer(pwrs::host::embed(Assets));
+    let service = pwrs::Router::new().route("/", pwrs::get(homepage));
     pwrs::host::serve(service, 80).await.unwrap();
+}
+
+async fn homepage() -> impl pwrs::IntoResponse {
+    pwrs::maud_to_response(maud::html!(
+        html {
+            head {
+                title {"With scraping"}
+                link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css" {}
+            }
+            body {h1{"Check out terminal for scraping results!"}}
+        }
+    ))
+}  
+
+struct Story {
+    pub title: String,
+    pub content: String,
 }
 
 #[tokio::main]

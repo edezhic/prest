@@ -1,29 +1,26 @@
-# Powers for apps 💪
-### For an outdated overview visit [pwrs.app](https://pwrs.app/)
+# Prest
 
-**PWRs** is a **P**rogressive **W**eb **R**u**s**t framework designed to quickly start your cross-platform apps. Beware that it's an early WIP - I've verified that rust with the dependencies used here provide a nice development experience, so I've decided to try to compose them in a easy-to-start way: basic example is just ~20 lines of code + ~30 for the page template and ~30 for the cargo config.
+**Prest** is a **P**rogressive **REST**ful framework designed to quickly start your cross-platform apps. Beware that it's an early WIP - I've verified that rust with the dependencies used here provide a nice development experience, so I've decided to try to compose them in a easy-to-start way: basic PWA is just ~30 lines of code and ~30 lines of cargo config.
 
-Beside PWRs this repo contains a bunch of example apps which can be run with `cargo run -p NAME` and optional `--features="sw"` flag to include the service worker:
+This repo contains a bunch of examples which can be run with `cargo run -p NAME`:
 
-- `basic` is a minimalistic boilerplate for a PWRS app
-- `with-tracing` ...
-- `with-oauth` ...
-- `with-htmx` ...
-- `with-tls` ...
-- `with-gluesql` ...
-- `with-scraping` ...
+- `hello-world` is the simplest example with just 5 LoC
+- `pwa` is a basic Progressive RESTful app
+- `with-htmx` includes ~fancy UI
+- `with-oauth` includes Google OAuth flow and basic authz/authn boilerplate
+- `with-tls` includes HTTPS server
+- `with-scraping` includes parser for a news website
+- `with-gluesql` includes embedded sled-powered GlueSQL DB (TODO try adding into SW as well)
+- `with-tracing` includes tracing on the host (TODO for the SW - https://github.com/old-storyai/tracing-wasm)
 
-Before getting started you'll need the nightly [rust toolchain](https://rustup.rs/)
+To build and run them you'll need the nightly [rust toolchain](https://rustup.rs/)
 
 TODO:
-- try sw tracing https://github.com/old-storyai/tracing-wasm
-- make a single examples' assets folder
 - `with-language-model`
 - `with-diesel`
 - `with-blockchain`
 - `with-webrtc`?
-- tests
-- docs
+- `docs`/``
 - `native` wry/tauri stuff
 - -host: catch panic and compression layers, other tower-http middleware?
 
