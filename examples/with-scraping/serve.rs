@@ -1,5 +1,5 @@
 use futures::future::join_all;
-use pwrs::Result;
+use prest::Result;
 use reqwest::get;
 use scraper::{Html, Selector};
 struct Target {
@@ -21,12 +21,12 @@ async fn main() {
         })
     });
 
-    let service = pwrs::Router::new().route("/", pwrs::get(homepage));
-    pwrs::host::serve(service, 80).await.unwrap();
+    let service = prest::Router::new().route("/", prest::get(homepage));
+    prest::host::serve(service, 80).await.unwrap();
 }
 
-async fn homepage() -> impl pwrs::IntoResponse {
-    pwrs::maud_to_response(maud::html!(
+async fn homepage() -> impl prest::IntoResponse {
+    prest::maud_to_response(maud::html!(
         html {
             head {
                 title {"With scraping"}

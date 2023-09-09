@@ -13,11 +13,11 @@ path = "./serve.rs"
 
 [features]
 default = ["host"]
-host = ["pwrs/host", "pwrs/build", "tokio/full", "rust-embed"]
-sw = ["pwrs/sw", "wasm-bindgen", "wasm-bindgen-futures"]
+host = ["prest/host", "prest/build", "tokio/full", "rust-embed"]
+sw = ["prest/sw", "wasm-bindgen", "wasm-bindgen-futures"]
 
 [dependencies]
-pwrs = { path = "../../" }
+prest = { path = "../../" }
 maud = "*"
 tokio = { version = "*", optional = true }
 rust-embed = { version = "*", features = ["interpolate-folder-path"], optional = true }
@@ -25,4 +25,4 @@ wasm-bindgen = { version = "*", optional = true }
 wasm-bindgen-futures = { version = "*", optional = true }
 
 [build-dependencies]
-pwrs = { path = "../../" }
+prest = { path = "../../" }

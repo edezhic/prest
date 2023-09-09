@@ -1,5 +1,5 @@
 #[tokio::main]
 async fn main() {
-    let service = pwrs::Router::new().route("/", pwrs::get(|| async { "Hello world!" }));
-    pwrs::host::serve(service, 80).await.unwrap();
+    let service = prest::Router::new().route("/", prest::get(|| async { "Hello world!" }));
+    prest::host::serve(service, 80).await.unwrap();
 }

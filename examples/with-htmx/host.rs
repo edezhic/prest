@@ -4,9 +4,9 @@ struct Assets;
 
 #[tokio::main]
 async fn main() {
-    let service = pwrs::Router::new()
+    let service = prest::Router::new()
         .merge(shared::ui::service())
-        .layer(pwrs::host::embed(Assets));
-    pwrs::host::serve(service, 80).await.unwrap();
+        .layer(prest::host::embed(Assets));
+    prest::host::serve(service, 80).await.unwrap();
 }
 

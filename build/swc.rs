@@ -63,7 +63,7 @@ pub fn run(main: &str, minify: bool, tree_shaking: bool) -> Result<String, Error
     let code = GLOBALS.set(&Globals::new(), || {
         let globals = Box::leak(Box::new(Globals::default()));
 
-        let mut pwrs = Bundler::new(
+        let mut prest = Bundler::new(
             globals,
             source_map_rc.clone(),
             loader,
@@ -72,7 +72,7 @@ pub fn run(main: &str, minify: bool, tree_shaking: bool) -> Result<String, Error
             hook,
         );
 
-        let mut bundles = pwrs
+        let mut bundles = prest
             .bundle(entries)
             .map_err(|err| println!("{:?}", err))
             .expect("should bundle stuff");

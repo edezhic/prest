@@ -8,6 +8,6 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-pwrs = { path = "../../", features = ["host"] }
+prest = { path = "../../", features = ["host"] }
 maud = "*"
 tokio = { version = "*", features = ["full"] }

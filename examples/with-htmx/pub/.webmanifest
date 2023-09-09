@@ -1,5 +1,5 @@
 {
-    "name": "PWRS app",
+    "name": "prest app",
     "description": "Progressive Web RuSt application example",
     "start_url": "/",
     "display": "standalone",

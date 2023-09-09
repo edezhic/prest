@@ -1,6 +1,6 @@
 mod templates;
 pub use templates::*;
-use pwrs::*;
+use prest::*;
 
 pub fn service() -> Router {
     Router::new()
@@ -15,7 +15,7 @@ pub fn full_html(content: Markup) -> Markup {
     maud::html!(
         html {
             head {
-                title {"PWRS app"}
+                title {"prest app"}
                 link rel="icon" href="/favicon.png" {}
                 link rel="manifest" href="/.webmanifest" {}
                 link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" {}

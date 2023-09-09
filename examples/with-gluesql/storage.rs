@@ -1,6 +1,6 @@
 use std::sync::LazyLock;
 
-use pwrs::*;
+use prest::*;
 pub use gluesql::core::ast_builder::table;
 use gluesql::{core::ast_builder::{Build as BuildSQL}, sled_storage::SledStorage, prelude::{Payload, Value, Glue}};
 

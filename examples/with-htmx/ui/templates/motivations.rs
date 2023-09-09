@@ -17,8 +17,8 @@ pub fn render() -> maud::Markup {
                 li{"because of all these type and memory checks builds might take a while"}
                 li{"this kind of memory management hasn't been implemented in any other mainstream language yet so pretty much everyone gets confused by it at the beginning"}
             }
-            p{"All of that together makes rust a nice fit for low-level/high-load services but lame for prototyping and early stage web development. So, we need a setup which allows to quickly add some HTML/CSS/JS and deploy, while also leaving a clear path to scale for any needs - that's what "b{"pwrs"}" is all about, while pwrsapp is meant to be a simple yet flexible boilerplate to jump-start your projects."}
-            p{"However, if you already have some kind of preferred framework and don't want to rebase whole project on rust - don't worry! You can cherry-pick the pieces of pwrs that seem interesting to you and embed these modules into your existing stack with practically zero runtime overhead."}
+            p{"All of that together makes rust a nice fit for low-level/high-load services but lame for prototyping and early stage web development. So, we need a setup which allows to quickly add some HTML/CSS/JS and deploy, while also leaving a clear path to scale for any needs - that's what "b{"prest"}" is all about, while prestapp is meant to be a simple yet flexible boilerplate to jump-start your projects."}
+            p{"However, if you already have some kind of preferred framework and don't want to rebase whole project on rust - don't worry! You can cherry-pick the pieces of prest that seem interesting to you and embed these modules into your existing stack with practically zero runtime overhead."}
             p{"If you're just starting your rust journey but have some programming experience I'd highly recommend "(link("the official docbook", "doc.rust-lang.org/book"))}
         }
         //(back_button("motivations"))

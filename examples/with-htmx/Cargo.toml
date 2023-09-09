@@ -15,18 +15,18 @@ path = "./host.rs"
 sw = []
 
 [dependencies]
-pwrs = { path = "../../" }
+prest = { path = "../../" }
 maud = "*"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-pwrs = { path = "../../", features = ["host"] }
+prest = { path = "../../", features = ["host"] }
 tokio = { version = "*", features = ["full"] }
 rust-embed = "*"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-pwrs = { path = "../../", features = ["sw"] }
+prest = { path = "../../", features = ["sw"] }
 wasm-bindgen = "*"
 wasm-bindgen-futures = "*"
 
 [build-dependencies]
-pwrs = { path = "../../", features = ["build"] }
+prest = { path = "../../", features = ["build"] }

@@ -1,20 +1,20 @@
 
 #[tokio::main]
 async fn main() {
-    let service = pwrs::Router::new().route("/", pwrs::get(homepage));
+    let service = prest::Router::new().route("/", prest::get(homepage));
 
     // init http -> https redirection service
-    tokio::spawn(pwrs::host::redirect_to_origin("https://localhost"));
+    tokio::spawn(prest::host::redirect_to_origin("https://localhost"));
 
-    let tls_config = pwrs::host::RustlsConfig::from_pem_file("./cert.pem", "./key.pem")
+    let tls_config = prest::host::RustlsConfig::from_pem_file("./cert.pem", "./key.pem")
         .await
         .unwrap();
 
-    pwrs::host::serve_tls(service, tls_config).await.unwrap();
+    prest::host::serve_tls(service, tls_config).await.unwrap();
 }
 
-async fn homepage() -> impl pwrs::IntoResponse {
-    pwrs::maud_to_response(maud::html!(
+async fn homepage() -> impl prest::IntoResponse {
+    prest::maud_to_response(maud::html!(
         html {
             head {
                 title {"With TLS"}

@@ -28,7 +28,7 @@ pub fn render() -> maud::Markup {
         }
         //(forward_button("more about platform support", "platforms"}
 
-        ."highlight architecture"{"Cross-platform frameworks usually require heavy runtimes to run the same code everywhere, but not with rust! Currently pwrsapp includes:"}
+        ."highlight architecture"{"Cross-platform frameworks usually require heavy runtimes to run the same code everywhere, but not with rust! Currently prestapp includes:"}
         
         ."columns-row" {
             ."column" {
@@ -50,12 +50,12 @@ pub fn render() -> maud::Markup {
         ."highlight" {
             p{"the whole app packed in a WASM+WASI binary is just " b{"~2.5mb"}"! This is pretty nuts considering that it includes the server, icons, service worker, and even duplicated UI because both host and sw include it while host also includes the full sw bundle."}
         }
-        //(forward_button("more about pwrsapp internals", "internals"}
+        //(forward_button("more about prestapp internals", "internals"}
 
         h2{"Getting started"}
         ."highlight details"{
             p{"The only prerequisite is the "(link("official rust toolchain", "rustup.rs"))", but I also recommend "(link("VS Code", "code.visualstudio.com"))" IDE for its built-in Git and TypeScript support with "(link("rust-analyzer", "rust-analyzer.github.io"))" extension for the best dev experience."}
-            p{"Now it's time to clone the "(link("pwrsapp repo", "github.com/edezhic/pwrsapp"))" and start playing with it. I'd suggest running " code{"cargo build"}" right away because the first invocation will download, build and cache all the dependencies from sources and it might take considerable time. Anyway, if you'll go straight for " code{"cargo run"}" it will build everything automatically as well. Also, if you're going for active development I'd highly recommend "(link("cargo-watch", "crates.io/crates/cargo-watch"))" to automatically rebuild and rerun the project on changes with a simple " code{"cargo watch -x run"}}
+            p{"Now it's time to clone the "(link("prestapp repo", "github.com/edezhic/prestapp"))" and start playing with it. I'd suggest running " code{"cargo build"}" right away because the first invocation will download, build and cache all the dependencies from sources and it might take considerable time. Anyway, if you'll go straight for " code{"cargo run"}" it will build everything automatically as well. Also, if you're going for active development I'd highly recommend "(link("cargo-watch", "crates.io/crates/cargo-watch"))" to automatically rebuild and rerun the project on changes with a simple " code{"cargo watch -x run"}}
             p{"Beware that the default config intentionally omits the service worker to speed up the local host build for development purposes, but you can include it by adding " code{r#"--features="sw""#}" flag. Another available feature is " code{"containerize"}" which builds host into a wasi container instead of the local executable. You can enable both with " code{r#"--features="sw containerize""#}". Also, you can add the release flag " code{"--release"}" to get faster and smaller binaries, just beware that compilation will take longer. Last but not least - " code{r#"cargo run --features="webview""#}" will start the host and connect a webview to it."}
             p{"That's it, you're all set to build speedy modern apps! This stack allows mixing Rust and TypeScript on pretty much any platform in any way you want without compromising types or memory safety. Some ideas how you can extend the architecture:"}
             ul{

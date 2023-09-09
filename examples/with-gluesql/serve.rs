@@ -1,5 +1,5 @@
 #![feature(lazy_cell)]
-use pwrs::*;
+use prest::*;
 
 mod storage;
 use storage::Todos;
@@ -11,7 +11,7 @@ async fn main() {
         .route("/", get(|| async { ([(header::CONTENT_TYPE, "text/html")], todospage().await.0) }))
         .route("/todo/add", get(add_todo))
         .route("/todo/delete", get(delete_todo));
-    pwrs::host::serve(service, 80).await.unwrap();
+    prest::host::serve(service, 80).await.unwrap();
 }
 
 async fn todospage() -> Markup {

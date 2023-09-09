@@ -26,9 +26,9 @@ pub static REGISTER_SW_SNIPPET: &str = "if ('serviceWorker' in navigator) naviga
 #[macro_export]
 macro_rules! render {
     ($template: ident) => {
-        pwrs::get(|| async {
+        prest::get(|| async {
             (
-                [(pwrs::header::CONTENT_TYPE, "text/html; charset=utf-8")],
+                [(prest::header::CONTENT_TYPE, "text/html; charset=utf-8")],
                 $template::render().0,
             )
         })

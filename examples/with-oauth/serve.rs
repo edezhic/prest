@@ -1,7 +1,7 @@
 #![feature(lazy_cell)]
 
-use pwrs::host::auth::*;
-use pwrs::*;
+use prest::host::auth::*;
+use prest::*;
 use std::{
     collections::HashMap,
     hash::Hash,
@@ -40,20 +40,20 @@ pub type RequireAuthzLayer = RequireAuthorizationLayer<u64, User>;
 
 #[tokio::main]
 async fn main() {
-    pwrs::host::set_dot_env_variables();
+    prest::host::set_dot_env_variables();
     let (auth_svc, session, authn) = init_auth::<u64, User>();
-    let service = pwrs::Router::new()
+    let service = prest::Router::new()
         .route("/protected", get(|| async { "Authorized!" }))
         .route_layer(RequireAuthzLayer::login()) // routes above this layer require logged-in state
         .route("/", get(homepage))
         .merge(auth_svc)
         .layer(authn)
         .layer(session);
-    pwrs::host::serve(service, 80).await.unwrap();
+    prest::host::serve(service, 80).await.unwrap();
 }
 
-async fn homepage() -> impl pwrs::IntoResponse {
-    pwrs::maud_to_response(maud::html!(
+async fn homepage() -> impl prest::IntoResponse {
+    prest::maud_to_response(maud::html!(
         html {
             head {
                 title {"With OAuth"}
@@ -73,7 +73,7 @@ pub fn init_auth<Id: Hash + Eq + Clone + Send + Sync + 'static, User: AuthUser<I
     SessionLayer<SessionMemoryStore>,
     AuthLayer<AuthMemoryStore<Id, User>, Id, User>,
 ) {
-    let secret = pwrs::host::generate_secret::<[u8; 64]>();
+    let secret = prest::host::generate_secret::<[u8; 64]>();
     let session_store = SessionMemoryStore::new();
     let auth_store = Arc::new(RwLock::new(HashMap::new()));
 

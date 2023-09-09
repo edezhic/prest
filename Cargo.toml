@@ -1,5 +1,5 @@
 [package]
-name = "pwrs"
+name = "prest"
 version = "0.0.1"
 edition = "2021"
 
@@ -12,8 +12,8 @@ host = ["dep:tokio", "dep:rust-embed", "dep:rand", "dep:tracing-subscriber", "de
 sw = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:js-sys", "dep:web-sys", "dep:console_error_panic_hook"]
 
 [lib]
-name = "pwrs"
-path = "./pw.rs"
+name = "prest"
+path = "./prest.rs"
 
 [dependencies]
 maud = "*"
