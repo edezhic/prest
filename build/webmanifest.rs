@@ -1,28 +1,43 @@
 use webmanifest::{DisplayMode, Icon, Manifest};
 
-static DEFAULT_DESC: &str = "An installable web application";
-static DEFAULT_BG: &str = "#1e293b";
-static DEFAULT_THEME: &str = "#a21caf";
-static DEFAULT_START: &str = "/";
-static DEFAULT_DISPLAY: DisplayMode = DisplayMode::Standalone;
-static DEFAULT_ICON_SRC: &str = "logo.png";
-static DEFAULT_ICON_SIZE: &str = "512x512";
+pub struct ManifestOptions<'a> {
+    pub name: String,
+    pub desc: String,
+    pub background: String,
+    pub theme: String,
+    pub start: String,
+    pub display: DisplayMode,
+    pub icons: Vec<Icon<'a>>,
+}
 
-pub fn compose() -> String {
-    let name = std::env::var("CARGO_PKG_NAME").unwrap();
-    let desc = if let Ok(desc) = std::env::var("CARGO_PKG_DESCRIPTION") {
-        desc
-    } else {
-        DEFAULT_DESC.to_string()
-    };
-    let manifest = Manifest::builder(&name)
-        .description(&desc)
-        .bg_color(DEFAULT_BG)
-        .theme_color(DEFAULT_THEME)
-        .start_url(DEFAULT_START)
-        .display_mode(DEFAULT_DISPLAY.clone())
-        .icon(&Icon::new(DEFAULT_ICON_SRC, DEFAULT_ICON_SIZE))
-        .build()
-        .unwrap();
-    manifest
+impl Default for ManifestOptions<'_> {
+    fn default() -> Self {
+        Self {
+            name: std::env::var("CARGO_PKG_NAME").unwrap(),
+            desc: if let Ok(desc) = std::env::var("CARGO_PKG_DESCRIPTION") {
+                desc
+            } else {
+                "An installable web application".to_string()
+            },
+            background: "#1e293b".to_owned(),
+            theme: "#a21caf".to_owned(),
+            start: "/".to_owned(),
+            display: DisplayMode::Standalone,
+            icons: vec![Icon::new("logo.png", "512x512")],
+            
+        }
+    }
+}
+
+pub fn compose(opts: ManifestOptions) -> String {
+    let mut manifest = Manifest::builder(&opts.name)
+        .description(&opts.desc)
+        .bg_color(&opts.background)
+        .theme_color(&opts.theme)
+        .start_url(&opts.theme)
+        .display_mode(opts.display.clone());
+    for icon in &opts.icons {
+        manifest = manifest.icon(icon);
+    }
+    manifest.build().unwrap()
 }

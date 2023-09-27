@@ -1,12 +1,12 @@
 # Prest
 
-**Prest** is a **P**rogressive **REST**ful framework designed to quickly start your cross-platform apps. Beware that it's an early WIP - I've verified that rust with the dependencies used here provide a nice development experience, so I've decided to try to compose them in a easy-to-start way: basic PWA is just ~30 lines of code and ~30 lines of cargo config.
+**Prest** is a **P**rogressive **REST**ful framework designed to quickly start your cross-platform apps. Beware that it's an early WIP - I've verified that rust with the dependencies used here provide a nice development experience, so I've decided to try to compose them in a easy-to-start way.
 
 This repo contains a bunch of examples which can be run with `cargo run -p NAME`:
 
-- `hello-world` is the simplest example with just 5 LoC
-- `pwa` is a basic Progressive RESTful app
-- `with-htmx` includes ~fancy UI
+- `hello-world` is the simplest example in just 5 LoC
+- `hello-world-pwa` is a basic Progressive RESTful app
+- `blog` is a bit fancier and describes what this project is about (WIP)
 - `with-oauth` includes Google OAuth flow and basic authz/authn boilerplate
 - `with-tls` includes HTTPS server
 - `with-scraping` includes parser for a news website

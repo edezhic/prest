@@ -23,18 +23,6 @@ pub use tower::{Layer, Service};
 
 pub static REGISTER_SW_SNIPPET: &str = "if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {type: 'module'});";
 
-#[macro_export]
-macro_rules! render {
-    ($template: ident) => {
-        prest::get(|| async {
-            (
-                [(prest::header::CONTENT_TYPE, "text/html; charset=utf-8")],
-                $template::render().0,
-            )
-        })
-    };
-}
-
 pub fn maud_to_response(markup: Markup) -> impl IntoResponse {
     ([(header::CONTENT_TYPE, "text/html; charset=utf-8")], markup.0)
 }

@@ -1,10 +1,9 @@
 [package]
-name = "pwa"
+name = "hello-world-pwa"
 version = "0.0.1"
 edition = "2021"
 
 [lib]
-name = "serve"
 path = "./serve.rs"
 
 [[bin]]

@@ -1,11 +1,11 @@
 use crate::ui::external_link::render as link;
 pub fn render() -> maud::Markup {
     maud::html!(
-        h1{b{"p"}"rogressive " b{"w"}"eb " b{"r"}"u" b{"s"}"t " b{"app"}"lication"}
+        h1{b{"PREST"}}
         ."highlight summary"{
-            p{b{"Progressive"}" app that starts as a web page and can bootstrap up to a native one"}
-            p{"based on " b{"Web"}" standards such as HTML, CSS, TS/JS, APIs, WASM, WASI et cetera"}
-            p{"written in " b{"Rust"}" for safety and speed on a wide range of platforms"}
+            p{"Progressive RESTful app that starts as a web page and can bootstrap up to a native one"}
+            p{"based on web standards such as HTML, CSS, TS/JS, APIs, WASM, WASI et cetera"}
+            p{"written in Rust for safety and speed on a wide range of platforms"}
         }
         //(forward_button("more about PWAs and Rust", "motivations"))
 
