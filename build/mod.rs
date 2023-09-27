@@ -99,7 +99,7 @@ fn read_lib_name() -> String {
     } else {
         parsed["package"]["name"].as_str().unwrap().to_owned()
     };
-    lib_name
+    lib_name.replace("-", "_")
 }
 
 // cargo:rerun-if-changed invalidates build caches if anything changes there

@@ -1,14 +1,14 @@
 #![allow(dead_code)]
 
 fn shared_routes() -> prest::Router {
-    prest::Router::new().route("/", prest::get(|| async { prest::maud_to_response(
-        maud::html!(
-            (prest::head("Prest app", Some(maud::html!(link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css"{}))))
-            body {
-                h1{"Progressive RESTful application"}
-            }
-        )
-    )}))
+    prest::Router::new().route(
+        "/",
+        prest::get(|| async {
+            prest::maud_to_response(
+                maud::html!((prest::head("Hello world PWA", None)) body {"Hello world!"}),
+            )
+        }),
+    )
 }
 
 #[cfg(feature = "host")]
