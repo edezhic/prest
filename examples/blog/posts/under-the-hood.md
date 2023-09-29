@@ -4,7 +4,7 @@ Second, it's based on Web standards because they are as cross-platform as it get
 
 Third, it's written in Rust because it provides reliability, performance and a great WASM ecosystem.
 
-There are plenty of dependencies...
+There are plenty of dependencies... maud, tokio, 
 
 Notes about architectural choices:
 * WRY - awesome but I decided to focus on PWA thing, seems to have better platform support and easier to use. 

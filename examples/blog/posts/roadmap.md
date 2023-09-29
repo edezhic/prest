@@ -12,6 +12,9 @@ This is a hobby project so there are no solid long-term plans. However, there ar
 - `native` wry/tauri stuff
 and many others. The goal here is to try to work with different things from Prest. Especially things which might run on both client and server like GlueSQL.
 
+### More middleware
+Catch panic, compression, ...
+
 ### API simplification and customization
 Current API is very rigid and nowhere near stability. It's quite simple already but should be simplified and integrated with more other Rust web dev crates before even considering stabilization. Also, hardcoded things should be moved into Default impls of config structs/enums.
 

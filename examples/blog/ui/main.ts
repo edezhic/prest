@@ -1,1 +1,0 @@
-import './scripts/inline_svgs';

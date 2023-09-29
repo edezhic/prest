@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-mod ui;
+mod pages;
 
 #[cfg(feature = "host")]
 #[derive(rust_embed::RustEmbed, Clone)]
@@ -8,19 +8,14 @@ mod ui;
 struct Assets;
 
 #[cfg(feature = "host")]
-#[derive(rust_embed::RustEmbed, Clone)]
-#[folder = "./icons"]
-struct Icons;
-
-#[cfg(feature = "host")]
 #[tokio::main]
 async fn main() {
-    let service = ui::service().layer(prest::host::embed(Assets)).layer(prest::host::embed(Icons));
+    let service = pages::service().layer(prest::host::embed(Assets));
     prest::host::serve(service, 80).await.unwrap();
 }
 
 #[cfg(feature = "sw")]
 #[wasm_bindgen::prelude::wasm_bindgen]
 pub async fn serve(sw: prest::sw::ServiceWorkerGlobalScope, event: prest::sw::FetchEvent) {
-    prest::sw::process_fetch_event(ui::service, sw, event).await
+    prest::sw::process_fetch_event(pages::service, sw, event).await
 }

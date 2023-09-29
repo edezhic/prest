@@ -12,6 +12,7 @@ pub use axum::{
     self,
     body::{Body, HttpBody},
     extract::*,
+    middleware,
     response::{IntoResponse, Redirect, Response},
     routing::{any, delete, get, patch, post, put},
     Router,
@@ -20,6 +21,7 @@ pub use bytes;
 pub use http::{self, header, HeaderMap, StatusCode};
 pub use maud::{Markup, PreEscaped};
 pub use tower::{Layer, Service};
+pub use tower_http as http_middleware;
 
 pub static REGISTER_SW_SNIPPET: &str = "if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {type: 'module'});";
 

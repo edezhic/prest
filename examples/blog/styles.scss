@@ -1,0 +1,42 @@
+header.top {
+  padding: 0.5rem;
+  .logo {
+    margin-bottom: 0;
+    a {
+      color: rgb(26, 179, 230);
+      :hover {
+        color: rgb(63 193 237);
+      }
+    }
+  }
+}
+
+.icon {
+  color: #bbb;
+  margin-left: 0.75rem;
+}
+
+/*
+ * View Transition styles
+ */
+@keyframes fade-in {
+  from {
+      opacity: 0;
+      transform: translateX(90px);
+  }
+}
+@keyframes fade-out {
+  to {
+      opacity: 0;
+      transform: translateX(-90px);
+  }
+}
+::view-transition-old(slide-it) {
+  animation: 300ms cubic-bezier(0.4, 0, 1, 1) both fade-out;
+}
+::view-transition-new(slide-it) {
+  animation: 420ms cubic-bezier(0, 0, 0.2, 1) 90ms both fade-in;
+}
+.slide-transition {
+  view-transition-name: slide-it;
+}
