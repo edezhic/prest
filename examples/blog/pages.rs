@@ -38,9 +38,8 @@ fn full_html(content: Markup) -> Markup {
     maud::html!(
         html data-theme="dark" {
             (prest::head("Prest Blog", Some(maud::html!(
-                link rel="stylesheet" href="/ui.css" {}
                 link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"{}
-                script src="/ui.js"{}
+                link rel="stylesheet" href="/ui.css" {}
                 script src="https://unpkg.com/htmx.org@1.9.0" integrity="sha384-aOxz9UdWG0yBiyrTwPeMibmaoq07/d3a96GCbb9x60f3mOt5zwkjdbcHFnKH8qls" crossorigin="anonymous"{}
             ))))
             body { 

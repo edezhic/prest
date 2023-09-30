@@ -1,0 +1,17 @@
+[package]
+name = "with-ui-typescript"
+version = "0.0.1"
+edition = "2021"
+
+[[bin]]
+name = "serve"
+path = "./serve.rs"
+
+[dependencies]
+prest = { path = "../../", features = ["host"] }
+tokio = "*"
+maud = "*"
+rust-embed = { version = "*", features = ["interpolate-folder-path"] }
+
+[build-dependencies]
+prest = { path = "../../", features = ["build", "typescript"] }

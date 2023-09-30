@@ -1,7 +1,8 @@
 mod sw;
-mod swc;
 mod wasm_bindgen;
 mod webmanifest;
+#[cfg(feature = "typescript")]
+mod swc;
 
 use std::{
     format as f,
@@ -23,6 +24,7 @@ pub static WASM_WASI: &str = "wasm32-wasi";
 pub static DEFAULT_LOGO: &[u8] = include_bytes!("assets/logo.png");
 pub static DEFAULT_FAVICON: &[u8] = include_bytes!("assets/favicon.ico");
 
+#[cfg(feature = "typescript")]
 pub fn bundle_ts(input: &str, filename: &str) {
     let start = Instant::now();
     track_non_rust_path(input); // track imports?

@@ -13,7 +13,7 @@ categories = ["development-tools", "wasm", "web-programming"]
 members = ["examples/*"]
 
 [features]
-build = ["dep:toml", "dep:grass", "dep:wasm-bindgen-cli-support", "dep:webmanifest", "typescript"]
+build = ["dep:toml", "dep:grass", "dep:wasm-bindgen-cli-support", "dep:webmanifest"]
 host = ["dep:tokio", "dep:rust-embed", "dep:rand", "dep:tracing-subscriber", "dep:axum-server", "dep:axum-login", "dep:dotenv", "dep:openidconnect"]
 sw = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:js-sys", "dep:web-sys", "dep:console_error_panic_hook"]
 typescript = ["dep:swc", "dep:swc_atoms", "dep:swc_bundler", "dep:swc_common", "dep:swc_config", "dep:swc_ecma_parser", "dep:swc_ecma_ast", "dep:swc_ecma_codegen", "dep:swc_ecma_loader", "dep:swc_ecma_minifier", "dep:swc_ecma_transforms_base", "dep:swc_ecma_transforms_typescript", "dep:swc_ecma_visit"]
