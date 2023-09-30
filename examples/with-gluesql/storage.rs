@@ -1,10 +1,9 @@
-use std::sync::LazyLock;
-
+use once_cell::sync::Lazy;
 use prest::*;
 pub use gluesql::core::ast_builder::table;
 use gluesql::{core::ast_builder::{Build as BuildSQL}, sled_storage::SledStorage, prelude::{Payload, Value, Glue}};
 
-static STORE: LazyLock<SledStorage> = LazyLock::new(|| { gluesql::sled_storage::SledStorage::new("sled_db").unwrap() });
+static STORE: Lazy<SledStorage> = Lazy::new(|| { gluesql::sled_storage::SledStorage::new("sled_db").unwrap() });
 
 pub struct Todo {
     pub uuid: String,

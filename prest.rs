@@ -1,5 +1,3 @@
-#![feature(allocator_api, type_alias_impl_trait, lazy_cell)]
-
 #[cfg(feature = "build")]
 pub mod build;
 #[cfg(feature = "host")]
@@ -45,12 +43,7 @@ pub fn head(title: &str, other: Option<Markup>) -> Markup {
     )
 }
 
-use std::{
-    alloc::Global,
-    future::Future,
-    pin::Pin,
-    task::{Context, Poll},
-};
+use std::task::{Context, Poll};
 
 type PageWrapper = fn(Markup) -> Markup;
 
@@ -89,8 +82,7 @@ where
 {
     type Response = S::Response;
     type Error = S::Error;
-    type Future =
-        Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'static, Global>>;
+    type Future = futures_util::future::BoxFuture<'static, Result<Self::Response, Self::Error>>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.inner.poll_ready(cx)

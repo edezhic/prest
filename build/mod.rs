@@ -8,7 +8,7 @@ use std::{
     format as f,
     fs::{create_dir_all, read_to_string, rename, write},
     process::Command,
-    time::Instant, sync::LazyLock,
+    time::Instant,
 };
 
 pub static SW_TARGET_DIR: &str = "target_sw";
@@ -76,7 +76,8 @@ pub fn generate_pwa_assets() {
     bench(&f!("built service worker"), start);
 }
 
-static ASSETS_DIR: LazyLock<String> = LazyLock::new(|| {
+use once_cell::sync::Lazy;
+static ASSETS_DIR: Lazy<String> = Lazy::new(|| {
     let dir = f!("{}/assets", std::env::var("OUT_DIR").unwrap());
     create_dir_all(&dir).unwrap();
     dir

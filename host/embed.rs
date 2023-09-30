@@ -1,6 +1,6 @@
 use crate::*;
 use rust_embed::RustEmbed;
-use std::{task::{Context, Poll}, pin::Pin, future::Future, alloc::Global};
+use std::task::{Context, Poll};
 
 pub fn embed<T: RustEmbed + Clone>(assets: T) -> Embed<T> {
     Embed { assets }
@@ -33,7 +33,7 @@ where
 {
     type Response = S::Response;
     type Error = S::Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'static, Global>>;
+    type Future = futures_util::future::BoxFuture<'static, Result<Self::Response, Self::Error>>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.inner.poll_ready(cx)

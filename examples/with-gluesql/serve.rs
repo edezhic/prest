@@ -1,4 +1,3 @@
-#![feature(lazy_cell)]
 use prest::*;
 
 mod storage;

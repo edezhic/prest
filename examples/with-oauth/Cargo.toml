@@ -11,3 +11,4 @@ path = "./serve.rs"
 prest = { path = "../../", features = ["host"] }
 maud = "*"
 tokio = { version = "*", features = ["full"] }
+once_cell = "*"

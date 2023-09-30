@@ -1,3 +1,5 @@
+Rust with the dependencies used here provide nice results, so I've decided to try to compose them in a easy-to-start way.
+
 The initial inspiration comes from [this](https://github.com/richardanaya/wasm-service) simple PoC - a combination of a Service Worker based on Rust compiled into WebAssembly and HTMX library. While such mix looks odd at first sight it actually provides a couple of extremely nice properties:
 
 1. Really RESTful architecture - you don't even have to reach beyond HTML to build an interactive installable app

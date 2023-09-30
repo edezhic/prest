@@ -1,14 +1,13 @@
 This is a hobby project so there are no solid long-term plans. However, there are things that I'll most likely spend time on in the foreseeable future:
 
 ### More examples
-- `with-language-model`
+- `with-mistral-llm` - https://github.com/huggingface/candle/blob/main/candle-examples/examples/mistral/main.rs
 - `with-diesel`
 - `with-blockchain`
-- tracing for the SW - https://github.com/old-storyai/tracing-wasm
 - Askama/other template engines
-- GlueSQL for the SW
+- Tracing for the SW - https://github.com/old-storyai/tracing-wasm
+- GlueSQL for the SW - https://gluesql.org/docs/0.14/getting-started/javascript-web 
 - `with-webrtc`?
-- `blog`
 - `native` wry/tauri stuff
 and many others. The goal here is to try to work with different things from Prest. Especially things which might run on both client and server like GlueSQL.
 

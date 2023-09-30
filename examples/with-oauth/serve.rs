@@ -1,15 +1,14 @@
-#![feature(lazy_cell)]
-
 use prest::host::auth::*;
 use prest::*;
 use std::{
     collections::HashMap,
     hash::Hash,
-    sync::{Arc, LazyLock},
+    sync::Arc,
 };
+use once_cell::sync::Lazy;
 use tokio::sync::RwLock;
 
-static GCLIENT: LazyLock<GoogleClient> = LazyLock::new(|| {
+static GCLIENT: Lazy<GoogleClient> = Lazy::new(|| {
     tokio::task::block_in_place(|| {
         tokio::runtime::Handle::current().block_on(GoogleClient::init(
             "http://localhost",

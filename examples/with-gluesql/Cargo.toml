@@ -15,3 +15,4 @@ futures = "*"
 uuid = { version = "*", features = ["v4"] }
 tokio = "*"
 gluesql = { git = "https://github.com/gluesql/gluesql", default-features = false, features = ["sled-storage"]}
+once_cell = "*"

@@ -32,6 +32,8 @@ anyhow = "*"
 serde = "*"
 hex = "*"
 tower-http = { version = "*", features = ["trace", "catch-panic", "cors", "set-header"] }
+futures-util = "*"
+once_cell = "*"
 
 # Host deps:
 tokio = { version = "*", features = ["full"], optional = true }
