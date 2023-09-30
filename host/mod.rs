@@ -16,10 +16,24 @@ pub fn generate_secret<T>() -> T
     rand::Rng::gen::<T>(&mut rand::thread_rng())
 }
 
-pub async fn serve(router: Router, port: u16) -> Result<()> {
+pub struct Addr {
+    pub ip: [u8; 4],
+    pub port: u16
+}
+
+impl Default for Addr {
+    fn default() -> Self {
+        Self {
+            ip: [0, 0, 0, 0],
+            port: 80,
+        }
+    }
+}
+
+pub async fn serve(router: Router, addr: Addr) -> Result<()> {
     let svc = router.into_make_service();
-    let http_addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
-    axum_server::bind(http_addr).serve(svc).await?;
+    let socket_addr = std::net::SocketAddr::from((addr.ip, addr.port));
+    axum_server::bind(socket_addr).serve(svc).await?;
     anyhow::bail!("Server stopped without emitting errors")
 }
 

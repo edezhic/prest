@@ -11,7 +11,7 @@ struct Assets;
 #[tokio::main]
 async fn main() {
     let service = pages::service().layer(prest::host::embed(Assets));
-    prest::host::serve(service, 80).await.unwrap();
+    prest::host::serve(service, Default::default()).await.unwrap();
 }
 
 #[cfg(feature = "sw")]

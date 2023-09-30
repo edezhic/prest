@@ -48,7 +48,7 @@ async fn main() {
         .merge(auth_svc)
         .layer(authn)
         .layer(session);
-    prest::host::serve(service, 80).await.unwrap();
+    prest::host::serve(service, Default::default()).await.unwrap();
 }
 
 async fn homepage() -> impl prest::IntoResponse {
