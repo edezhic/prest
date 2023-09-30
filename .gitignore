@@ -12,3 +12,5 @@ include_sw.js
 cert.pem
 key.pem
 sled_db
+.replit
+replit.nix
