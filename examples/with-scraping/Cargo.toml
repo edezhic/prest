@@ -9,8 +9,8 @@ path = "./serve.rs"
 
 [dependencies]
 prest = { path = "../../", features = ["host"] }
-maud = "*"
-tokio = { version = "*", features = ["full"] }
+maud = "0.25"
+tokio = { version = "1.32", features = ["full"] }
 reqwest = { version = "*", default-features=false, features = ["rustls-tls"] }
 scraper = "*"
 futures = "*"

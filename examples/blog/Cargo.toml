@@ -17,12 +17,12 @@ sw = ["prest/sw", "wasm-bindgen", "wasm-bindgen-futures"]
 
 [dependencies]
 prest = { path = "../../" }
-maud = "*"
+maud = "0.25"
 markdown = "1.0.0-alpha.14"
-rust-embed = { version = "*", features = ["interpolate-folder-path"] }
-tokio = { version = "*", optional = true }
-wasm-bindgen = { version = "*", optional = true }
-wasm-bindgen-futures = { version = "*", optional = true }
+rust-embed = { version = "8", features = ["interpolate-folder-path"] }
+tokio = { version = "1.32", optional = true }
+wasm-bindgen = { version = "0.2.87", optional = true }
+wasm-bindgen-futures = { version = "0.4.37", optional = true }
 
 [build-dependencies]
 prest = { path = "../../" }

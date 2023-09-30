@@ -10,8 +10,8 @@ path = "./serve.rs"
 [dependencies]
 prest = { path = "../../", features = ["host"] }
 tokio = "*"
-maud = "*"
-rust-embed = { version = "*", features = ["interpolate-folder-path"] }
+maud = "0.25"
+rust-embed = { version = "8", features = ["interpolate-folder-path"] }
 
 [build-dependencies]
 prest = { path = "../../", features = ["build", "typescript"] }
