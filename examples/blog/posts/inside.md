@@ -10,7 +10,7 @@ Under the hood `prest` re-exports a whole bunch of libraries for common web deve
 * [rust-embed](https://github.com/pyrossh/rust-embed) - asset bundler optimized for fast debug compilation and packs all the files inside the release binary for fast runtime performance and convenient devops.
 * [js-sys](https://rustwasm.github.io/wasm-bindgen/contributing/js-sys/index.html) and [web-sys](https://rustwasm.github.io/wasm-bindgen/contributing/web-sys/index.html) for all kinds of interactions with JS and Web APIs from rust.
 
-And some that are used in the [build script](https://doc.rust-lang.org/cargo/reference/build-scripts.html): 
+And some that are available for the [build scripts](https://doc.rust-lang.org/cargo/reference/build-scripts.html): 
 
 * [wasm-bindgen](https://rustwasm.github.io/wasm-bindgen/) for JS<->WASM bindings generation. Also supports Rust->TS bindgen for type safety all the way.
 * [swc](https://swc.rs/) - fast TypeScript compiler.
