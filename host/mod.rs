@@ -2,8 +2,10 @@ use super::*;
 
 mod embed;
 pub use embed::embed;
-pub mod auth;
 pub use axum_server::tls_rustls::RustlsConfig;
+
+#[cfg(feature = "auth")]
+pub mod auth;
 
 pub fn set_dot_env_variables() {
     dotenv::dotenv().unwrap();

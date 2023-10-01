@@ -1,7 +1,7 @@
 [package]
 name = "prest"
 description = "Progressive RESTful framework"
-version = "0.1.0"
+version = "0.1.0-alpha"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 homepage = "https://github.com/edezhic/prest"
@@ -14,7 +14,8 @@ members = ["examples/*"]
 
 [features]
 build = ["dep:toml", "dep:grass", "dep:wasm-bindgen-cli-support", "dep:webmanifest"]
-host = ["dep:tokio", "dep:rust-embed", "dep:rand", "dep:tracing-subscriber", "dep:axum-server", "dep:axum-login", "dep:dotenv", "dep:openidconnect"]
+host = ["dep:tokio", "dep:rust-embed", "dep:rand", "dep:tracing-subscriber", "dep:axum-server",  "dep:dotenv"]
+auth = ["dep:axum-login", "dep:openidconnect"]
 sw = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:js-sys", "dep:web-sys", "dep:console_error_panic_hook"]
 typescript = ["dep:swc", "dep:swc_atoms", "dep:swc_bundler", "dep:swc_common", "dep:swc_config", "dep:swc_ecma_parser", "dep:swc_ecma_ast", "dep:swc_ecma_codegen", "dep:swc_ecma_loader", "dep:swc_ecma_minifier", "dep:swc_ecma_transforms_base", "dep:swc_ecma_transforms_typescript", "dep:swc_ecma_visit"]
 

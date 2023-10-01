@@ -11,11 +11,9 @@ Long story short - I want a simple framework based on familiar web technologies,
 
 I want to emphasize focus on HTML and REST in Prest because they are both supported on almost all devices and widely known among the developers. If you haven't worked with web before - I strongly recommend checking out [hypermedia.systems](https://hypermedia.systems/). Such basis makes onboarding extremely simple even for programming newbies and familiar to devs with any web experience. Thanks to the Service Worker you don't need separate client and server rendering pipelines - pretty much everything is possible with usual HTTP requests and HTML responses.
 
-While this approach can handle needs of most apps, I realise that modern UI development consists mostly of JS/TS, SCSS and other tech. And Rust shines here as well! Prest comes with [wasm-bindgen](https://rustwasm.github.io/docs/wasm-bindgen/) for type-safe Rust<->TS integration, [SWC](https://swc.rs/) - TypeScript transpiler and bundler, [grass](https://github.com/connorskees/grass) - SASS preprocessor and more tools will be integrated for developers convenicence.
+While this approach can handle needs of most apps, I realise that modern UI development consists mostly of JS/TS, SCSS and other tech. And Rust shines here as well! Prest comes with [wasm-bindgen](https://rustwasm.github.io/docs/wasm-bindgen/) for type-safe Rust<->TS integration, [SWC](https://swc.rs/) - TypeScript transpiler and bundler, [grass](https://github.com/connorskees/grass) - SASS preprocessor and more tools will be integrated for developers convenicence. For further details check out [the post about Prest's insides](https://prest.blog/inside).
 
-As you can see, Rust ecosystem has all the tooling you'll need to make apps of any level of complexity. And I've decided to build Prest as a relatively thin wrapper around these tools to lower the entry threshold and simplify the first steps.
-
-And the ambition doesn't end here. There are plenty of new technologies being developed primarily in Rust for the next generation of applications:
+As you can see, Rust ecosystem has all the tooling you'll need to make apps of any level of complexity. So I've decided to build Prest as a relatively thin wrapper around these tools to lower the entry threshold and simplify the first steps. And the ambition doesn't end here - there are plenty of new technologies being developed primarily in Rust for the next generation of applications:
 
 * [WASI](https://github.com/bytecodealliance/wasmtime/blob/main/docs/WASI-intro.md) for extremely simple DevOps
 * [WebGPU](https://developer.chrome.com/blog/webgpu-io2023/) for cross-platform AI and complex UIs

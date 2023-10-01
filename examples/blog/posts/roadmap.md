@@ -1,28 +1,16 @@
-This is a hobby project so there are no solid long-term plans. However, there are things that I'll most likely spend time on in the foreseeable future:
+This is a hobby project so there are no solid long-term plans, it's still alpha and not even on [crates.io](https://crates.io/crates/prest) yet because the latest [axum](https://github.com/tokio-rs/axum) is not published yet. However, [it seems quite promising to me](https://prest.blog/motivation) so I have some ideas that I'll likely work on next:
 
-### More examples
-- `with-mistral-llm` - https://github.com/huggingface/candle/blob/main/candle-examples/examples/mistral/main.rs
-- `with-diesel`
-- `with-blockchain`
-- Askama/other template engines
-- Tracing for the SW - https://github.com/old-storyai/tracing-wasm
-- GlueSQL for the SW - https://gluesql.org/docs/0.14/getting-started/javascript-web 
+### Examples
+- [with-candle-mistral](https://github.com/huggingface/candle/tree/main/candle-examples/examples/mistral)
+- `with-blockchain` (solana? polkadot? other?)
+- `with-diesel` with postgres and sqlite
+- [with-askama](https://github.com/djc/askama)
+- [with-tinytemplate](https://crates.io/crates/tinytemplate)
+- [with-tauri](https://beta.tauri.app/)
 - `with-webrtc`?
-- `native` wry/tauri stuff
-and many others. The goal here is to try to work with different things from Prest. Especially things which might run on both client and server like GlueSQL.
 
-### More middleware
-Catch panic, compression, ...
+### Middleware
+Include [tower_http](https://docs.rs/tower-http/latest/tower_http/) and probably some shared BE/FE layers like [tracing](https://github.com/old-storyai/tracing-wasm) or smth for [GlueSQL](https://gluesql.org/docs/0.14/getting-started/javascript-web).
 
-### API simplification and customization
-Current API is very rigid and nowhere near stability. It's quite simple already but should be simplified and integrated with more other Rust web dev crates before even considering stabilization. Also, hardcoded things should be moved into Default impls of config structs/enums.
-
-### Publication & Stabilisation 
-As of now there is a number of unstable deps, Axum probably being the brightest example because the required version is not even published yet, so these things are on hold for unknown time.
-
-### WASI
-A really cool thing that simplifies devops x1000, but devex still sucks because of the missing ecosystem support and features. 
-
-### Other things
-host: catch panic, compression layers, other tower-http (and not only) middleware? just reexport or ...?
-Tests, docs etc
+### Ergonomics
+Less basic boilerplate, more configs with reasonable defaults instead of hardcoded values.
