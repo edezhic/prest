@@ -10,7 +10,7 @@ This is a hobby project so there are no solid long-term plans, it's still alpha 
 - `with-webrtc`?
 
 ### Middleware
-Include [tower_http](https://docs.rs/tower-http/latest/tower_http/) and probably some shared BE/FE layers like [tracing](https://github.com/old-storyai/tracing-wasm) or smth for [GlueSQL](https://gluesql.org/docs/0.14/getting-started/javascript-web).
+Include [tower_http](https://docs.rs/tower-http/latest/tower_http/) and probably some shared BE/FE layers like tracing ([1](https://github.com/old-storyai/tracing-wasm), [2](https://docs.rs/tracing-chrome/latest/tracing_chrome/)) or smth for [GlueSQL](https://gluesql.org/docs/0.14/getting-started/javascript-web).
 
 ### Ergonomics
 Less basic boilerplate, more configs with reasonable defaults instead of hardcoded values.
