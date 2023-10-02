@@ -1,8 +1,10 @@
+#![allow(dead_code, unused_imports)]
+
 #[cfg(feature = "build")]
 pub mod build;
 #[cfg(feature = "host")]
 pub mod host;
-#[cfg(feature = "sw")]
+#[cfg(feature = "bindgen")]
 pub mod sw;
 
 pub use anyhow::{self, Result};
@@ -15,7 +17,6 @@ pub use axum::{
     routing::{any, delete, get, patch, post, put},
     Router,
 };
-pub use bytes;
 pub use http::{self, header, HeaderMap, StatusCode};
 pub use maud::{Markup, PreEscaped};
 pub use tower::{Layer, Service};
@@ -43,21 +44,25 @@ pub fn head(title: &str, other: Option<Markup>) -> Markup {
     )
 }
 
+#[cfg(feature = "htmx")]
 use std::task::{Context, Poll};
 
 type PageWrapper = fn(Markup) -> Markup;
 
+#[cfg(feature = "htmx")]
 #[derive(Clone)]
 pub struct Htmxify {
     pub wrapper: PageWrapper,
 }
 
+#[cfg(feature = "htmx")]
 impl Htmxify {
     pub fn wrap(wrapper: PageWrapper) -> Self {
         Self { wrapper }
     }
 }
 
+#[cfg(feature = "htmx")]
 impl<S> Layer<S> for Htmxify {
     type Service = HtmxMiddleware<S>;
 
@@ -69,17 +74,20 @@ impl<S> Layer<S> for Htmxify {
     }
 }
 
+#[cfg(feature = "htmx")]
 #[derive(Clone)]
 pub struct HtmxMiddleware<S> {
     wrapper: PageWrapper,
     inner: S,
 }
 
+#[cfg(feature = "htmx")]
 impl<S> Service<Request<Body>> for HtmxMiddleware<S>
 where
     S: Service<Request<Body>, Response = Response> + Send + 'static,
     S::Future: Send + 'static,
 {
+  
     type Response = S::Response;
     type Error = S::Error;
     type Future = futures_util::future::BoxFuture<'static, Result<Self::Response, Self::Error>>;

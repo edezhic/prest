@@ -13,14 +13,16 @@ categories = ["development-tools", "wasm", "web-programming"]
 members = ["examples/*"]
 
 [features]
+htmx = ["bytes"]
+
 host = ["rust-embed", "axum-server"]
-auth = ["axum-login", "openidconnect", "random", "dot_env"]
+auth = ["axum-login", "openidconnect", "random", "dot_env", "serde"]
 tls = ["axum-server/tls-rustls"]
 random = ["rand"]
 dot_env = ["dotenv"]
 tracing-sub = ["tracing-subscriber"]
 
-bindgen = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "web-sys", "console_error_panic_hook"]
+bindgen = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "web-sys", "console_error_panic_hook", "bytes"]
 
 build = ["toml"]
 sass = ["grass"]
@@ -35,14 +37,15 @@ path = "./prest.rs"
 axum = { git = "https://github.com/tokio-rs/axum", default-features = false, features = ["json", "query", "form"] }
 maud = "0.25"
 http = "0.2.9" 
-bytes = "1.5"
 tower = "0.4.13"
 anyhow = "1.0.75"
-serde = "1.0.188"
+
 hex = "0.4.3"
 tower-http = { version = "0.4.4", features = ["trace", "catch-panic", "cors", "set-header"] }
 futures-util = "0.3.28"
 once_cell = "1.18"
+
+bytes = { version = "1.5", optional = true }
 
 # Host deps:
 # --- fork to switch axum to the latest(unstable) main like here
@@ -53,6 +56,7 @@ tracing-subscriber = { version = "0.3.17", features = ["fmt"], optional = true }
 axum-server = { version = "0.5.1", optional = true }
 openidconnect = { version = "3.3.1", optional = true }
 dotenv = { version = "0.15", optional = true }
+serde = { version = "1", optional = true }
 
 # Build deps:
 grass = { version = "0.13.1", optional = true }
@@ -93,8 +97,4 @@ features = [
     "ServiceWorkerGlobalScope",
     "WorkerGlobalScope",
     "WorkerLocation",
-]   
-
-[profile.release]
-lto = true
-strip = true
+]
