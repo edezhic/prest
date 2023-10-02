@@ -13,11 +13,19 @@ categories = ["development-tools", "wasm", "web-programming"]
 members = ["examples/*"]
 
 [features]
-build = ["dep:toml", "dep:grass", "dep:wasm-bindgen-cli-support", "dep:webmanifest"]
-host = ["dep:tokio", "dep:rust-embed", "dep:rand", "dep:tracing-subscriber", "dep:axum-server",  "dep:dotenv"]
-auth = ["dep:axum-login", "dep:openidconnect"]
-sw = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:js-sys", "dep:web-sys", "dep:console_error_panic_hook"]
-typescript = ["dep:swc", "dep:swc_atoms", "dep:swc_bundler", "dep:swc_common", "dep:swc_config", "dep:swc_ecma_parser", "dep:swc_ecma_ast", "dep:swc_ecma_codegen", "dep:swc_ecma_loader", "dep:swc_ecma_minifier", "dep:swc_ecma_transforms_base", "dep:swc_ecma_transforms_typescript", "dep:swc_ecma_visit"]
+host = ["rust-embed", "axum-server"]
+auth = ["axum-login", "openidconnect", "random", "dot_env"]
+tls = ["axum-server/tls-rustls"]
+random = ["rand"]
+dot_env = ["dotenv"]
+tracing-sub = ["tracing-subscriber"]
+
+bindgen = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "web-sys", "console_error_panic_hook"]
+
+build = ["toml"]
+sass = ["grass"]
+pwa = ["wasm-bindgen-cli-support", "webmanifest"]
+typescript = ["swc", "swc_atoms", "swc_bundler", "swc_common", "swc_config", "swc_ecma_parser", "swc_ecma_ast", "swc_ecma_codegen", "swc_ecma_loader", "swc_ecma_minifier", "swc_ecma_transforms_base", "swc_ecma_transforms_typescript", "swc_ecma_visit"]
 
 [lib]
 name = "prest"
@@ -39,12 +47,10 @@ once_cell = "1.18"
 # Host deps:
 # --- fork to switch axum to the latest(unstable) main like here
 axum-login = { git = "https://github.com/edezhic/axum-login", optional = true } 
-# ---
-tokio = { version = "1.32", features = ["full"], optional = true }
 rust-embed = { version = "8", features = ["mime-guess"], optional = true }
 rand = { version = "0.8.5", features = ["min_const_gen"], optional = true }
 tracing-subscriber = { version = "0.3.17", features = ["fmt"], optional = true } 
-axum-server = { version = "0.5.1", features = ["tls-rustls"], optional = true }
+axum-server = { version = "0.5.1", optional = true }
 openidconnect = { version = "3.3.1", optional = true }
 dotenv = { version = "0.15", optional = true }
 

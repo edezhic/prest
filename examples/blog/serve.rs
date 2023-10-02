@@ -8,7 +8,7 @@ mod pages;
 struct Assets;
 
 #[cfg(feature = "host")]
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]
 async fn main() {
     let service = pages::service().layer(prest::host::embed(Assets));
     prest::host::serve(service, Default::default()).await.unwrap();

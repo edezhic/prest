@@ -1,8 +1,12 @@
+#[cfg(feature = "pwa")]
 mod sw;
-mod wasm_bindgen;
-mod webmanifest;
 #[cfg(feature = "typescript")]
 mod swc;
+#[cfg(feature = "pwa")]
+mod wasm_bindgen;
+#[cfg(feature = "pwa")]
+mod webmanifest;
+
 
 use std::{
     format as f,
@@ -21,7 +25,9 @@ pub static PROFILE: &str = "release";
 pub static WASM_UNK: &str = "wasm32-unknown-unknown";
 pub static WASM_WASI: &str = "wasm32-wasi";
 
+#[cfg(feature = "pwa")]
 pub static DEFAULT_LOGO: &[u8] = include_bytes!("assets/logo.png");
+#[cfg(feature = "pwa")]
 pub static DEFAULT_FAVICON: &[u8] = include_bytes!("assets/favicon.ico");
 
 #[cfg(feature = "typescript")]
@@ -33,6 +39,7 @@ pub fn bundle_ts(input: &str, filename: &str) {
     bench(&f!("{input} transpiled and bundled as {filename}"), start);
 }
 
+#[cfg(feature = "sass")]
 pub fn bundle_scss(input: &str, filename: &str) {
     let start = Instant::now();
     track_non_rust_path(input); // track imports?
@@ -41,6 +48,7 @@ pub fn bundle_scss(input: &str, filename: &str) {
     bench(&f!("{input} transpiled and bundled as {filename}"), start);
 }
 
+#[cfg(feature = "pwa")]
 pub fn generate_pwa_assets() {
     use sw::append_sw_listeners;
     let start = Instant::now();
