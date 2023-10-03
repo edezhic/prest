@@ -1,5 +1,5 @@
 [package]
-name = "with-mistral-inference"
+name = "with-llm-chat"
 version = "0.0.1"
 edition = "2021"
 
@@ -11,10 +11,14 @@ path = "./serve.rs"
 prest = { path = "../../", features = ["host"] }
 tokio = { version = "1.32", features = ["rt", "net", "macros"] }
 maud = "0.25"
+once_cell = "*"
+
 hf-hub = "0.3.0"
 tokenizers = { version = "0.13.4", default-features = false }
 candle = { git = "https://github.com/huggingface/candle", package = "candle-core" }
 candle-datasets = { git = "https://github.com/huggingface/candle" }
 candle-transformers = { git = "https://github.com/huggingface/candle" }
+
+
 
 

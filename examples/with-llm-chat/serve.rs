@@ -1,14 +1,28 @@
-mod generator;
+mod llm;
 use prest::*;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    start_printing_traces();
-    let mut generator = generator::Mistral::new().unwrap();
-    generator.session("I want to talk about", 3).unwrap();
+    //start_printing_traces();
+    /*
+    let mut chat = chat::load(generator::Config { 
+        seed: 123456789, 
+        repeat_penalty: 1.1, 
+        repeat_last_n: 64, 
+        temperature: None, 
+        top_p: None, 
+    }).unwrap();
+    chat.prompt("It goes like this:").unwrap();
+    while let Ok(Some(text)) = chat.answering() {
+        print!("{text}");
+        use std::io::Write;
+        std::io::stdout().flush().unwrap();
+    }
+     */
 
     let service = Router::new()
         .route("/", get(|| async { "With Mistral inference!" }))
+        .route("/model", get(|| async { todo!("WS handler") }))
         .layer(http_tracing());
     serve(service, Default::default()).await.unwrap();
 }
