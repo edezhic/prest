@@ -1,11 +1,12 @@
 #![allow(dead_code)]
+use prest::*;
 
-fn shared_routes() -> prest::Router {
-    prest::Router::new().route(
+fn shared_routes() -> Router {
+    Router::new().route(
         "/",
-        prest::get(|| async {
-            prest::maud_to_response(
-                maud::html!((prest::head("Hello world PWA", None)) body {"Hello world!"}),
+        get(|| async {
+            maud_to_response(
+                maud::html!((maud_head("Hello world PWA", None)) body {"Hello world!"}),
             )
         }),
     )
@@ -19,12 +20,12 @@ struct Assets;
 #[cfg(feature = "host")]
 #[tokio::main]
 async fn main() {
-    let service = shared_routes().layer(prest::host::embed(Assets));
-    prest::host::serve(service, Default::default()).await.unwrap();
+    let service = shared_routes().layer(middleware::embed(Assets));
+    serve(service, Default::default()).await.unwrap();
 }
 
 #[cfg(feature = "sw")]
 #[wasm_bindgen::prelude::wasm_bindgen]
-pub async fn serve(sw: prest::sw::ServiceWorkerGlobalScope, event: prest::sw::FetchEvent) {
-    prest::sw::process_fetch_event(shared_routes, sw, event).await
+pub async fn serve(sw: sw::ServiceWorkerGlobalScope, event: sw::FetchEvent) {
+    sw::process_fetch_event(shared_routes, sw, event).await
 }

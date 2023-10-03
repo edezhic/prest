@@ -1,122 +1,23 @@
 #![allow(dead_code, unused_imports)]
 
-#[cfg(feature = "build")]
-pub mod build;
-#[cfg(feature = "host")]
-pub mod host;
-#[cfg(feature = "bindgen")]
-pub mod sw;
-
 pub use anyhow::{self, Result};
+pub use http::{self, header, HeaderMap, HeaderValue, StatusCode};
 pub use axum::{
     self,
     body::{Body, HttpBody},
     extract::*,
-    middleware,
     response::{IntoResponse, Redirect, Response},
     routing::{any, delete, get, patch, post, put},
     Router,
 };
-pub use http::{self, header, HeaderMap, StatusCode};
-pub use maud::{Markup, PreEscaped};
-pub use tower::{Layer, Service};
-pub use tower_http as http_middleware;
 
-pub static REGISTER_SW_SNIPPET: &str = "if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {type: 'module'});";
+pub mod middleware;
 
-pub fn maud_to_response(markup: Markup) -> impl IntoResponse {
-    ([(header::CONTENT_TYPE, "text/html; charset=utf-8")], markup.0)
-}
+mod utils;
+pub use utils::*;
 
-pub fn head(title: &str, other: Option<Markup>) -> Markup {
-    maud::html!(
-        head {
-            title {(title)}
-            link rel="icon" href="/favicon.ico" {}
-            link rel="manifest" href="/.webmanifest" {}
-            script {(REGISTER_SW_SNIPPET)}
-            meta name="viewport" content="width=device-width, initial-scale=1.0";
-            meta name="theme-color" content="#a21caf";
-            @if let Some(markup) = other {
-                (markup)
-            }
-        }
-    )
-}
+#[cfg(feature = "build")]
+pub mod build;
 
-#[cfg(feature = "htmx")]
-use std::task::{Context, Poll};
-
-type PageWrapper = fn(Markup) -> Markup;
-
-#[cfg(feature = "htmx")]
-#[derive(Clone)]
-pub struct Htmxify {
-    pub wrapper: PageWrapper,
-}
-
-#[cfg(feature = "htmx")]
-impl Htmxify {
-    pub fn wrap(wrapper: PageWrapper) -> Self {
-        Self { wrapper }
-    }
-}
-
-#[cfg(feature = "htmx")]
-impl<S> Layer<S> for Htmxify {
-    type Service = HtmxMiddleware<S>;
-
-    fn layer(&self, inner: S) -> Self::Service {
-        HtmxMiddleware {
-            wrapper: self.wrapper,
-            inner,
-        }
-    }
-}
-
-#[cfg(feature = "htmx")]
-#[derive(Clone)]
-pub struct HtmxMiddleware<S> {
-    wrapper: PageWrapper,
-    inner: S,
-}
-
-#[cfg(feature = "htmx")]
-impl<S> Service<Request<Body>> for HtmxMiddleware<S>
-where
-    S: Service<Request<Body>, Response = Response> + Send + 'static,
-    S::Future: Send + 'static,
-{
-  
-    type Response = S::Response;
-    type Error = S::Error;
-    type Future = futures_util::future::BoxFuture<'static, Result<Self::Response, Self::Error>>;
-
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.inner.poll_ready(cx)
-    }
-
-    fn call(&mut self, request: Request<Body>) -> Self::Future {
-        let is_htmx_request = request.headers().get("HX-Request").is_some();
-        let future = self.inner.call(request);
-        let wrapper = self.wrapper;
-        Box::pin(async move {
-            let response: Response = future.await?;
-            let (mut parts, mut content) = response.into_parts();
-            let mut buf = Vec::with_capacity(content.size_hint().lower() as usize);
-            while let Some(chunk) = content.data().await {
-                bytes::BufMut::put(&mut buf, chunk.unwrap());
-            }
-            let content = std::string::String::from_utf8(buf).unwrap();
-            let content = if is_htmx_request {
-                PreEscaped(content)
-            } else {
-                wrapper(PreEscaped(content))
-            };
-            let body = Body::from(content.0);
-            parts.headers.remove(header::CONTENT_LENGTH);
-            let response = Response::from_parts(parts, body);
-            Ok(response)
-        })
-    }
-}
+pub static REGISTER_SW_SNIPPET: &str = 
+    "if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {type: 'module'});";

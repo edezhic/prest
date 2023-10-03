@@ -5,7 +5,7 @@ fn routes() -> prest::Router {
         "/",
         prest::get(|| async {
             prest::maud_to_response(
-                maud::html!((prest::head("With TypeScript", Some(maud::html!(
+                maud::html!((prest::maud_head("With TypeScript", Some(maud::html!(
                     script src="/script.js"{}
                 )))) body {"Hello world with TypeScript!"}),
             )
@@ -20,5 +20,5 @@ struct Assets;
 #[tokio::main]
 async fn main() {
     let service = routes().layer(prest::host::embed(Assets));
-    prest::host::serve(service, Default::default()).await.unwrap();
+    prest::serve(service, Default::default()).await.unwrap();
 }

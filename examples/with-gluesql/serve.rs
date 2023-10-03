@@ -10,7 +10,7 @@ async fn main() {
         .route("/", get(|| async { ([(header::CONTENT_TYPE, "text/html")], todospage().await.0) }))
         .route("/todo/add", get(add_todo))
         .route("/todo/delete", get(delete_todo));
-    prest::host::serve(service, Default::default()).await.unwrap();
+    prest::serve(service, Default::default()).await.unwrap();
 }
 
 async fn todospage() -> Markup {

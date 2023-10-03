@@ -22,7 +22,7 @@ async fn main() {
     });
 
     let service = prest::Router::new().route("/", prest::get(homepage));
-    prest::host::serve(service, Default::default()).await.unwrap();
+    prest::serve(service, Default::default()).await.unwrap();
 }
 
 async fn homepage() -> impl prest::IntoResponse {

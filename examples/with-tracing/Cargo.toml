@@ -16,7 +16,7 @@ host = ["prest/host", "prest/build", "tokio/full"]
 sw = ["prest/bindgen", "wasm-bindgen", "wasm-bindgen-futures"]
 
 [dependencies]
-prest = { path = "../../", features = ["host", "tracing-sub"] }
+prest = { path = "../../", features = ["host"] }
 maud = "0.25"
 rust-embed = { version = "8", features = ["interpolate-folder-path"] }
 tokio = { version = "1.32", optional = true }

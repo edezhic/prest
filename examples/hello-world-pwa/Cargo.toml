@@ -12,7 +12,7 @@ path = "./serve.rs"
 
 [features]
 default = ["host"]
-host = ["prest/host", "prest/build", "tokio/full"]
+host = ["prest/host", "tokio/full"]
 sw = ["prest/bindgen", "wasm-bindgen", "wasm-bindgen-futures"]
 
 [dependencies]
@@ -24,4 +24,4 @@ wasm-bindgen = { version = "0.2.87", optional = true }
 wasm-bindgen-futures = { version = "0.4.37", optional = true }
 
 [build-dependencies]
-prest = { path = "../../" }
+prest = { path = "../../", default-features = false, features = ["build"] }

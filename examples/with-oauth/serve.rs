@@ -1,5 +1,4 @@
-use prest::host::auth::*;
-use prest::*;
+use prest::{*, auth::*};
 use std::{
     collections::HashMap,
     hash::Hash,
@@ -39,7 +38,7 @@ pub type RequireAuthzLayer = RequireAuthorizationLayer<u64, User>;
 
 #[tokio::main]
 async fn main() {
-    prest::host::set_dot_env_variables();
+    prest::set_dot_env_variables();
     let (auth_svc, session, authn) = init_auth::<u64, User>();
     let service = prest::Router::new()
         .route("/protected", get(|| async { "Authorized!" }))
@@ -48,7 +47,7 @@ async fn main() {
         .merge(auth_svc)
         .layer(authn)
         .layer(session);
-    prest::host::serve(service, Default::default()).await.unwrap();
+    prest::serve(service, Default::default()).await.unwrap();
 }
 
 async fn homepage() -> impl prest::IntoResponse {
@@ -72,7 +71,7 @@ pub fn init_auth<Id: Hash + Eq + Clone + Send + Sync + 'static, User: AuthUser<I
     SessionLayer<SessionMemoryStore>,
     AuthLayer<AuthMemoryStore<Id, User>, Id, User>,
 ) {
-    let secret = prest::host::generate_secret::<[u8; 64]>();
+    let secret = prest::generate_secret::<[u8; 64]>();
     let session_store = SessionMemoryStore::new();
     let auth_store = Arc::new(RwLock::new(HashMap::new()));
 
