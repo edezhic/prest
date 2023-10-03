@@ -2,10 +2,10 @@
 
 Project's [repo](https://github.com/edezhic/prest) contains a bunch of examples which can be run with `cargo run -p NAME`:
 
-- `blog` includes SCSS and description of the project, available at [prest.blog](https://prest.blog)
+- `blog` includes description of the project, available at [prest.blog](https://prest.blog)
 - `hello-world` is the simplest example in just 5 LoC
-- `hello-world-pwa` is a basic Progressive RESTful app
-- `with-oauth` includes Google OAuth flow and basic authz/authn boilerplate
+- `hello-world-pwa` is a basic Progressive RESTful app in 30 LoC
+- `with-oauth` includes Google OAuth flow and basic user management
 - `with-tls` includes HTTPS server
 - `with-scraping` includes parser for a news website
 - `with-gluesql` includes embedded [sled](http://sled.rs/)-powered [GlueSQL](https://gluesql.org/docs/) DB

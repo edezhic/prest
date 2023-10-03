@@ -126,7 +126,10 @@ pub fn run(main: &str, minify: bool, tree_shaking: bool) -> Result<String, Error
             let mut emitter = Emitter {
                 cfg: swc_ecma_codegen::Config {
                     minify,
-                    ..Default::default()
+                    target: EsVersion::latest(),
+                    ascii_only: false,
+                    omit_last_semi: false,
+                    emit_assert_for_import_attributes: false,
                 },
                 cm: source_map_rc.clone(),
                 comments: None,
