@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 mod pages;
+use prest::*;
 
 #[cfg(feature = "host")]
 #[derive(rust_embed::RustEmbed, Clone)]
@@ -10,12 +11,12 @@ struct Assets;
 #[cfg(feature = "host")]
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let service = pages::service().layer(prest::middleware::embed(Assets));
-    prest::serve(service, Default::default()).await.unwrap();
+    let service = pages::service().layer(embed(Assets));
+    serve(service, Default::default()).await.unwrap();
 }
 
 #[cfg(feature = "sw")]
 #[wasm_bindgen::prelude::wasm_bindgen]
-pub async fn serve(sw: prest::sw::ServiceWorkerGlobalScope, event: prest::sw::FetchEvent) {
-    prest::sw::process_fetch_event(pages::service, sw, event).await
+pub async fn serve(sw: sw::ServiceWorkerGlobalScope, event: sw::FetchEvent) {
+    sw::process_fetch_event(pages::service, sw, event).await
 }

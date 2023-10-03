@@ -22,8 +22,8 @@ struct Assets;
 async fn main() {
     start_printing_traces();
     let service = shared_routes()
-        .layer(middleware::embed(Assets))
-        .layer(middleware::http_tracing());
+        .layer(embed(Assets))
+        .layer(http_tracing());
     serve(service, Default::default()).await.unwrap();
 }
 

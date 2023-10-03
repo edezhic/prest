@@ -1,6 +1,6 @@
 #![allow(dead_code, unused_imports)]
 
-pub use anyhow::{self, Result};
+pub use anyhow::{self, Error, Result, bail};
 pub use http::{self, header, HeaderMap, HeaderValue, StatusCode};
 pub use axum::{
     self,
@@ -10,9 +10,8 @@ pub use axum::{
     routing::{any, delete, get, patch, post, put},
     Router,
 };
-
-pub mod middleware;
-
+mod middleware;
+pub use middleware::*;
 mod utils;
 pub use utils::*;
 

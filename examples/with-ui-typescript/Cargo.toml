@@ -14,4 +14,4 @@ maud = "0.25"
 rust-embed = { version = "8", features = ["interpolate-folder-path"] }
 
 [build-dependencies]
-prest = { path = "../../", features = ["build", "typescript"] }
+prest = { path = "../../", features = ["typescript"] }

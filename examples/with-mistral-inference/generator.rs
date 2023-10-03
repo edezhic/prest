@@ -1,4 +1,4 @@
-use anyhow::{Error as E, Result};
+use prest::*;
 use candle_transformers::{
     generation::LogitsProcessor, 
     models::quantized_mistral::{Config, Model},
@@ -6,6 +6,7 @@ use candle_transformers::{
     quantized_var_builder::VarBuilder,
 };
 use tokenizers::Tokenizer;
+use std::time::Instant;
 
 static SEED: u64 = 123456789;
 /// Penalty to be applied for repeating tokens, 1. means no penalty.
@@ -13,50 +14,55 @@ static REPEAT_PENALTY: f32 = 1.1;
 /// The context size to consider for the repeat penalty.
 static REPEAT_LAST_N: usize = 64;
 
+// static repo, api, tokenizer
+
 pub struct Mistral {
     model: Model,
     tokenizer: Tokenizer,
     eos_token: u32,
-    logits_processor: LogitsProcessor,
 }
 
 impl Mistral {
     pub fn new() -> Result<Self> {
-        let start = std::time::Instant::now();
+        let start = Instant::now();
         let repo = hf_hub::Repo::model("lmz/candle-mistral".to_owned());
         let repo_api = hf_hub::api::sync::Api::new()?.repo(repo);
         let tokenizer_filename = repo_api.get("tokenizer.json")?;
         let weights_filename = repo_api.get("model-q4k.gguf")?;
         println!("retrieved the files in {:?}", start.elapsed());
     
-        let start = std::time::Instant::now();
-        let tokenizer = Tokenizer::from_file(tokenizer_filename).map_err(E::msg)?;
-        let model = Model::new(&Config::config_7b_v0_1(true), VarBuilder::from_gguf(&weights_filename)?)?;
-        let logits_processor = LogitsProcessor::new(SEED, None, None);
+        let start = Instant::now();
+        let tokenizer = Tokenizer::from_file(tokenizer_filename).map_err(Error::msg)?;
+        let cfg = Config::config_7b_v0_1(true);
+        let weights = VarBuilder::from_gguf(&weights_filename)?;
+        let model = Model::new(&cfg, weights)?;
         println!("loaded the model in {:?}", start.elapsed());
 
-        let eos_token = tokenizer.get_vocab(true).get("</s>").copied().unwrap();
+        let Some(&eos_token) = tokenizer.get_vocab(true).get("</s>")
+            else { bail!("EOS token not found!") };
         
         Ok(Self {
             model,
             tokenizer,
             eos_token,
-            logits_processor,
         })
     }
 
-    pub fn sample(&mut self, prompt: &str, sample_len: usize) -> Result<()> {
-        let start = std::time::Instant::now();
+    pub fn session(&mut self, prompt: &str, sample_len: usize) -> Result<()> {
+        let temperature = None;
+        let top_p = None;
+        let mut logits_processor = LogitsProcessor::new(SEED, temperature, top_p);
         let mut tokens = self
             .tokenizer
             .encode(prompt, true)
-            .map_err(E::msg)?
+            .map_err(Error::msg)?
             .get_ids()
             .to_vec();
 
         let mut prev_index = tokens.len();
         let mut current_index = tokens.len();
         
+        let start = Instant::now();
         for index in 0..sample_len {
             let start_pos = if index == 0 || tokens.len() == 0 { 0 } else { tokens.len() - 1 };
             let penalty_pos = tokens.len().saturating_sub(REPEAT_LAST_N);
@@ -68,7 +74,7 @@ impl Mistral {
                     REPEAT_PENALTY,
                     &tokens[penalty_pos..],
             )?;
-            let next_token = self.logits_processor.sample(&logits)?;
+            let next_token = logits_processor.sample(&logits)?;
             
             if next_token == self.eos_token {
                 break;

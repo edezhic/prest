@@ -13,24 +13,24 @@ categories = ["development-tools", "wasm", "web-programming"]
 members = ["examples/*"]
 
 [features]
-default = ["maud", "htmx", "print-traces"]
+default = ["htmx", "maud", "print-traces"]
 host = ["embed", "serve"]
 bindgen = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "web-sys", "console_error_panic_hook", "bytes"]
-build = ["toml"]
-
 htmx = ["bytes"]
 print-traces = ["tracing-subscriber/fmt"]
 embed = ["rust-embed", "hex"]
 serve = ["axum-server"]
-auth = ["axum-login", "openidconnect", "random", "dot_env", "serde"]
+
+oauth = ["axum-login", "openidconnect", "random", "dot_env", "serde"]
 tls = ["axum-server/tls-rustls"]
 random = ["rand"]
 dot_env = ["dotenv"]
 
 
-sass = ["grass"]
-pwa = ["wasm-bindgen-cli-support", "webmanifest"]
-typescript = ["swc", "swc_atoms", "swc_bundler", "swc_common", "swc_config", "swc_ecma_parser", "swc_ecma_ast", "swc_ecma_codegen", "swc_ecma_loader", "swc_ecma_minifier", "swc_ecma_transforms_base", "swc_ecma_transforms_typescript", "swc_ecma_visit"]
+sass = ["build", "grass"]
+pwa = ["build", "wasm-bindgen-cli-support", "webmanifest"]
+typescript = ["build", "swc", "swc_atoms", "swc_bundler", "swc_common", "swc_config", "swc_ecma_parser", "swc_ecma_ast", "swc_ecma_codegen", "swc_ecma_loader", "swc_ecma_minifier", "swc_ecma_transforms_base", "swc_ecma_transforms_typescript", "swc_ecma_visit"]
+build = ["toml"]
 
 [lib]
 name = "prest"

@@ -5,11 +5,11 @@ use prest::*;
 async fn main() {
     start_printing_traces();
     let mut generator = generator::Mistral::new().unwrap();
-    generator.sample("To make cross-platform app in Rust", 5).unwrap();
+    generator.session("I want to talk about", 3).unwrap();
 
     let service = Router::new()
         .route("/", get(|| async { "With Mistral inference!" }))
-        .layer(middleware::http_tracing());
+        .layer(http_tracing());
     serve(service, Default::default()).await.unwrap();
 }
 /*

@@ -20,8 +20,8 @@ pub fn start_printing_traces() {
     tracing_subscriber::registry().with(fmt_layer).init();
 }
 
-#[cfg(feature = "auth")]
-pub mod auth;
+#[cfg(feature = "oauth")]
+pub mod oauth;
 
 #[cfg(feature = "dot_env")]
 pub fn set_dot_env_variables() {

@@ -1,4 +1,4 @@
-use prest::{*, auth::*};
+use prest::{*, oauth::*};
 use std::{
     collections::HashMap,
     hash::Hash,

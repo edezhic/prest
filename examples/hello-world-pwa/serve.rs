@@ -20,7 +20,7 @@ struct Assets;
 #[cfg(feature = "host")]
 #[tokio::main]
 async fn main() {
-    let service = shared_routes().layer(middleware::embed(Assets));
+    let service = shared_routes().layer(embed(Assets));
     serve(service, Default::default()).await.unwrap();
 }
 

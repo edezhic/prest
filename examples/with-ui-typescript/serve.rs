@@ -1,11 +1,12 @@
 #![allow(dead_code)]
+use prest::*;
 
-fn routes() -> prest::Router {
-    prest::Router::new().route(
+fn routes() -> Router {
+    Router::new().route(
         "/",
-        prest::get(|| async {
-            prest::maud_to_response(
-                maud::html!((prest::maud_head("With TypeScript", Some(maud::html!(
+        get(|| async {
+            maud_to_response(
+                maud::html!((maud_head("With TypeScript", Some(maud::html!(
                     script src="/script.js"{}
                 )))) body {"Hello world with TypeScript!"}),
             )
@@ -19,6 +20,6 @@ struct Assets;
 
 #[tokio::main]
 async fn main() {
-    let service = routes().layer(prest::host::embed(Assets));
-    prest::serve(service, Default::default()).await.unwrap();
+    let service = routes().layer(embed(Assets));
+    serve(service, Default::default()).await.unwrap();
 }

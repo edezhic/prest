@@ -48,12 +48,13 @@ pub fn run(main: &str, minify: bool, tree_shaking: bool) -> Result<String, Error
         module: Default::default(),
     };
 
-    let minify_options = &swc_ecma_minifier::option::MinifyOptions {
-        compress: Some(swc_ecma_minifier::option::CompressOptions {
-            top_level: Some(swc_ecma_minifier::option::TopLevelOptions { functions: true }),
+    use swc_ecma_minifier::option::{MinifyOptions, CompressOptions, TopLevelOptions, MangleOptions};
+    let minify_options = &MinifyOptions {
+        compress: Some(CompressOptions {
+            top_level: Some(TopLevelOptions { functions: true }),
             ..Default::default()
         }),
-        mangle: Some(swc_ecma_minifier::option::MangleOptions {
+        mangle: Some(MangleOptions {
             top_level: Some(true),
             ..Default::default()
         }),
@@ -124,13 +125,7 @@ pub fn run(main: &str, minify: bool, tree_shaking: bool) -> Result<String, Error
         {
             let writer = JsWriter::new(source_map_rc.clone(), "\n", &mut buf, None);
             let mut emitter = Emitter {
-                cfg: swc_ecma_codegen::Config {
-                    minify,
-                    target: EsVersion::latest(),
-                    ascii_only: false,
-                    omit_last_semi: false,
-                    emit_assert_for_import_attributes: false,
-                },
+                cfg: swc_ecma_codegen::Config::default().with_minify(minify),
                 cm: source_map_rc.clone(),
                 comments: None,
                 wr: if minify {
