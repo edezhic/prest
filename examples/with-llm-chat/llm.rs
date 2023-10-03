@@ -15,6 +15,17 @@ pub struct Config {
     pub temperature: Option<f64>,
     pub top_p: Option<f64>,
 }
+impl Default for Config {
+    fn default() -> Self {
+        Self { 
+            seed: 123456789, 
+            repeat_penalty: 1.1, 
+            repeat_last_n: 64, 
+            temperature: None, 
+            top_p: None, 
+        }
+    }
+}
 
 pub fn load(cfg: Config) -> Result<Chat> {
     let start = std::time::Instant::now();

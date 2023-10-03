@@ -3,15 +3,9 @@ use prest::*;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    //start_printing_traces();
+    start_printing_traces();
     /*
-    let mut chat = chat::load(generator::Config { 
-        seed: 123456789, 
-        repeat_penalty: 1.1, 
-        repeat_last_n: 64, 
-        temperature: None, 
-        top_p: None, 
-    }).unwrap();
+    let mut chat = chat::load(Default::default()).unwrap();
     chat.prompt("It goes like this:").unwrap();
     while let Ok(Some(text)) = chat.answering() {
         print!("{text}");
