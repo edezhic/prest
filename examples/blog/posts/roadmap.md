@@ -1,4 +1,4 @@
-This is a hobby project so there are no solid long-term plans, it's still alpha and not even on [crates.io](https://crates.io/crates/prest) yet because the latest [axum](https://github.com/tokio-rs/axum) is not published yet. However, [it seems quite promising to me](https://prest.blog/motivation) so I have some ideas that I'll likely work on next:
+This is a hobby project and there are no solid long-term plans. However, [the overall idea](https://prest.blog/motivation) seems quite promising to me, so there are things I'll likely build next:
 
 ### Examples
 - `with-blockchain` (solana? polkadot? other?)
@@ -10,7 +10,10 @@ This is a hobby project so there are no solid long-term plans, it's still alpha 
 - `with-openapi`?
 
 ### Middleware
-Include [tower_http](https://docs.rs/tower-http/latest/tower_http/) and probably some shared BE/FE layers like tracing ([1](https://github.com/old-storyai/tracing-wasm), [2](https://docs.rs/tracing-chrome/latest/tracing_chrome/)) or smth for [GlueSQL](https://gluesql.org/docs/0.14/getting-started/javascript-web).
+Include more of [tower_http](https://docs.rs/tower-http/latest/tower_http/), probably some shared BE/FE layers like tracing ([1](https://github.com/old-storyai/tracing-wasm), [2](https://docs.rs/tracing-chrome/latest/tracing_chrome/)) or smth for [GlueSQL](https://gluesql.org/docs/0.14/getting-started/javascript-web) and other middleware.
 
 ### Ergonomics
 Less basic boilerplate, more configs with reasonable defaults instead of hardcoded values.
+
+### Publish
+It's not on [crates.io](https://crates.io/crates/prest) yet because it depends on the latest unpublished [axum](https://github.com/tokio-rs/axum) and related packages. Awaiting them to upload the first alpha version.
