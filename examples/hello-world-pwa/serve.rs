@@ -4,11 +4,7 @@ use prest::*;
 fn shared_routes() -> Router {
     Router::new().route(
         "/",
-        get(|| async {
-            maud_to_response(
-                maud::html!((maud_head("Hello world PWA", None)) body {"Hello world!"}),
-            )
-        }),
+        template(maud::html!((maud_pwa_head("Hello world PWA", None)) body {"Hello world!"}).0),
     )
 }
 

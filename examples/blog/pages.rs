@@ -36,7 +36,7 @@ async fn posts(
 fn full_html(content: String) -> String {
     maud::html!(
         html data-theme="dark" {
-            (prest::maud_head("Prest Blog", Some(maud::html!(
+            (prest::maud_pwa_head("Prest Blog", Some(maud::html!(
                 link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"{}
                 link rel="stylesheet" href="/ui.css" {}
                 script src="https://unpkg.com/htmx.org@1.9.0" integrity="sha384-aOxz9UdWG0yBiyrTwPeMibmaoq07/d3a96GCbb9x60f3mOt5zwkjdbcHFnKH8qls" crossorigin="anonymous"{}

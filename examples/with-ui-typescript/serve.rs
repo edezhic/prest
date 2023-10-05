@@ -6,7 +6,7 @@ fn routes() -> Router {
         "/",
         get(|| async {
             maud_to_response(
-                maud::html!((maud_head("With TypeScript", Some(maud::html!(
+                maud::html!((maud_pwa_head("With TypeScript", Some(maud::html!(
                     script src="/script.js"{}
                 )))) body {"Hello world with TypeScript!"}),
             )

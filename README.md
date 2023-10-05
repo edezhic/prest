@@ -6,7 +6,7 @@ Project's [repo](https://github.com/edezhic/prest) contains a bunch of examples 
 - `hello-world` is the simplest example in just 5 LoC
 - `hello-world-pwa` is a basic Progressive RESTful app in 30 LoC
 - `with-oauth` includes Google OAuth flow and basic user management
-- `with-llm-chat` connects [Mistral](todo) with UI using [htmx websockets](todo) 
+- `with-candle-mistral` includes [Mistral](https://mistral.ai/news/announcing-mistral-7b/) LLM using [candle](https://github.com/huggingface/candle) ML framework
 - `with-tls` includes HTTPS server
 - `with-scraping` includes parser for a news website
 - `with-gluesql` includes embedded [sled](http://sled.rs/)-powered [GlueSQL](https://gluesql.org/docs/) DB

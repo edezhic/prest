@@ -1,11 +1,18 @@
 use crate::*;
+use axum::routing::MethodRouter;
 pub use maud::*;
+
+pub fn template(s: String) -> MethodRouter {
+    get(|| async {
+        Html(s)
+    })
+}
 
 pub fn maud_to_response(markup: Markup) -> impl IntoResponse {
     ([(header::CONTENT_TYPE, "text/html; charset=utf-8")], markup.0)
 }
 
-pub fn maud_head(title: &str, other: Option<Markup>) -> Markup {
+pub fn maud_pwa_head(title: &str, other: Option<Markup>) -> Markup {
     maud::html!(
         head {
             title {(title)}

@@ -4,7 +4,7 @@ use prest::*;
 fn shared_routes() -> Router {
     Router::new().route("/", get(|| async { maud_to_response(
         maud::html!(
-            (maud_head("Prest app with tracing", Some(maud::html!(link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css"{}))))
+            (maud_pwa_head("Prest app with tracing", Some(maud::html!(link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css"{}))))
             body {
                 h1{"Progressive RESTful application with tracing (check out the terminal!)"}
             }
