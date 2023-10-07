@@ -13,7 +13,7 @@ path = "./serve.rs"
 [features]
 default = ["host"]
 host = ["prest/host", "prest/build", "tokio/full"]
-sw = ["prest/bindgen", "wasm-bindgen", "wasm-bindgen-futures"]
+sw = ["prest/sw-bindings", "wasm-bindgen", "wasm-bindgen-futures"]
 
 [dependencies]
 prest = { path = "../../", features = ["host"] }

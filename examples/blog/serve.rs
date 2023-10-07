@@ -17,6 +17,6 @@ async fn main() {
 
 #[cfg(feature = "sw")]
 #[wasm_bindgen::prelude::wasm_bindgen]
-pub async fn serve(sw: sw::ServiceWorkerGlobalScope, event: sw::FetchEvent) {
-    sw::process_fetch_event(pages::service, sw, event).await
+pub async fn serve(sw: ServiceWorkerGlobalScope, event: FetchEvent) {
+    process_fetch_event(pages::service, sw, event).await
 }
