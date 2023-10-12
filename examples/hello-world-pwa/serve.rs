@@ -2,10 +2,7 @@
 use prest::*;
 
 fn shared_routes() -> Router {
-    Router::new().route(
-        "/",
-        template(maud::html!((maud_pwa_head("Hello world PWA", None)) body {"Hello world!"}).0),
-    )
+    Router::new().route("/",template!((Head::default()) body {"Hello from PWA!"}))
 }
 
 #[cfg(feature = "host")]
@@ -16,8 +13,7 @@ struct Assets;
 #[cfg(feature = "host")]
 #[tokio::main]
 async fn main() {
-    let service = shared_routes().layer(embed(Assets));
-    serve(service, Default::default()).await.unwrap();
+    serve(shared_routes().layer(embed(Assets)), Default::default()).await.unwrap();
 }
 
 #[cfg(feature = "sw")]

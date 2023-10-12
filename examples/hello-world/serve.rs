@@ -1,5 +1,6 @@
+use prest::*;
 #[tokio::main]
 async fn main() {
-    let service = prest::Router::new().route("/", prest::get(|| async { "Hello world!" }));
-    prest::serve(service, Default::default()).await.unwrap();
+    let service = Router::new().route("/", template!(h1{"Hello world!"}));
+    serve(service, Default::default()).await.unwrap();
 }

@@ -28,7 +28,7 @@ async fn main() {
     serve(service, Default::default()).await.unwrap();
 }
 
-async fn home() -> Html<String> {
+async fn home() -> Markup {
     let cargo_contract_error = if let Err(e) = Command::new("cargo").arg("contract").arg("help").output() {
         Some(e.to_string())
     } else {
@@ -41,7 +41,7 @@ async fn home() -> Html<String> {
     };
     let tooling_ready = cargo_contract_error.is_none() && substrate_node_error.is_none();
     let contract_ready = CONTRACT_ADDR.lock().await.is_some();
-    Html(maud::html!(
+    html!(
         @if tooling_ready {
             ."grid" {
                 button hx-get="/build" {"Build"}
@@ -66,26 +66,26 @@ async fn home() -> Html<String> {
             }
         }
         
-    ).0)
+    )
 }
 
-async fn test() -> Html<String> {
+async fn test() -> Markup {
     let output = match Command::new("cargo").arg("test").current_dir(contract_path()).output() {
         Ok(output) => String::from_utf8(output.stdout).unwrap(),
         Err(e) => e.to_string()
     };
-    Html(maud::html!(code {(PreEscaped(output))}).0)
+    html!(code {(PreEscaped(output))})
 }
 
-async fn build() -> Html<String> {
+async fn build() -> Markup {
     let output = match Command::new("cargo").arg("contract").arg("build").current_dir(contract_path()).output() {
         Ok(output) => String::from_utf8(output.stdout).unwrap(),
         Err(e) => e.to_string()
     };
-    Html(maud::html!(code {(PreEscaped(output))}).0)
+    html!(code {(PreEscaped(output))})
 }
 
-async fn deploy() -> Html<String> {
+async fn deploy() -> Markup {
     Lazy::force(&NODE);
     let output = match Command::new("cargo")
         .arg("contract")
@@ -104,14 +104,14 @@ async fn deploy() -> Html<String> {
     let mut guard = CONTRACT_ADDR.lock().await;
     *guard = Some(addr);
 
-    Html(maud::html!(
+    html!(
         button hx-get="/read" {"Get the value from the contract"}
         button hx-get="/flip" {"Flip the value in the contract"}
         code #"output" {(PreEscaped(output))}
-    ).0)
+    )
 }
 
-async fn read() -> Html<String> {
+async fn read() -> Markup {
     let addr = CONTRACT_ADDR.lock().await.clone().unwrap();
     let output = match Command::new("cargo")
         .arg("contract")
@@ -124,10 +124,10 @@ async fn read() -> Html<String> {
             Ok(output) => String::from_utf8(output.stdout).unwrap(),
             Err(e) => e.to_string()
     };
-    Html(maud::html!(code {(PreEscaped(output))}).0)
+    html!(code {(PreEscaped(output))})
 }
 
-async fn flip() -> Html<String> {
+async fn flip() -> Markup {
     let addr = CONTRACT_ADDR.lock().await.clone().unwrap();
     let output = match Command::new("cargo")
         .arg("contract")
@@ -142,19 +142,16 @@ async fn flip() -> Html<String> {
             Ok(output) => String::from_utf8(output.stdout).unwrap(),
             Err(e) => e.to_string()
     };
-    Html(maud::html!(code {(PreEscaped(output))}).0)
+    html!(code {(PreEscaped(output))})
 }
 
-fn full_html(content: String) -> String {
-    maud::html!(
+fn full_html(content: Markup) -> Markup {
+    html!(
         html data-theme="dark" {
-            (prest::maud_pwa_head("Prest Blog", Some(maud::html!(
-                link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"{}
-                script src="https://unpkg.com/htmx.org@1.9.0" integrity="sha384-aOxz9UdWG0yBiyrTwPeMibmaoq07/d3a96GCbb9x60f3mOt5zwkjdbcHFnKH8qls" crossorigin="anonymous"{}
-            ))))
-            body { main."container" hx-target="main" hx-swap="beforeend" {(PreEscaped(content))} }
+            (Head::default())
+            body { main."container" hx-target="main" hx-swap="beforeend" {(content)} }
         }
-    ).0
+    )
 }
 
 fn contract_path() -> std::path::PathBuf {

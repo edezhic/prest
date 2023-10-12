@@ -7,7 +7,7 @@ use storage::Todos;
 async fn main() {
     Todos::migrate().unwrap();
     let service = Router::new()
-        .route("/", get(|| async { ([(header::CONTENT_TYPE, "text/html")], todospage().await.0) }))
+        .route("/", get(|| async { todospage().await }))
         .route("/todo/add", get(add_todo))
         .route("/todo/delete", get(delete_todo));
     prest::serve(service, Default::default()).await.unwrap();
@@ -15,7 +15,7 @@ async fn main() {
 
 async fn todospage() -> Markup {
     let todos = Todos::get_todos().await;
-    maud::html!(
+    html!(
         html {
             head {
                 title {"With GlueSQL"}

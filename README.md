@@ -3,8 +3,8 @@
 Project's [repo](https://github.com/edezhic/prest) contains a bunch of examples which can be run with `cargo run -p NAME`:
 
 - `blog` includes description of the project, available at [prest.blog](https://prest.blog)
-- `hello-world` is the simplest example in just 5 LoC
-- `hello-world-pwa` is a basic Progressive RESTful app in 30 LoC
+- `hello-world` is the simplest example in just a couple of lines of code
+- `hello-world-pwa` is a basic Progressive RESTful app in 25 LoC
 - `with-oauth` includes Google OAuth flow and basic session + user management
 - `with-candle-mistral` includes [Mistral](https://mistral.ai/news/announcing-mistral-7b/) LLM using [candle](https://github.com/huggingface/candle) ML framework
 - `with-substrate-contract` includes an [ink!](https://use.ink/)-based contract for [Substrate](https://substrate.io/)-based blockchains like [Polkadot](https://www.polkadot.network/)

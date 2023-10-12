@@ -9,7 +9,6 @@ path = "./serve.rs"
 
 [dependencies]
 prest = { path = "../../", features = ["host"] }
-maud = "0.25"
 serde = "*"
 futures = "*"
 uuid = { version = "*", features = ["v4"] }

@@ -2,16 +2,7 @@
 use prest::*;
 
 fn routes() -> Router {
-    Router::new().route(
-        "/",
-        get(|| async {
-            maud_to_response(
-                maud::html!((maud_pwa_head("With TypeScript", Some(maud::html!(
-                    script src="/script.js"{}
-                )))) body {"Hello world with TypeScript!"}),
-            )
-        }),
-    )
+    Router::new().route("/",template!((Head::default().with(html!(script src="/script.js"{}))) body {"Hello TypeScript!"}))
 }
 
 #[derive(rust_embed::RustEmbed, Clone)]

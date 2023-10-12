@@ -9,6 +9,5 @@ path = "./serve.rs"
 
 [dependencies]
 prest = { path = "../../", features = ["host", "oauth"] }
-maud = "0.25"
 tokio = { version = "1.32", features = ["full"] }
 once_cell = "*"

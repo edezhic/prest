@@ -41,7 +41,7 @@ async fn main() {
     prest::set_dot_env_variables();
     let (auth_svc, session, authn) = init_auth::<u64, User>();
     let service = prest::Router::new()
-        .route("/protected", get(|| async { "Authorized!" }))
+        .route("/protected", template!(h1{"Authorized!"}))
         .route_layer(RequireAuthzLayer::login()) // routes above this layer require logged-in state
         .route("/", get(homepage))
         .merge(auth_svc)
@@ -50,8 +50,8 @@ async fn main() {
     prest::serve(service, Default::default()).await.unwrap();
 }
 
-async fn homepage() -> impl prest::IntoResponse {
-    prest::maud_to_response(maud::html!(
+async fn homepage() -> Markup {
+    html!(
         html {
             head {
                 title {"With OAuth"}
@@ -63,7 +63,7 @@ async fn homepage() -> impl prest::IntoResponse {
                 a href="/protected" {"Click me to go to the authorized route"}
             }
         }
-    ))
+    )
 }
 
 pub fn init_auth<Id: Hash + Eq + Clone + Send + Sync + 'static, User: AuthUser<Id>>() -> (

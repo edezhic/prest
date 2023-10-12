@@ -1,6 +1,6 @@
 use futures::future::join_all;
-use prest::Result;
-use reqwest::get;
+use prest::*;
+use reqwest::get as fetch;
 use scraper::{Html, Selector};
 struct Target {
     pub url: String,
@@ -21,12 +21,12 @@ async fn main() {
         })
     });
 
-    let service = prest::Router::new().route("/", prest::get(homepage));
-    prest::serve(service, Default::default()).await.unwrap();
+    let service = Router::new().route("/", get(homepage));
+    serve(service, Default::default()).await.unwrap();
 }
 
-async fn homepage() -> impl prest::IntoResponse {
-    prest::maud_to_response(maud::html!(
+async fn homepage() -> Markup {
+    html!(
         html {
             head {
                 title {"With scraping"}
@@ -34,7 +34,7 @@ async fn homepage() -> impl prest::IntoResponse {
             }
             body {h1{"Check out terminal for scraping results!"}}
         }
-    ))
+    )
 }  
 
 struct Story {
@@ -45,7 +45,7 @@ struct Story {
 #[tokio::main]
 async fn scrape(target: Target) -> Result<()> {
     let mut stories = vec![];
-    let response = get(&target.url).await?.text().await?;
+    let response = fetch(&target.url).await?.text().await?;
     let document = Html::parse_document(&response);
 
     // select links from the target
@@ -58,7 +58,7 @@ async fn scrape(target: Target) -> Result<()> {
     links.dedup();
 
     // await requests to each link
-    let results = join_all(links.into_iter().map(|link| get(link))).await;
+    let results = join_all(links.into_iter().map(|link| fetch(link))).await;
     // filter out unsuccessful results
     let responses = results.into_iter().filter_map(|resp| resp.ok());
     // await bodies of successful responses

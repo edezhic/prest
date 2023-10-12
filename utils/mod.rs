@@ -1,8 +1,3 @@
-#[cfg(feature = "maud")]
-mod maud_support;
-#[cfg(feature = "maud")]
-pub use maud_support::*;
-
 #[cfg(feature = "sw-bindings")]
 mod sw_bindings;
 #[cfg(feature = "sw-bindings")]

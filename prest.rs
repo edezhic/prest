@@ -11,6 +11,9 @@ pub use axum::{
     routing::{any, delete, get, patch, post, put},
     Router,
 };
+pub use html_macro::html;
+mod html;
+pub use html::*;
 mod middleware;
 pub use middleware::*;
 mod utils;
@@ -21,3 +24,5 @@ pub mod build;
 
 pub static REGISTER_SW_SNIPPET: &str = 
     "if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {type: 'module'});";
+
+pub const DOCTYPE: PreEscaped<&'static str> = PreEscaped("<!DOCTYPE html>");

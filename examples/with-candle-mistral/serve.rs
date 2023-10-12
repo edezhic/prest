@@ -20,11 +20,11 @@ async fn main() {
         .route("/", get(page))
         .route("/prompt", post(|Form(prompt): Form<Prompt>| async move {
             LLM.lock().await.prompt(&prompt.content).unwrap();
-            Html(history(true).await)
+            history(true).await
         }))
         .route("/more", get(|| async { 
             let in_progress = LLM.lock().await.more();
-            Html(history(in_progress).await)
+            history(in_progress).await
         }))
         .route("/reset", get(|| async {
             let mut llm = LLM.lock().await;
@@ -37,14 +37,14 @@ async fn main() {
     serve(service, Default::default()).await.unwrap();
 }
 
-async fn page() -> Html<String> {
+async fn page() -> Markup {
     let ready = if let Some(llm) = Lazy::get(&LLM) {
         llm.try_lock().is_ok()
     } else {
         std::thread::spawn(|| { Lazy::force(&LLM); });
         false
     };
-    Html(maud::html!( html data-theme="dark" {
+    html!( html data-theme="dark" {
         head {
             title {"LLM Chat"}
             link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"{}
@@ -53,19 +53,19 @@ async fn page() -> Html<String> {
         }
         body."container" { 
             @if ready {
-                article {(PreEscaped(history(false).await))}
+                article {(history(false).await)}
             } @else {
                 article hx-get="/" hx-target="body" hx-trigger="load delay:1s" aria-busy="true"{}
             }
         }
-    }).0)
+    })
 }
 
-async fn history(in_progress: bool) -> String {
+async fn history(in_progress: bool) -> Markup {
     let content = LLM.lock().await.history.clone();
     let fresh = content.len() == 0;
-    maud::html!(
-        (maud::PreEscaped(content))
+    html!(
+        (PreEscaped(content))
         @if in_progress { 
             ins hx-get="/more" hx-target="article" hx-trigger="load" aria-busy="true" style="margin-left: 4px"{}
             button."secondary" hx-get="/" hx-target="body" style="margin-top: 2rem" {"Pause"}
@@ -77,5 +77,5 @@ async fn history(in_progress: bool) -> String {
             }
         }
         button."secondary outline" hx-get="/reset" hx-target="body" style="margin-top: 1rem" {"Reset"}
-    ).0
+    )
 }

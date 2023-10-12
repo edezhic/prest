@@ -2,15 +2,15 @@ use crate::*;
 use super::*;
 use std::task::{Context, Poll};
 
-pub type PageWrapper = fn(String) -> String;
+pub type NonHtmxRequestWrapper = fn(Markup) -> Markup;
 
 #[derive(Clone)]
 pub struct Htmxify {
-    pub wrapper: PageWrapper,
+    pub wrapper: NonHtmxRequestWrapper,
 }
 
 impl Htmxify {
-    pub fn wrap(wrapper: PageWrapper) -> Self {
+    pub fn wrap(wrapper: NonHtmxRequestWrapper) -> Self {
         Self { wrapper }
     }
 }
@@ -28,7 +28,7 @@ impl<S> Layer<S> for Htmxify {
 
 #[derive(Clone)]
 pub struct HtmxMiddleware<S> {
-    wrapper: PageWrapper,
+    wrapper: NonHtmxRequestWrapper,
     inner: S,
 }
 
@@ -58,12 +58,13 @@ where
                 bytes::BufMut::put(&mut buf, chunk.unwrap());
             }
             let content = std::string::String::from_utf8(buf).unwrap();
+            let content = PreEscaped(content);
             let content = if is_htmx_request {
                 content
             } else {
                 wrapper(content)
             };
-            let body = Body::from(content);
+            let body = Body::from(content.0);
             parts.headers.remove(header::CONTENT_LENGTH);
             if !parts.headers.contains_key(header::CONTENT_TYPE) {
                 parts.headers.insert(header::CONTENT_TYPE, HeaderValue::from_static("text/html"));

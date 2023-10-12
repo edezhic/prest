@@ -15,8 +15,8 @@ async fn main() {
     serve_tls(service, tls_config).await.unwrap();
 }
 
-async fn homepage() -> impl IntoResponse {
-    maud_to_response(maud::html!(
+async fn homepage() -> Markup {
+    html!(
         html {
             head {
                 title {"With TLS"}
@@ -24,5 +24,5 @@ async fn homepage() -> impl IntoResponse {
             }
             body {h1{"Check out the connection / protocol!"}}
         }
-    ))
+    )
 }  
