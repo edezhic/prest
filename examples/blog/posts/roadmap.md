@@ -1,7 +1,6 @@
 This is a hobby project and there are no solid long-term plans. However, [the overall idea](https://prest.blog/motivation) seems quite promising to me, so there are things I'll likely build next:
 
 ### Examples
-- `with-substrate` polkadot, subxt, parachain/contracts/transactions
 - `with-diesel` postgres and sqlite
 - [with-askama](https://github.com/djc/askama)
 - [with-tinytemplate](https://crates.io/crates/tinytemplate)
