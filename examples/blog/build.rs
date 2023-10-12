@@ -1,5 +1,5 @@
 fn main() {
-    #[cfg(feature = "host")]
+    #[cfg(all(feature = "host", not(debug_assertions)))]
     prest::build::generate_pwa_assets();
 
     #[cfg(feature = "host")] 
