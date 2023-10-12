@@ -17,5 +17,7 @@ Include more of [tower_http](https://docs.rs/tower-http/latest/tower_http/), pro
 ### Ergonomics
 Less basic boilerplate, more configs with reasonable defaults instead of hardcoded values.
 
+Probably include patched versions of some crates like [maud](https://maud.lambda.xyz) and rust-embed to simplify their interfaces and resolve macro-related re-export issues.
+
 ### Publish
 It's not on [crates.io](https://crates.io/crates/prest) yet because it depends on the latest unpublished [axum](https://github.com/tokio-rs/axum) and related packages. Awaiting them to upload the first alpha version.
