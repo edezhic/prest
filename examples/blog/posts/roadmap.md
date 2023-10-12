@@ -4,6 +4,7 @@ Cut blog deps - replace sass with css nesting, add `include_asset` util into bui
 
 ### Examples
 - `with-diesel` postgres and sqlite
+- `with-hyperscript`
 - [with-askama](https://github.com/djc/askama)
 - [with-tinytemplate](https://crates.io/crates/tinytemplate)
 - [with-tauri](https://beta.tauri.app/)
