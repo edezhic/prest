@@ -13,10 +13,8 @@ categories = ["development-tools", "wasm", "web-programming"]
 members = ["examples/*", "html/macro"]
 
 [features]
-default = ["htmx", "print-traces"]
 host = ["embed", "serve"]
-sw-bindings = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "web-sys", "console_error_panic_hook", "bytes"]
-htmx = ["bytes"]
+sw-bindings = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "web-sys", "console_error_panic_hook"]
 print-traces = ["tracing-subscriber/fmt"]
 embed = ["rust-embed", "hex"]
 serve = ["axum-server"]
@@ -25,7 +23,6 @@ oauth = ["axum-login", "openidconnect", "random", "dot_env", "serde"]
 tls = ["axum-server/tls-rustls"]
 random = ["rand"]
 dot_env = ["dotenv"]
-
 
 sass = ["build", "grass"]
 pwa = ["build", "wasm-bindgen-cli-support", "webmanifest"]
@@ -38,23 +35,21 @@ path = "./prest.rs"
 
 [dependencies]
 anyhow = "1.0.75"
+itoa = "1"
+bytes = "1"
 http = "0.2.9" 
 tower = "0.4.13"
-axum = { git = "https://github.com/tokio-rs/axum", default-features = false, features = ["json", "query", "form"] }
-html_macro = { path = "./html/macro" }
-itoa = "1"
-
-tower-http = { version = "0.4.4", features = ["trace", "catch-panic", "cors", "set-header"] }
 futures-util = "0.3.28"
 once_cell = "1.18"
+axum = { git = "https://github.com/tokio-rs/axum", default-features = false, features = ["query", "form"] }
+html_macro = { path = "./html/macro" }
+tower-http = { version = "0.4.4", features = ["trace", "catch-panic", "cors", "set-header"] }
 
-bytes = { version = "1.5", optional = true }
+rust-embed = { version = "8", features = ["mime-guess"], optional = true }
 hex = { version = "0.4.3", optional = true }
 
-# Host deps:
 # --- fork to switch axum to the latest(unstable) main like here
 axum-login = { git = "https://github.com/edezhic/axum-login", optional = true } 
-rust-embed = { version = "8", features = ["mime-guess"], optional = true }
 rand = { version = "0.8.5", features = ["min_const_gen"], optional = true }
 tracing-subscriber = { version = "0.3.17", optional = true } 
 axum-server = { version = "0.5.1", optional = true }
@@ -63,7 +58,7 @@ dotenv = { version = "0.15", optional = true }
 serde = { version = "1", optional = true }
 
 # Build deps:
-grass = { version = "0.13.1", optional = true }
+grass = { version = "0.13.1", optional = true, default-features = false }
 toml = { version = "0.8.1", optional = true }
 webmanifest = { version = "1.1.1", optional = true }
 wasm-bindgen-cli-support = { version = "0.2.87", optional = true }

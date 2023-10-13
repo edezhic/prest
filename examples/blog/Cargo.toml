@@ -16,7 +16,7 @@ host = ["prest/host", "tokio"]
 sw = ["prest/sw-bindings", "prest/pwa", "wasm-bindgen", "wasm-bindgen-futures"]
 
 [dependencies]
-prest = { path = "../../", features = ["htmx"] }
+prest = { path = "../../" }
 markdown = "1.0.0-alpha.14"
 rust-embed = { version = "8", features = ["interpolate-folder-path"] }
 tokio = { version = "1.32", optional = true, features = ["rt", "net", "macros"] }
