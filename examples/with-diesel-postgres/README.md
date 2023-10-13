@@ -1,0 +1,1 @@
+diesel migration generate create_todos
