@@ -1,10 +1,9 @@
 This is a hobby project and there are no solid long-term plans. However, [the overall idea](https://prest.blog/motivation) seems quite promising to me, so there are things I'll likely build next:
 
-Cut blog deps - replace sass with css nesting, add `include_asset` util into build mod and reorg pwa utils into a single module, move other build utils into their modules
-
 ### Examples
 - `with-diesel` postgres and sqlite
 - `with-hyperscript`
+- `with-sass`
 - [with-askama](https://github.com/djc/askama)
 - [with-tinytemplate](https://crates.io/crates/tinytemplate)
 - [with-tauri](https://beta.tauri.app/)

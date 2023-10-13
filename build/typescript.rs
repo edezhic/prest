@@ -1,4 +1,17 @@
+use super::{bench, out_path, track_non_rust_path};
 use anyhow::Error;
+
+pub fn bundle_ts(input: &str, filename: &str) {
+    let start = std::time::Instant::now();
+    track_non_rust_path(input); // track imports?
+    let contents = swc_run(input, false, false).unwrap();
+    std::fs::write(out_path(filename), contents).unwrap();
+    bench(
+        &format!("{input} transpiled and bundled as {filename}"),
+        start,
+    );
+}
+
 use std::{collections::HashMap, sync::Arc};
 
 use swc_bundler::{Bundler, Hook, Load, ModuleData, ModuleRecord};
@@ -19,13 +32,10 @@ use swc_ecma_parser::{parse_file_as_module, Syntax, TsConfig};
 use swc_ecma_transforms_base::fixer::fixer;
 use swc_ecma_visit::{FoldWith, VisitMutWith};
 
-pub fn run(main: &str, minify: bool, tree_shaking: bool) -> Result<String, Error> {
+fn swc_run(main: &str, minify: bool, tree_shaking: bool) -> Result<String, Error> {
     // starting points for each bundle's build
     let mut entries = HashMap::default();
-    entries.insert(
-        "main".into(),
-        swc_common::FileName::Real(main.into()),
-    );
+    entries.insert("main".into(), swc_common::FileName::Real(main.into()));
     let source_map_rc = Arc::new(SourceMap::default());
 
     // bundler helpers to handle imports
@@ -48,7 +58,9 @@ pub fn run(main: &str, minify: bool, tree_shaking: bool) -> Result<String, Error
         module: Default::default(),
     };
 
-    use swc_ecma_minifier::option::{MinifyOptions, CompressOptions, TopLevelOptions, MangleOptions};
+    use swc_ecma_minifier::option::{
+        CompressOptions, MangleOptions, MinifyOptions, TopLevelOptions,
+    };
     let minify_options = &MinifyOptions {
         compress: Some(CompressOptions {
             top_level: Some(TopLevelOptions { functions: true }),
@@ -115,12 +127,11 @@ pub fn run(main: &str, minify: bool, tree_shaking: bool) -> Result<String, Error
                 })
             })
             .collect();
-    
 
         // since we're building only 1 bundle
         let bundled = &bundles[0];
 
-        // write it's emitted pieces into buffer  
+        // write it's emitted pieces into buffer
         let mut buf = vec![];
         {
             let writer = JsWriter::new(source_map_rc.clone(), "\n", &mut buf, None);
@@ -140,7 +151,7 @@ pub fn run(main: &str, minify: bool, tree_shaking: bool) -> Result<String, Error
 
         // convert buffer into UTF-8 and save into the file
         let code = String::from_utf8_lossy(&buf).to_string();
-        
+
         code
     });
     Ok(code)
@@ -173,12 +184,8 @@ impl Load for Loader {
             &mut vec![],
         )
         .unwrap_or_else(|err| {
-            let handler = Handler::with_tty_emitter(
-                ColorConfig::Always,
-                true,
-                false,
-                Some(self.0.clone()),
-            );
+            let handler =
+                Handler::with_tty_emitter(ColorConfig::Always, true, false, Some(self.0.clone()));
             err.into_diagnostic(&handler).emit();
             panic!(
                 "failed to parse(load) file {}",

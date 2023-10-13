@@ -35,7 +35,7 @@ async fn posts(
 
 fn full_html(content: Markup) -> Markup {
     html!( html data-theme="dark" {
-        (Head::default().title("Prest Blog").with(html!(link rel="stylesheet" href="/ui.css"{})))
+        (Head::default().title("Prest Blog").with(html!(link rel="stylesheet" href="/styles.css"{})))
         body hx-boost="true" hx-swap="innerHTML transition:true show:window:top" hx-target="main" { 
             header."top container" {
                 nav { 
