@@ -22,6 +22,8 @@ pub use utils::*;
 #[cfg(feature = "build")]
 pub mod build;
 
+//pub type SyncState<T> = Lazy<Arc<Mutex<T>>>;
+
 pub static REGISTER_SW_SNIPPET: &str = 
     "if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {type: 'module'});";
 
