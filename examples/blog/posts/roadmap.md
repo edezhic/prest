@@ -1,6 +1,5 @@
 This is a hobby project and there are no solid long-term plans. However, [the overall idea](https://prest.blog/motivation) seems quite promising to me, so there are things I'll likely build next:
 
-- sqlx-sqlite todos
 - move substrate contract build and test commands into the build.rs
 - simplify gluesql example. Add some gluesql/block_on utils into prest?
 

@@ -1,7 +1,6 @@
 mod escape;
 mod head;
 pub use head::*;
-mod utils;
 
 use crate::*;
 use std::{borrow::Cow, boxed::Box, string::String, sync::Arc};

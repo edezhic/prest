@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS todos
 (
-    id          INTEGER PRIMARY KEY NOT NULL,
+    uuid        TEXT PRIMARY KEY    NOT NULL,
     task        TEXT                NOT NULL,
-    done        BOOLEAN             NOT NULL DEFAULT 0
+    done        BOOLEAN             NOT NULL DEFAULT FALSE
 );

@@ -10,6 +10,7 @@ Project's [repo](https://github.com/edezhic/prest) contains a bunch of examples 
 - `with-substrate-contract` includes an [ink!](https://use.ink/)-based contract for [Substrate](https://substrate.io/)-based blockchains like [Polkadot](https://www.polkadot.network/)
 - `with-tls` includes [Rustls](https://github.com/rustls/rustls)-based HTTPS server
 - `with-scraping` includes [scraper](https://github.com/causal-agent/scraper-based)-based parser for a news website
+- `with-sqlx-sqlite` includes SQLx ... SQLite ...
 - `with-gluesql-sled` includes embedded [sled](http://sled.rs/)-powered [GlueSQL](https://gluesql.org/docs/) DB
 - `with-tracing` includes tracing on the host
 - `with-ui-typescript` includes TypeScript transpiled into JS, requires [nightly](https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust)

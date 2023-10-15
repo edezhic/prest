@@ -1,3 +1,15 @@
+use crate::*;
+
+#[macro_export]
+macro_rules! template {
+    ($($markup:tt)*) => { get(|| async { html!($($markup)*) })};
+}
+
+#[macro_export]
+macro_rules! redirect {
+    ($path:literal) => { all(|| async { Redirect::to($path) })};
+}
+
 #[cfg(feature = "sw-bindings")]
 mod sw_bindings;
 #[cfg(feature = "sw-bindings")]
