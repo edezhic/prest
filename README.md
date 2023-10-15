@@ -5,12 +5,12 @@ Project's [repo](https://github.com/edezhic/prest) contains a bunch of examples 
 - `hello-world` is the simplest example in just a couple of lines of code
 - `hello-world-pwa` is a basic Progressive RESTful app in ~25 LoC
 - `blog` includes description of the project, available at [prest.blog](https://prest.blog)
-- `with-oauth` includes Google OAuth flow and basic session + user management
+- `with-oauth-google` includes Google OAuth flow and basic session + user management
 - `with-candle-mistral` includes [Mistral](https://mistral.ai/news/announcing-mistral-7b/) LLM using [candle](https://github.com/huggingface/candle) ML framework
 - `with-substrate-contract` includes an [ink!](https://use.ink/)-based contract for [Substrate](https://substrate.io/)-based blockchains like [Polkadot](https://www.polkadot.network/)
 - `with-tls` includes [Rustls](https://github.com/rustls/rustls)-based HTTPS server
 - `with-scraping` includes [scraper](https://github.com/causal-agent/scraper-based)-based parser for a news website
-- `with-gluesql` includes embedded [sled](http://sled.rs/)-powered [GlueSQL](https://gluesql.org/docs/) DB
+- `with-gluesql-sled` includes embedded [sled](http://sled.rs/)-powered [GlueSQL](https://gluesql.org/docs/) DB
 - `with-tracing` includes tracing on the host
 - `with-ui-typescript` includes TypeScript transpiled into JS, requires [nightly](https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust)
 

@@ -1,7 +1,6 @@
 mod llm;
 use prest::*;
 use std::sync::Arc;
-use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
 
 static LLM: Lazy<Arc<Mutex<llm::Mistral>>> = Lazy::new(|| { 

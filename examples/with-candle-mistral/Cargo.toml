@@ -10,7 +10,6 @@ path = "./serve.rs"
 [dependencies]
 prest = { path = "../../", features = ["host"] }
 tokio = { version = "1.32", features = ["full"] }
-once_cell = "*"
 serde = "*"
 
 hf-hub = "0.3.0"

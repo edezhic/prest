@@ -21,17 +21,30 @@ impl<'a> Head<'a> {
         self.title = title;
         self
     }
+    pub fn pwa() -> Head<'a> {
+        Self {
+            title: "Prest PWA",
+            favicon: Some("/favicon.ico"),
+            manifest: Some("/.webmanifest"),
+            viewport: Some("width=device-width, initial-scale=1.0"),
+            theme_color: Some("#a21caf"),
+            register_sw: true,
+            include_htmx: true,
+            include_picocss: true,
+            other: None,
+        }
+    }
 }
 
 impl<'a> Default for Head<'a> {
     fn default() -> Self {
         Self {
             title: "Prest app",
-            favicon: Some("/favicon.ico"),
-            manifest: Some("/.webmanifest"),
+            favicon: None,
+            manifest: None,
             viewport: Some("width=device-width, initial-scale=1.0"),
-            theme_color: Some("#a21caf"),
-            register_sw: true,
+            theme_color: None,
+            register_sw: false,
             include_htmx: true,
             include_picocss: true,
             other: None,

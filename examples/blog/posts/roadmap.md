@@ -1,14 +1,12 @@
 This is a hobby project and there are no solid long-term plans. However, [the overall idea](https://prest.blog/motivation) seems quite promising to me, so there are things I'll likely build next:
 
-- `with-sqlx-sqlite`
+- sqlx-sqlite todos
 - move substrate contract build and test commands into the build.rs
-- simplify gluesql example. Add some utils into prest?
-- pub type State = async_Lazy<Arc<tokio::mutex<T>>>>
-- pub(crate) use crate as prest; // for html macros
-- with-gluesql -> with-gluesql-sled
+- simplify gluesql example. Add some gluesql/block_on utils into prest?
 
 ### More examples
 
+- `with-seaorm-postgres`
 - [with-askama](https://github.com/djc/askama)
 - [with-tinytemplate](https://crates.io/crates/tinytemplate)
 - [with-tauri](https://beta.tauri.app/)
@@ -29,9 +27,10 @@ Include more of [tower_http](https://docs.rs/tower-http/latest/tower_http/), pro
 ### Ergonomics
 Less basic boilerplate, more configs with reasonable defaults instead of hardcoded values.
 
-Include a patched version of rust-embed to avoid having this dep everywhere.
+Shorthand for `static X: Lazy<Arc<RwLock<T>>> = ...`
+Dep tokio/sync by default for async RwLock?
 
-More integrations.
+Include a patched version of rust-embed to avoid having this dep everywhere.
 
 ### Publish
 It's not on [crates.io](https://crates.io/crates/prest) yet because it depends on the latest unpublished [axum](https://github.com/tokio-rs/axum) and related packages. Awaiting them to upload the first alpha version.

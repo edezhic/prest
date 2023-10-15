@@ -1,6 +1,5 @@
 use prest::*;
 use std::{sync::Arc, process::Command};
-use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
 
 static NODE: Lazy<Arc<Mutex<std::process::Child>>> = Lazy::new(|| { 

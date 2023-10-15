@@ -1,5 +1,5 @@
 [package]
-name = "with-oauth"
+name = "with-oauth-google"
 version = "0.0.1"
 edition = "2021"
 
@@ -10,4 +10,3 @@ path = "./serve.rs"
 [dependencies]
 prest = { path = "../../", features = ["host", "oauth"] }
 tokio = { version = "1.32", features = ["full"] }
-once_cell = "*"

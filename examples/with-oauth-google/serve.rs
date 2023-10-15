@@ -4,7 +4,6 @@ use std::{
     hash::Hash,
     sync::Arc,
 };
-use once_cell::sync::Lazy;
 use tokio::sync::RwLock;
 
 static GCLIENT: Lazy<GoogleClient> = Lazy::new(|| {

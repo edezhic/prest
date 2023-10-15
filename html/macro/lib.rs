@@ -32,6 +32,6 @@ fn expand(input: TokenStream) -> TokenStream {
         //extern crate prest;
         let mut #output_ident = alloc::string::String::with_capacity(#size_hint);
         #stmts
-        PreEscaped(#output_ident)
+        prest::PreEscaped(#output_ident)
     })
 }

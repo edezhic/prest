@@ -1,5 +1,5 @@
 [package]
-name = "with-gluesql"
+name = "with-gluesql-sled"
 version = "0.0.1"
 edition = "2021"
 
@@ -14,4 +14,3 @@ futures = "*"
 uuid = { version = "*", features = ["v4"] }
 tokio = "*"
 gluesql = { git = "https://github.com/gluesql/gluesql", default-features = false, features = ["sled-storage"]}
-once_cell = "*"

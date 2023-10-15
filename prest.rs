@@ -1,5 +1,7 @@
 #![allow(dead_code, unused_imports)]
 
+pub(crate) use crate as prest;
+
 pub use anyhow::{self, Error, Result, bail};
 pub use http::{self, header, HeaderMap, HeaderValue, StatusCode};
 pub use axum::{
@@ -11,6 +13,8 @@ pub use axum::{
     routing::{any, delete, get, patch, post, put},
     Router,
 };
+pub use once_cell::sync::Lazy;
+
 pub use html_macro::html;
 mod html;
 pub use html::*;
