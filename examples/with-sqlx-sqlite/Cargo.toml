@@ -12,4 +12,4 @@ prest = { path = "../../", features = ["host", "print-traces"] }
 tokio = { version = "1.32", features = ["full"] }
 sqlx = { version = "0.7", features = [ "runtime-tokio", "tls-rustls", "sqlite", "macros" ] }
 serde = "*"
-uuid = { version = "*", features = ["v4", "fast-rng"] }
+uuid = { version = "*", features = ["v4"] }

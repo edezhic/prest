@@ -7,7 +7,7 @@ static DB: Lazy<Pool<Sqlite>> = Lazy::new(|| {
         .expect("successful DB connection")
 });
 
-#[derive(serde::Deserialize, sqlx::FromRow)]
+#[derive(Debug, serde::Deserialize, sqlx::FromRow)]
 pub struct Todo {
     #[serde(default)]
     pub uuid: String,
@@ -32,13 +32,11 @@ async fn main() {
             .put(create_todo)
             .delete(delete_todo),
     );
-
-    println!("3");
     
     serve(service, Default::default()).await.unwrap();
 }
 
-async fn create_todo(Query(Todo { task, .. }): Query<Todo>) -> Markup {
+async fn create_todo(Form(Todo { task, .. }): Form<Todo>) -> Markup {
     use uuid::Uuid;
 
     let uuid = Uuid::new_v4().to_string(); 
@@ -52,7 +50,7 @@ async fn create_todo(Query(Todo { task, .. }): Query<Todo>) -> Markup {
     read_todos().await
 }
 
-async fn toggle_todo(Query(Todo { uuid, done, .. }): Query<Todo>) -> Markup {
+async fn toggle_todo(Form(Todo { uuid, done, .. }): Form<Todo>) -> Markup {
     let done = match done {
         true => "TRUE",
         false => "FALSE",
@@ -66,40 +64,53 @@ async fn toggle_todo(Query(Todo { uuid, done, .. }): Query<Todo>) -> Markup {
         .rows_affected();
 
     if rows_affected == 0 {
-        println!("something went wrong with completing {uuid:?}")
+        println!("something went wrong with toggle for {uuid:?}")
     }
 
     read_todos().await
 }
 
-async fn delete_todo(Query(Todo { uuid, .. }): Query<Todo>) -> Markup {
+async fn delete_todo(Form(Todo { uuid, .. }): Form<Todo>) -> Markup {
+    let rows_affected = query("DELETE todos WHERE uuid = ?")
+        .bind(uuid.clone())
+        .execute(&*DB)
+        .await
+        .unwrap()
+        .rows_affected();
+
+    if rows_affected == 0 {
+        println!("something went wrong with deleting {uuid:?}")
+    }
+
     read_todos().await
 }
 
 async fn read_todos() -> Markup {
-    let mut stream = query_as::<Sqlite, Todo>("SELECT * FROM todos").fetch(&*DB);
-    println!("{:?}", stream.size_hint());
-    todos_page(vec![])
+    let todos = query_as::<Sqlite, Todo>("SELECT * FROM todos")
+            .fetch_all(&*DB)
+            .await
+            .unwrap();
+    todos_page(todos)
 }
 
 fn todos_page(todos: Vec<Todo>) -> Markup {
     html! { html data-theme="dark" {
         (Head::default().title("With SQLx and SQLite"))
-        body {
+        body."container" hx-target="body" {
             form hx-put="/" {
                 label for="task" {"Task description:"}
                 input type="text" name="task" {}
                 input type="submit" value="Create" {}
             }
-            ul {
+            article {
                 @for todo in todos {
-                    li {
-                        input type="checkbox" name="done" value={(todo.done)} {}
-                        (todo.task)
-                        form hx-delete="/" {
-                            input type="hidden" name="uuid" value={(todo.uuid)} {}
-                            input type="submit" value="Remove" {}
+                    div style="display: flex; justify-content: space-between; align-items: center;" {
+                        label for="done" {
+                            input type="checkbox" id="done" name="done" {}
+                            {(todo.task)}
                         }
+                        input type="hidden" name="uuid" value={(todo.uuid)} {}
+                        a hx-delete="/" role="button" class="secondary outline" {"Delete"}
                     }
                 }
             }
