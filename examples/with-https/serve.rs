@@ -16,13 +16,8 @@ async fn main() {
 }
 
 async fn homepage() -> Markup {
-    html!(
-        html {
-            head {
-                title {"With TLS"}
-                link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css" {}
-            }
-            body {h1{"Check out the connection / protocol!"}}
-        }
-    )
+    html!((DOCTYPE) html {
+        (Head::default().title("With TLS"))
+        body {h1{"Check out the connection / protocol!"}}
+    })
 }  

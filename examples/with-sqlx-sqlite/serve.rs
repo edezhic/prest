@@ -19,9 +19,16 @@ pub struct Todo {
 
 #[tokio::main]
 async fn main() {
-    start_printing_traces();
+    println!("0");
+    //start_printing_traces();
 
-    migrate!().run(&*DB).await.unwrap();
+    let db = Lazy::force(&DB);
+    
+    println!("1");
+    
+    migrate!().run(DB).await.unwrap();
+
+    println!("2");
 
     let service = Router::new().route(
         "/",
@@ -30,10 +37,14 @@ async fn main() {
             .put(create_todo)
             .delete(delete_todo),
     );
+
+    println!("3");
+    
     serve(service, Default::default()).await.unwrap();
 }
 
 async fn create_todo(Query(Todo { task, .. }): Query<Todo>) -> Markup {
+    println!("4");
     let uuid = "uuid".to_owned();
     // Insert the task, then obtain the ID of this row
     let id = query("INSERT INTO todos ( uuid, task ) VALUES ( ?, ? )")
@@ -43,7 +54,8 @@ async fn create_todo(Query(Todo { task, .. }): Query<Todo>) -> Markup {
         .await
         .unwrap()
         .last_insert_rowid();
-    println!("{:?}", id);
+    
+    println!("Hurray! res==={:?}", id);
     read_todos().await
 }
 
