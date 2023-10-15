@@ -87,7 +87,7 @@ async fn read_todos() -> Markup {
         else { return vec![] };
     let Payload::Select {rows, ..} = payload 
         else { return vec![] };
-    // let todos = rows.map(...);
+    // let todos = rows.iter().map(...).collect::<Vec<Todo>>();
     let mut todos = vec![];
     for row in rows {
         let Value::Uuid(uuid) = row[0].clone() else { continue; };

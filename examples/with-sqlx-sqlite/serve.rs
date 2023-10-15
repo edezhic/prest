@@ -19,16 +19,11 @@ pub struct Todo {
 
 #[tokio::main]
 async fn main() {
-    println!("0");
-    //start_printing_traces();
+    start_printing_traces();
 
     let db = Lazy::force(&DB);
     
-    println!("1");
-    
-    migrate!().run(DB).await.unwrap();
-
-    println!("2");
+    migrate!().run(db).await.unwrap();
 
     let service = Router::new().route(
         "/",
@@ -44,18 +39,16 @@ async fn main() {
 }
 
 async fn create_todo(Query(Todo { task, .. }): Query<Todo>) -> Markup {
-    println!("4");
-    let uuid = "uuid".to_owned();
-    // Insert the task, then obtain the ID of this row
-    let id = query("INSERT INTO todos ( uuid, task ) VALUES ( ?, ? )")
-        .bind(uuid)
+    use uuid::Uuid;
+
+    let uuid = Uuid::new_v4().to_string(); 
+    query("INSERT INTO todos ( uuid, task ) VALUES ( ?, ? )")
+        .bind(uuid.clone())
         .bind(task)
         .execute(&*DB)
         .await
-        .unwrap()
-        .last_insert_rowid();
+        .unwrap();
     
-    println!("Hurray! res==={:?}", id);
     read_todos().await
 }
 
@@ -64,15 +57,15 @@ async fn toggle_todo(Query(Todo { uuid, done, .. }): Query<Todo>) -> Markup {
         true => "TRUE",
         false => "FALSE",
     };
-    let rows_affected = query_as("UPDATE todos SET done = TRUE WHERE uuid = ?")
+    let rows_affected = query("UPDATE todos SET done = ? WHERE uuid = ?")
         .bind(done.to_owned())
         .bind(uuid.clone())
-        .execute(pool)
+        .execute(&*DB)
         .await
         .unwrap()
         .rows_affected();
 
-    if rows_affected = 0 {
+    if rows_affected == 0 {
         println!("something went wrong with completing {uuid:?}")
     }
 

@@ -1,4 +1,4 @@
-run = "cargo run -p blog"
+run = "cargo run -p with-sqlx-sqlite"
 hidden = ["target"]
 
 [packager]
