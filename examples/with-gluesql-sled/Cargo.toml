@@ -12,5 +12,5 @@ prest = { path = "../../", features = ["host"] }
 serde = "*"
 futures = "*"
 uuid = { version = "*", features = ["v4"] }
-tokio = "*"
+tokio = { version = "*", features = ["full"] }
 gluesql = { git = "https://github.com/gluesql/gluesql", default-features = false, features = ["sled-storage"]}
