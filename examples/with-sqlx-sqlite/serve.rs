@@ -99,7 +99,7 @@ mod todo {
         fn render(&self) -> Markup {
             let id = Uuid::parse_str(&self.uuid).unwrap();
             let id = format!("uuid-{id}");
-            let cb = format!("on change from trigger submit on #{id}");
+            let cb = format!("on change from .{id} trigger submit on #{id}");
             html!(
                 div style="height: 64px; display: flex; justify-content: space-between; align-items: center;" {
                     form #(id) hx-patch="/"  style="margin-bottom: 0px;" {
