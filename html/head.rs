@@ -8,6 +8,7 @@ pub struct Head<'a> {
     theme_color: Option<&'a str>,
     register_sw: bool,
     include_htmx: bool,
+    include_hyperscript: bool,
     include_picocss: bool,
     other: Option<Markup>,
 }
@@ -30,6 +31,7 @@ impl<'a> Head<'a> {
             theme_color: Some("#a21caf"),
             register_sw: true,
             include_htmx: true,
+            include_hyperscript: true,
             include_picocss: true,
             other: None,
         }
@@ -46,6 +48,7 @@ impl<'a> Default for Head<'a> {
             theme_color: None,
             register_sw: false,
             include_htmx: true,
+            include_hyperscript: true,
             include_picocss: true,
             other: None,
         }
@@ -62,7 +65,8 @@ impl<'a> Render for Head<'a> {
                 @if let Some(viewport) = self.viewport { meta name="viewport" content=(viewport); }
                 @if let Some(color) = self.theme_color { meta name="theme-color" content=(color); }
                 @if self.register_sw { script {(REGISTER_SW_SNIPPET)} }
-                @if self.include_htmx { script src="https://unpkg.com/htmx.org@1.9.0" integrity="sha384-aOxz9UdWG0yBiyrTwPeMibmaoq07/d3a96GCbb9x60f3mOt5zwkjdbcHFnKH8qls" crossorigin="anonymous"{} }
+                @if self.include_htmx { script src="https://unpkg.com/htmx.org@1.9.0" crossorigin="anonymous"{} }
+                @if self.include_hyperscript { script src="https://unpkg.com/hyperscript.org@0.9.11" crossorigin="anonymous"{} }
                 @if self.include_picocss { link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"{} }
                 @if let Some(markup) = &self.other {(markup.clone())}
             }
