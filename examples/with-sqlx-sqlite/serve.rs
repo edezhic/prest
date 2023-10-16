@@ -1,14 +1,29 @@
 use prest::*;
 use serde::Deserialize;
-use sqlx::{migrate, query_as, FromRow, Sqlite, SqlitePool};
+use sqlx::{migrate, query, query_as, FromRow, Sqlite, SqlitePool};
+
+#[tokio::main]
+async fn main() {
+    migrate!().run(&*DB).await.unwrap();
+    let service = Router::new()
+        .route(
+            "/",
+            template!(@for todo in get_todos().await {(todo)})
+                .patch(|Form(todo): Form<Todo>| async move { toggle_todo(todo).await.render() })
+                .put(|Form(todo): Form<Todo>| async move { add_todo(todo).await.render() })
+                .delete(|Form(todo): Form<Todo>| async move {
+                    delete_todo(todo).await;
+                }),
+        )
+        .layer(Htmxify::wrap(page));
+    serve(service, Default::default()).await.unwrap();
+}
 
 fn new_uuid() -> String {
     uuid::Uuid::new_v4().to_string()
 }
 
-static DB: Lazy<SqlitePool> = Lazy::new(|| {
-    SqlitePool::connect_lazy("sqlite::memory:").unwrap()
-});
+static DB: Lazy<SqlitePool> = Lazy::new(|| SqlitePool::connect_lazy("sqlite::memory:").unwrap());
 
 #[derive(FromRow, Deserialize)]
 struct Todo {
@@ -22,10 +37,7 @@ struct Todo {
 
 async fn get_todos() -> Vec<Todo> {
     let q = "select * from todos";
-    query_as::<Sqlite, Todo>(q)
-        .fetch_all(&*DB)
-        .await
-        .unwrap()
+    query_as::<Sqlite, Todo>(q).fetch_all(&*DB).await.unwrap()
 }
 
 async fn add_todo(todo: Todo) -> Todo {
@@ -49,33 +61,7 @@ async fn toggle_todo(todo: Todo) -> Todo {
 }
 async fn delete_todo(todo: Todo) {
     let q = "delete from todos where uuid = ?";
-    query_as::<Sqlite, Todo>(q)
-        .bind(todo.uuid)
-        .fetch_one(&*DB)
-        .await
-        .unwrap();
-}
-
-#[tokio::main]
-async fn main() {
-    start_printing_traces();
-    migrate!().run(&*DB).await.unwrap();
-    let service = Router::new()
-        .route(
-            "/",
-            template!(@for todo in get_todos().await {(todo)})
-                .patch(|Form(todo): Form<Todo>| async move {
-                    toggle_todo(todo).await.render()
-                })
-                .put(|Form(todo): Form<Todo>| async move {
-                    add_todo(todo).await.render()
-                })
-                .delete(|Form(todo): Form<Todo>| async move {
-                    delete_todo(todo).await;
-                }),
-        )
-        .layer(Htmxify::wrap(page));
-    serve(service, Default::default()).await.unwrap();
+    query(q).bind(todo.uuid).execute(&*DB).await.unwrap();
 }
 
 impl Render for Todo {
@@ -108,7 +94,7 @@ pub fn page(content: Markup) -> Markup {
     html! { html data-theme="dark" {
         (Head::default().title("Todo"))
         body."container" hx-target="article" style="margin-top: 16px;" {
-            form hx-put="/" hx-swap="beforeend" _="on htmx:afterSwap reset() me" {
+            form hx-put="/" hx-swap="beforeend" _="on htmx:afterRequest reset() me" {
                 label for="task" {"Task description:"}
                 input type="text" name="task" {}
                 button type="submit" {"Add"}
