@@ -1,5 +1,6 @@
 use prest::*;
 use sqlx::{migrate, query, query_as, Pool, Sqlite};
+use todo::{Todo, page};
 
 static DB: Lazy<Pool<Sqlite>> = Lazy::new(|| {
     sqlx::sqlite::SqlitePoolOptions::new()
@@ -7,8 +8,64 @@ static DB: Lazy<Pool<Sqlite>> = Lazy::new(|| {
         .expect("successful DB connection")
 });
 
+#[tokio::main]
+async fn main() {
+    //start_printing_traces();
+    migrate!().run(&*DB).await.unwrap();
+    let service = Router::new()
+        .route(
+            "/",
+            get(todos)
+                .patch(toggle_todo)
+                .put(new_todo)
+                .delete(delete_todo),
+        )
+        .layer(Htmxify::wrap(page));
+    serve(service, Default::default()).await.unwrap();
+}
+
+async fn new_todo(Form(todo): Form<Todo>) -> Markup {
+    query("INSERT INTO todos ( uuid, task ) VALUES ( ?, ? )")
+        .bind(Todo::new_uuid())
+        .bind(todo.task)
+        .execute(&*DB)
+        .await
+        .unwrap();
+    todos().await
+}
+
+async fn toggle_todo(Form(todo): Form<Todo>) -> Markup {
+    query("UPDATE todos SET done = ? WHERE uuid = ?")
+        .bind(!todo.done)
+        .bind(todo.uuid.clone())
+        .execute(&*DB)
+        .await
+        .unwrap();
+    todos().await
+}
+
+async fn delete_todo(Form(todo): Form<Todo>) -> Markup {
+    query("DELETE FROM todos WHERE uuid = ?")
+        .bind(todo.uuid.clone())
+        .execute(&*DB)
+        .await
+        .unwrap();
+    todos().await
+}
+
+async fn todos() -> Markup {
+    let todos = query_as::<Sqlite, Todo>("SELECT * FROM todos")
+        .fetch_all(&*DB)
+        .await
+        .unwrap();
+    html!(@for todo in todos {(todo)})
+}
+
 mod todo {
-    #[derive(Debug, serde::Deserialize, sqlx::FromRow)]
+    // dep:sqlx without runtime and other default-features
+    use sqlx::FromRow;
+    use serde::Deserialize;
+    #[derive(Debug, FromRow, Deserialize)]
     pub struct Todo {
         #[serde(default)]
         pub uuid: String,
@@ -16,6 +73,11 @@ mod todo {
         pub task: String,
         #[serde(default)]
         pub done: bool,
+    }
+    impl Todo {
+        pub fn new_uuid() -> String {
+            
+        }
     }
     impl Render for Todo {
         fn render(&self) -> Markup {
@@ -30,7 +92,7 @@ mod todo {
                 div style="height: 64px; display: flex; justify-content: space-between; align-items: center;" {
                     form hx-patch="/" id={(id)} style="margin-bottom: 0px;" {
                         input type="hidden" name="uuid" value={(self.uuid)} {}
-                        input type="hidden" name="done" value={(!self.done)} {}
+                        input type="hidden" name="done" value={(self.done)} {}
                         label {
                             input type="checkbox" _={(done)} {}
                             {(self.task)}
@@ -57,58 +119,4 @@ mod todo {
             article {(content)}
         })
     }
-}
-use todo::{Todo, page};
-    
-#[tokio::main]
-async fn main() {
-    //start_printing_traces();
-    migrate!().run(&*DB).await.unwrap();
-    let service = Router::new()
-        .route(
-            "/",
-            get(todos)
-                .patch(toggle_todo)
-                .put(create_todo)
-                .delete(delete_todo),
-        )
-        .layer(Htmxify::wrap(page));
-    serve(service, Default::default()).await.unwrap();
-}
-
-async fn create_todo(Form(todo): Form<Todo>) -> Markup {
-    query("INSERT INTO todos ( uuid, task ) VALUES ( ?, ? )")
-        .bind(uuid::Uuid::new_v4().to_string())
-        .bind(todo.task)
-        .execute(&*DB)
-        .await
-        .unwrap();
-    todos().await
-}
-
-async fn toggle_todo(Form(todo): Form<Todo>) -> Markup {
-    query("UPDATE todos SET done = ? WHERE uuid = ?")
-        .bind(todo.done)
-        .bind(todo.uuid.clone())
-        .execute(&*DB)
-        .await
-        .unwrap();
-    todos().await
-}
-
-async fn delete_todo(Form(todo): Form<Todo>) -> Markup {
-    query("DELETE FROM todos WHERE uuid = ?")
-        .bind(todo.uuid.clone())
-        .execute(&*DB)
-        .await
-        .unwrap();
-    todos().await
-}
-
-async fn todos() -> Markup {
-    let todos = query_as::<Sqlite, Todo>("SELECT * FROM todos")
-        .fetch_all(&*DB)
-        .await
-        .unwrap();
-    html!(@for todo in todos {(todo)})
 }
