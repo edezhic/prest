@@ -21,14 +21,26 @@ struct Todo {
 }
 
 async fn get_todos() -> Vec<Todo> {
-    query_as::<Sqlite, Todo>("SELECT * FROM todos")
+    let q = "select * from todos";
+    query_as::<Sqlite, Todo>(q)
         .fetch_all(&*DB)
         .await
         .unwrap()
 }
-//async fn add_todo(todo: Todo) -> Todo {}
+
+async fn add_todo(todo: Todo) -> Todo {
+    let q = "insert into todos (uuid, task) values (?, ?) returning *";
+    query_as::<Sqlite, Todo>(q)
+        .bind(todo.uuid)
+        .bind(todo.task)
+        .fetch_one(&*DB)
+        .await
+        .unwrap()
+}
+
 async fn toggle_todo(todo: Todo) -> Todo {
-    query_as::<Sqlite, Todo>("UPDATE todos SET done = ? WHERE uuid = ?")
+    let q = "update todos set done = ? where uuid = ? returning *";
+    query_as::<Sqlite, Todo>(q)
         .bind(!todo.done)
         .bind(todo.uuid)
         .fetch_one(&*DB)
@@ -46,6 +58,8 @@ async fn main() {
             "/",
             template!(@for todo in get_todos().await {(todo)})
                 .patch(|Form(todo): Form<Todo>| async move {
+                    toggle_todo(todo).await.render()
+                    /*
                     query("UPDATE todos SET done = ? WHERE uuid = ?")
                         .bind(!todo.done)
                         .bind(todo.uuid)
@@ -53,6 +67,7 @@ async fn main() {
                         .await
                         .unwrap();
                     html!(@for todo in get_todos().await {(todo)})
+                    */
                 })
                 .put(|Form(todo): Form<Todo>| async {
                     query("INSERT INTO todos (uuid, task) VALUES (?, ?)")
