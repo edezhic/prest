@@ -7,7 +7,7 @@ Project's [repo](https://github.com/edezhic/prest) contains a bunch of examples 
 - `hello-world-pwa` is a basic Progressive RESTful app in ~25 LoC
 - `with-tracing` includes tracing on the host
 - `with-https` includes [Rustls](https://github.com/rustls/rustls)-based HTTPS server
-- `with-sqlx-sqlite` includes SQLx ... SQLite ...
+- `with-sqlx-sqlite` includes [SQLx](https://github.com/launchbadge/sqlx)-based connection to [SQLite](https://www.sqlite.org/index.html)
 - `with-gluesql-sled` includes embedded [sled](http://sled.rs/)-powered [GlueSQL](https://gluesql.org/docs/) DB
 - `with-ui-typescript` includes TypeScript transpiled into JS, requires [nightly](https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust)
 - `with-oauth-google` includes Google OAuth flow and basic session + user management

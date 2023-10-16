@@ -1,6 +1,6 @@
 use prest::*;
 use serde::Deserialize;
-use sqlx::{migrate, query, query_as, FromRow, Sqlite, SqlitePool};
+use sqlx::{migrate, query_as, FromRow, Sqlite, SqlitePool};
 
 fn new_uuid() -> String {
     uuid::Uuid::new_v4().to_string()
@@ -47,7 +47,14 @@ async fn toggle_todo(todo: Todo) -> Todo {
         .await
         .unwrap()
 }
-//async fn delete_todo(todo: Todo) -> Todo {}
+async fn delete_todo(todo: Todo) {
+    let q = "delete from todos where uuid = ?";
+    query_as::<Sqlite, Todo>(q)
+        .bind(todo.uuid)
+        .fetch_one(&*DB)
+        .await
+        .unwrap();
+}
 
 #[tokio::main]
 async fn main() {
@@ -59,32 +66,12 @@ async fn main() {
             template!(@for todo in get_todos().await {(todo)})
                 .patch(|Form(todo): Form<Todo>| async move {
                     toggle_todo(todo).await.render()
-                    /*
-                    query("UPDATE todos SET done = ? WHERE uuid = ?")
-                        .bind(!todo.done)
-                        .bind(todo.uuid)
-                        .execute(&*DB)
-                        .await
-                        .unwrap();
-                    html!(@for todo in get_todos().await {(todo)})
-                    */
                 })
-                .put(|Form(todo): Form<Todo>| async {
-                    query("INSERT INTO todos (uuid, task) VALUES (?, ?)")
-                        .bind(todo.uuid)
-                        .bind(todo.task)
-                        .execute(&*DB)
-                        .await
-                        .unwrap();
-                    html!(@for todo in get_todos().await {(todo)})
+                .put(|Form(todo): Form<Todo>| async move {
+                    add_todo(todo).await.render()
                 })
-                .delete(|Form(todo): Form<Todo>| async {
-                    query("DELETE FROM todos WHERE uuid = ?")
-                        .bind(todo.uuid)
-                        .execute(&*DB)
-                        .await
-                        .unwrap();
-                    html!(@for todo in get_todos().await {(todo)})
+                .delete(|Form(todo): Form<Todo>| async move {
+                    delete_todo(todo).await;
                 }),
         )
         .layer(Htmxify::wrap(page));
@@ -96,7 +83,7 @@ impl Render for Todo {
         let id = format!("uuid-{}", &self.uuid);
         let cb = format!("on change from .{id} trigger submit on #{id}");
         html!(
-            div style="height: 64px; display: flex; justify-content: space-between; align-items: center;" {
+            div hx-target="this" hx-swap="outerHTML" style="height: 64px; display: flex; justify-content: space-between; align-items: center;" {
                 form #(id) hx-patch="/"  style="margin-bottom: 0px;" {
                     input type="hidden" name="uuid" value={(self.uuid)} {}
                     input type="hidden" name="done" value={(self.done)} {}
@@ -121,12 +108,12 @@ pub fn page(content: Markup) -> Markup {
     html! { html data-theme="dark" {
         (Head::default().title("Todo"))
         body."container" hx-target="article" style="margin-top: 16px;" {
-            form hx-put="/" _="on htmx:afterRequest reset() me" {
+            form hx-put="/" hx-swap="beforeend" _="on htmx:afterSwap reset() me" {
                 label for="task" {"Task description:"}
                 input type="text" name="task" {}
                 button type="submit" {"Add"}
             }
+            article {(content)}
         }
-        article {(content)}
     }}
 }
