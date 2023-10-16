@@ -18,6 +18,9 @@ requiredFiles = [".replit", "replit.nix"]
 [languages.rust]
 pattern = "**/*.rs"
 
+[languages.rust.languageServer]
+start = "rust-analyzer"
+
 [deployment]
 run = ["sh", "-c", "./target/debug/serve"]
 build = ["sh", "-c", "cargo build -p blog"]

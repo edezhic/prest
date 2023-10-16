@@ -3,9 +3,9 @@
     pkgs.rustc
 		pkgs.rustfmt
 		pkgs.cargo
-		pkgs.cargo-edit
-		pkgs.openssl # for hf-hub model loading
+		pkgs.rust-analyzer
 		pkgs.pkg-config
+		pkgs.openssl # for candle-mistral (hf-hub model download)
 		pkgs.sqlite # for sqlx-sqlite example
 	];
 }
