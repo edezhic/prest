@@ -1,4 +1,4 @@
-This is a hobby project and there are no solid long-term plans. However, [the overall idea](https://prest.blog/motivation) seems quite promising to me, so there are things I'll likely build next:
+This is a hobby project so there are no solid long-term plans. However, [the overall idea](https://prest.blog/motivation) seems quite promising to me, so there are things I'll likely build next:
 
 - more hyperscript for the blog: fix and htmxify markdown links, ...?
 - dev hyperscript/wasm ui tools
