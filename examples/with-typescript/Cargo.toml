@@ -1,5 +1,5 @@
 [package]
-name = "with-ui-typescript"
+name = "with-typescript"
 version = "0.0.1"
 edition = "2021"
 
