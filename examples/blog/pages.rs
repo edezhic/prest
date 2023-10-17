@@ -39,7 +39,7 @@ fn full_html(content: Markup) -> Markup {
         body hx-boost="true" hx-swap="innerHTML transition:true show:window:top" hx-target="main" { 
             header."top container" {
                 nav { 
-                    ul { h3."logo"{ li { a href="/" {"Prest"} } } }
+                    ul { h3."logo"{ li { a href="/" {"prest"} } } }
                     ul {
                         li { a href="/motivation" {"Motivation"} }
                         li { a href="/roadmap" {"Roadmap"} }

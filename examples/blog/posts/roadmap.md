@@ -1,20 +1,20 @@
 This is a hobby project and there are no solid long-term plans. However, [the overall idea](https://prest.blog/motivation) seems quite promising to me, so there are things I'll likely build next:
 
-- move substrate contract build and test commands into the build.rs
+- more hyperscript for the blog: fix and htmxify markdown links, ...?
+- dev hyperscript/wasm ui tools
+- move simplest examples into docs?
 
 ### More examples
 
-- `with-seaorm-postgres`
-- [with-askama](https://github.com/djc/askama)
+- [with-askama](https://github.com/djc/askama) + `.sass`?
 - [with-tinytemplate](https://crates.io/crates/tinytemplate)
 - [with-tauri](https://beta.tauri.app/)
 - `with-mongo`
-- `with-hyperscript`
-- `with-sass`
-- `with-webrtc`? with UI wasm?
+- `with-diesel-postgres` on replit?
 - `with-openapi`
+- `with-ui-wasm`
 - `into-container-scratch`
-- `into-wasi`
+- `into-wasi` [tokio partially supports WASI](https://docs.rs/tokio/latest/tokio/#wasm-support)
 
 ### Middleware
 

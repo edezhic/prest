@@ -2,7 +2,7 @@
 use prest::*;
 
 fn shared_routes() -> Router {
-    Router::new().route("/",template!((Head::pwa()) body {"Hello from PWA!"}))
+    Router::new().route("/",template!((Head::pwa()) h1{"Hello from PWA!"}))
 }
 
 #[cfg(feature = "host")]
