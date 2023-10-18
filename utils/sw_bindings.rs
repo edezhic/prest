@@ -6,7 +6,9 @@ use js_sys::{Array, Reflect, Set, Uint8Array, Promise};
 pub use web_sys::{FetchEvent, ServiceWorkerGlobalScope};
 use wasm_bindgen::{JsCast, JsValue};
 
-pub async fn process_fetch_event(build_svc: fn() -> Router, sw: ServiceWorkerGlobalScope, event: FetchEvent) {
+pub use wasm_bindgen::wasm_bindgen;
+
+pub async fn serve(router: Router, sw: ServiceWorkerGlobalScope, event: FetchEvent) {
     let host = &sw.location().host();
     set_panic_hook();
     let request = fetch_into_axum_request(&event).await;
@@ -14,8 +16,8 @@ pub async fn process_fetch_event(build_svc: fn() -> Router, sw: ServiceWorkerGlo
     if request.uri().host() != Some(host) {
         return;
     }
-    // pass the request through the ui service
-    let Ok(response) = build_svc().call(request).await else { return };
+    // pass the request to the router
+    let Ok(response) = router.call(request).await else { return };
     // proceed only if OK
     if response.status().as_u16() != 200 {
         return;

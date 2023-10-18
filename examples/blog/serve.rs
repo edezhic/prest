@@ -12,7 +12,7 @@ struct Assets;
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     let service = pages::service().layer(embed(Assets));
-    serve(service, Default::default()).await.unwrap();
+    serve(service, Default::default()).await
 }
 
 #[cfg(feature = "sw")]

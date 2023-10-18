@@ -14,26 +14,25 @@ impl Default for Addr {
     }
 }
 
-pub async fn serve(router: Router, addr: Addr) -> Result<()> {
+pub async fn serve(router: Router, addr: Addr) {
     let svc = router.into_make_service();
     let socket_addr = std::net::SocketAddr::from((addr.ip, addr.port));
-    axum_server::bind(socket_addr).serve(svc).await?;
-    anyhow::bail!("Server stopped without emitting errors")
+    axum_server::bind(socket_addr).serve(svc).await.unwrap();
 }
 
 #[cfg(feature = "tls")]
 pub use axum_server::tls_rustls::RustlsConfig;
 #[cfg(feature = "tls")]
-pub async fn serve_tls(router: Router, tls_config: RustlsConfig) -> Result<()> {
+pub async fn serve_tls(router: Router, tls_config: RustlsConfig) {
     let svc = router.into_make_service();
     let https_addr = std::net::SocketAddr::from(([127, 0, 0, 1], 443));
     axum_server::bind_rustls(https_addr, tls_config)
         .serve(svc)
-        .await?;
-    anyhow::bail!("Server stopped without emitting errors")
+        .await
+        .unwrap();
 }
 #[cfg(feature = "tls")]
-pub async fn redirect_to_origin<N: AsRef<str>>(origin: N) -> Result<()> {
+pub async fn redirect_to_origin<N: AsRef<str>>(origin: N) {
     use axum::handler::HandlerWithoutStateExt;
     use std::net::SocketAddr;
     let origin = origin.as_ref().to_owned();
@@ -44,6 +43,5 @@ pub async fn redirect_to_origin<N: AsRef<str>>(origin: N) -> Result<()> {
     };
     axum_server::bind(SocketAddr::from(([127, 0, 0, 1], 80)))
         .serve(redirect.into_make_service())
-        .await?;
-    Ok(())
+        .await.unwrap();
 }

@@ -1,19 +1,20 @@
 #![allow(dead_code)]
 use prest::*;
 
-fn shared_routes() -> Router {
-    Router::new().route("/",template!((Head::pwa()) h1{"Hello from PWA!"}))
-}
-
-#[cfg(feature = "host")]
 #[derive(rust_embed::RustEmbed, Clone)]
 #[folder = "$OUT_DIR/assets"]
 struct Assets;
 
+fn shared_routes() -> Router {
+    Router::new()
+        .route("/", template!((Head::pwa()) h1{"Hello from PWA!"}))
+        .layer(embed(Assets))
+}
+
 #[cfg(feature = "host")]
 #[tokio::main]
 async fn main() {
-    serve(shared_routes().layer(embed(Assets)), Default::default()).await.unwrap();
+    serve(shared_routes(), Default::default()).await.unwrap();
 }
 
 #[cfg(feature = "sw")]

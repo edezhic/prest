@@ -50,7 +50,7 @@ pub fn generate_pwa_assets() {
     write(out_path("logo.png"), DEFAULT_LOGO).unwrap();
     write(out_path("favicon.ico"), DEFAULT_FAVICON).unwrap();
 
-    bench(&f!("built service worker"), start);
+    bench(&f!("built PWA assets"), start);
 }
 
 use wasm_bindgen_cli_support::Bindgen;
