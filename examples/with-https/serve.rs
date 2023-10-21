@@ -12,7 +12,7 @@ async fn main() {
         .await
         .unwrap();
 
-    serve_tls(service, tls_config).await.unwrap();
+    serve_tls(service, tls_config).await
 }
 
 async fn homepage() -> Markup {

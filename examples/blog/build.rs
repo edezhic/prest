@@ -1,7 +1,6 @@
 fn main() {
-    #[cfg(all(feature = "host", not(debug_assertions)))]
-    prest::build::generate_pwa_assets();
-
-    #[cfg(feature = "host")] 
-    prest::build::include_asset("./styles.css");
+    #[cfg(feature = "host")] {
+        prest::generate_pwa_assets();
+        prest::distribute("./styles.css");
+    }
 }

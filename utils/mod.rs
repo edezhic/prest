@@ -10,15 +10,15 @@ macro_rules! redirect {
     ($path:literal) => { all(|| async { Redirect::to($path) })};
 }
 
-#[cfg(feature = "sw-bindings")]
-mod sw_bindings;
-#[cfg(feature = "sw-bindings")]
-pub use sw_bindings::*;
+#[cfg(feature = "sw")]
+mod sw;
+#[cfg(feature = "sw")]
+pub use sw::*;
 
-#[cfg(feature = "serve")]
-mod serve;
-#[cfg(feature = "serve")]
-pub use serve::*;
+#[cfg(feature = "host")]
+mod host;
+#[cfg(feature = "host")]
+pub use host::*;
 
 #[cfg(feature = "print-traces")]
 pub fn start_printing_traces() {

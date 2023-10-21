@@ -4,17 +4,17 @@ use std::task::{Context, Poll};
 pub type NonHtmxRequestWrapper = fn(Markup) -> Markup;
 
 #[derive(Clone)]
-pub struct Htmxify {
+pub struct HTMXify {
     pub wrapper: NonHtmxRequestWrapper,
 }
 
-impl Htmxify {
+impl HTMXify {
     pub fn wrap(wrapper: NonHtmxRequestWrapper) -> Self {
         Self { wrapper }
     }
 }
 
-impl<S> Layer<S> for Htmxify {
+impl<S> Layer<S> for HTMXify {
     type Service = HtmxMiddleware<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
@@ -61,13 +61,11 @@ where
             let content = if is_htmx_request {
                 content
             } else {
+                parts.headers.remove(header::CONTENT_LENGTH);
                 wrapper(content)
             };
             let body = Body::from(content.0);
-            parts.headers.remove(header::CONTENT_LENGTH);
-            if !parts.headers.contains_key(header::CONTENT_TYPE) {
-                parts.headers.insert(header::CONTENT_TYPE, HeaderValue::from_static("text/html"));
-            }
+            parts.headers.insert(header::CONTENT_TYPE, HeaderValue::from_static("text/html"));
             let response = Response::from_parts(parts, body);
             Ok(response)
         })

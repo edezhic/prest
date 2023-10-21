@@ -1,9 +1,4 @@
-This is a hobby project, there are no solid long-term plans and api is unstable. However, [the overall idea](https://prest.blog/motivation) seems quite promising to me, and there are things I'll likely build next:
-
-- more hyperscript for the blog: fix and htmxify markdown links, ...?
-- dev hyperscript/wasm ui tools
-- move simplest examples into docs?
-- include a modified version of rust-embed to export macros, impl IntoResponse/Layer, ...
+This is a hobby project, there are no solid long-term plans and api is unstable. However, [the overall idea](https://prest.blog/motivation) seems quite promising to me so there are things I'll likely build next:
 
 ### More examples
 
@@ -17,11 +12,12 @@ This is a hobby project, there are no solid long-term plans and api is unstable.
 - `into-container-scratch`
 - `into-wasi` [tokio partially supports WASI](https://docs.rs/tokio/latest/tokio/#wasm-support)
 
-### Middleware
-
-Feature? Default? Opt?
-
-Include more of [tower_http](https://docs.rs/tower-http/latest/tower_http/), probably some shared BE/FE layers like tracing ([1](https://github.com/old-storyai/tracing-wasm), [2](https://docs.rs/tracing-chrome/latest/tracing_chrome/)) or smth for [GlueSQL](https://gluesql.org/docs/0.14/getting-started/javascript-web) and other middleware.
-
 ### Publish
 It's not on [crates.io](https://crates.io/crates/prest) yet because it depends on the latest unpublished [axum](https://github.com/tokio-rs/axum) and related packages. Awaiting them to upload the first alpha version.
+
+### Other
+
+- logs for the SW: simple `console_log`s under cfg(debug_assrts) or maybe tracing ([1](https://github.com/old-storyai/tracing-wasm), [2](https://docs.rs/tracing-chrome/latest/tracing_chrome/))
+- move simplest examples into docs: tracing, TS, https?
+- dev hyperscript/wasm ui tools
+- GlueSQL on the client - [doc](https://gluesql.org/docs/0.14/getting-started/javascript-web)

@@ -3,24 +3,10 @@ name = "with-tracing"
 version = "0.0.1"
 edition = "2021"
 
-[lib]
-path = "./serve.rs"
-
 [[bin]]
 name = "serve"
 path = "./serve.rs"
 
-[features]
-default = ["host"]
-host = ["tokio/full"]
-sw = ["prest/sw-bindings", "wasm-bindgen", "wasm-bindgen-futures"]
-
 [dependencies]
 prest = { path = "../../", features = ["host", "print-traces"] }
-rust-embed = { version = "8", features = ["interpolate-folder-path"] }
-tokio = { version = "1.32", optional = true }
-wasm-bindgen = { version = "0.2.87", optional = true }
-wasm-bindgen-futures = { version = "0.4.37", optional = true }
-
-[build-dependencies]
-prest = { path = "../../", features = ["build", "pwa"] }
+tokio = { version = "1.32", features = ["full"] }

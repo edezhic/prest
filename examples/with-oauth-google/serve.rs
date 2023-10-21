@@ -37,16 +37,16 @@ pub type RequireAuthzLayer = RequireAuthorizationLayer<u64, User>;
 
 #[tokio::main]
 async fn main() {
-    prest::set_dot_env_variables();
+    set_dot_env_variables();
     let (auth_svc, session, authn) = init_auth::<u64, User>();
-    let service = prest::Router::new()
-        .route("/protected", template!(h1{"Authorized!"}))
+    let service = Router::new()
+        .route("/protected", get(html!(h1{"Authorized!"})))
         .route_layer(RequireAuthzLayer::login()) // routes above this layer require logged-in state
         .route("/", get(homepage))
         .merge(auth_svc)
         .layer(authn)
         .layer(session);
-    prest::serve(service, Default::default()).await.unwrap();
+    serve(service, Default::default()).await
 }
 
 async fn homepage() -> Markup {
@@ -70,7 +70,7 @@ pub fn init_auth<Id: Hash + Eq + Clone + Send + Sync + 'static, User: AuthUser<I
     SessionLayer<SessionMemoryStore>,
     AuthLayer<AuthMemoryStore<Id, User>, Id, User>,
 ) {
-    let secret = prest::generate_secret::<[u8; 64]>();
+    let secret = generate_secret::<[u8; 64]>();
     let session_store = SessionMemoryStore::new();
     let auth_store = Arc::new(RwLock::new(HashMap::new()));
 

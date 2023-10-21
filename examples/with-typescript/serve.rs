@@ -1,13 +1,11 @@
 use prest::*;
 
-#[derive(rust_embed::RustEmbed, Clone)]
-#[folder = "$OUT_DIR/assets"]
-struct Assets;
+embed!(Dist);
 
 #[tokio::main]
 async fn main() {
     let service = Router::new()
-        .route("/", template!{(Head::default().js("/script.js")) h1{"Hello TypeScript!"}})
-        .layer(embed(Assets));
-    serve(service, Default::default()).await.unwrap();
+        .route("/", get(html!{(Head::default().js("/dist/script.js")) h1{"Hello TypeScript!"}}))
+        .route("/dist/*any", get(Dist::handle));
+    serve(service, Default::default()).await
 }

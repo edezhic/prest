@@ -13,15 +13,15 @@ path = "./serve.rs"
 [features]
 default = ["host"]
 host = ["prest/host", "tokio"]
-sw = ["prest/sw-bindings", "prest/pwa", "wasm-bindgen", "wasm-bindgen-futures"]
+sw = ["prest/sw", "wasm-bindgen", "wasm-bindgen-futures"]
 
 [dependencies]
 prest = { path = "../../" }
 markdown = "1.0.0-alpha.14"
-rust-embed = { version = "8", features = ["interpolate-folder-path"] }
+
 tokio = { version = "1.32", optional = true, features = ["rt", "net", "macros"] }
 wasm-bindgen = { version = "0.2.87", optional = true }
 wasm-bindgen-futures = { version = "0.4.37", optional = true }
 
 [build-dependencies]
-prest = { path = "../../", features = ["build"] }
+prest = { path = "../../", features = ["pwa"] }

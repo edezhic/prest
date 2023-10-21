@@ -1,6 +1,8 @@
 mod escape;
 mod head;
 pub use head::*;
+mod htmx;
+pub use htmx::*;
 
 use crate::*;
 use std::{borrow::Cow, boxed::Box, string::String, sync::Arc};

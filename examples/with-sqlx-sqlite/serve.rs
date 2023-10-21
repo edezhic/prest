@@ -8,15 +8,15 @@ async fn main() {
     let service = Router::new()
         .route(
             "/",
-            template!(@for todo in get_todos().await {(todo)})
+            get(html!(@for todo in get_todos().await {(todo)}))
                 .patch(|Form(todo): Form<Todo>| async move { toggle_todo(todo).await.render() })
                 .put(|Form(todo): Form<Todo>| async move { add_todo(todo).await.render() })
                 .delete(|Form(todo): Form<Todo>| async move {
                     delete_todo(todo).await;
                 }),
         )
-        .layer(Htmxify::wrap(page));
-    serve(service, Default::default()).await.unwrap();
+        .layer(HTMXify::wrap(page));
+    serve(service, Default::default()).await
 }
 
 fn new_uuid() -> String {

@@ -1,3 +1,3 @@
 fn main() {
-    prest::build::bundle_ts("./script.ts", "script.js");
+    prest::bundle_ts("./script.ts", "script.js");
 }

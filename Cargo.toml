@@ -10,15 +10,13 @@ keywords = ["fullstack", "progressive", "RESTful", "PWA"]
 categories = ["development-tools", "wasm", "web-programming"]
 
 [workspace]
-members = ["examples/*", "html/macro"]
+members = ["examples/*", "html/macro", "embed/macro", "embed/utils"]
 
 [features]
-host = ["embed", "serve"]
-sw-bindings = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "web-sys", "console_error_panic_hook"]
-print-traces = ["tracing-subscriber/fmt"]
-embed = ["rust-embed", "hex"]
-serve = ["axum-server"]
+host = ["axum-server"]
+sw = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "web-sys", "console_error_panic_hook"]
 
+print-traces = ["tracing-subscriber/fmt"]
 oauth = ["axum-login", "openidconnect", "random", "dot_env", "serde"]
 tls = ["axum-server/tls-rustls"]
 random = ["rand"]
@@ -29,24 +27,28 @@ pwa = ["build", "wasm-bindgen-cli-support", "webmanifest"]
 typescript = ["build", "swc", "swc_atoms", "swc_bundler", "swc_common", "swc_config", "swc_ecma_parser", "swc_ecma_ast", "swc_ecma_codegen", "swc_ecma_loader", "swc_ecma_minifier", "swc_ecma_transforms_base", "swc_ecma_transforms_typescript", "swc_ecma_visit"]
 build = ["toml"]
 
+debug-embed = ["embed-macro/debug-embed", "embed-utils/debug-embed"]
+
 [lib]
 name = "prest"
 path = "./prest.rs"
 
 [dependencies]
+html-macro = { path = "html/macro" }
+embed-macro = { path = "embed/macro"}
+embed-utils = { path = "embed/utils"}
 anyhow = "1.0.75"
 itoa = "1"
 bytes = "1"
 http = "0.2.9" 
+mime_guess = "2"
+hex = "0.4.3"
 tower = "0.4.13"
 futures-util = "0.3.28"
 once_cell = "1.18"
 axum = { git = "https://github.com/tokio-rs/axum", default-features = false, features = ["query", "form"] }
-html_macro = { path = "./html/macro" }
 tower-http = { version = "0.4.4", features = ["trace", "catch-panic", "cors", "set-header"] }
-
-rust-embed = { version = "8", features = ["mime-guess"], optional = true }
-hex = { version = "0.4.3", optional = true }
+walkdir = "2.3.2"
 
 # --- fork to switch axum to the latest(unstable) main like here
 axum-login = { git = "https://github.com/edezhic/axum-login", optional = true } 

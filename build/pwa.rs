@@ -7,16 +7,16 @@ use std::{
     time::Instant,
 };
 
-static DEFAULT_LOGO: &[u8] = include_bytes!("assets/logo.png");
-static DEFAULT_FAVICON: &[u8] = include_bytes!("assets/favicon.ico");
+static DEFAULT_LOGO: &[u8] = include_bytes!("dist/logo.png");
+static DEFAULT_FAVICON: &[u8] = include_bytes!("dist/favicon.ico");
 static LISTENER_TEMPLATE: &str = "self.addEventListener('NAME', event => LISTENER);\n";
 static DEFAULT_LISTENERS: [(&str, &str); 3] = [
     (
         "install",
-        "event.waitUntil(Promise.all([__wbg_init('/sw.wasm'), self.skipWaiting()]))",
+        "event.waitUntil(Promise.all([__wbg_init('/dist/sw.wasm'), self.skipWaiting()]))",
     ),
     ("activate", "event.waitUntil(self.clients.claim())"),
-    ("fetch", "serve(self, event)"),
+    ("fetch", "handle_fetch(self, event)"),
 ];
 
 pub fn generate_pwa_assets() {
@@ -50,7 +50,7 @@ pub fn generate_pwa_assets() {
     write(out_path("logo.png"), DEFAULT_LOGO).unwrap();
     write(out_path("favicon.ico"), DEFAULT_FAVICON).unwrap();
 
-    bench(&f!("built PWA assets"), start);
+    bench(&f!("built PWA dist"), start);
 }
 
 use wasm_bindgen_cli_support::Bindgen;

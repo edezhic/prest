@@ -1,5 +1,5 @@
 [package]
-name = "html_macro"
+name = "html-macro"
 version = "0.25.0"
 authors = ["Chris Wong <lambda.fairy@gmail.com>"]
 license = "MIT/Apache-2.0"

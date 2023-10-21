@@ -33,7 +33,7 @@ async fn main() {
             Redirect::to("/")
         }));
     
-    serve(service, Default::default()).await.unwrap();
+    serve(service, Default::default()).await
 }
 
 async fn page() -> Markup {

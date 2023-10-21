@@ -22,7 +22,7 @@ async fn main() {
     });
 
     let service = Router::new().route("/", get(homepage));
-    serve(service, Default::default()).await.unwrap();
+    serve(service, Default::default()).await
 }
 
 async fn homepage() -> Markup {

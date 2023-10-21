@@ -26,20 +26,20 @@ pub static SW_TARGET_DIR: &str = "target_sw";
 pub static PROFILE: &str = "debug";
 #[cfg(not(debug_assertions))]
 pub static PROFILE: &str = "release";
-pub static ASSETS_DIR: Lazy<String> = Lazy::new(|| {
-    let dir = format!("{}/assets", std::env::var("OUT_DIR").unwrap());
+pub static DIST_DIR: Lazy<String> = Lazy::new(|| {
+    let dir = format!("{}/dist", std::env::var("OUT_DIR").unwrap());
     create_dir_all(&dir).unwrap();
     dir
 });
 
-pub fn include_asset(path: &str) {
+pub fn distribute(path: &str) {
     let path = Path::new(path);
     let filename = path.file_name().unwrap();
-    std::fs::copy(path, format!("{}/{}", *ASSETS_DIR, filename.to_str().unwrap())).unwrap();
+    std::fs::copy(path, format!("{}/{}", *DIST_DIR, filename.to_str().unwrap())).unwrap();
 }
 
 pub fn out_path(filename: &str) -> String {
-    format!("{}/{filename}", *ASSETS_DIR)
+    format!("{}/{filename}", *DIST_DIR)
 }
 
 fn read_lib_name() -> String {

@@ -68,7 +68,7 @@ async fn main() {
     let service = Router::new()
         .route(
             "/",
-            template!(@for todo in get_todos().await {(todo)})
+            get(html!(@for todo in get_todos().await {(todo)}))
                 .put(|Form(Todo { task, .. }): Form<Todo>| async move {
                     let values = format!("GENERATE_UUID(), '{task}', false");
                     exec_inside_async(table(TODOS).insert().values(vec![values])).unwrap();
@@ -90,9 +90,9 @@ async fn main() {
                     Redirect::to("/")
                 }),
         )
-        .layer(Htmxify::wrap(page));
+        .layer(HTMXify::wrap(page));
 
-    serve(service, Default::default()).await.unwrap();
+    serve(service, Default::default()).await
 }
 
 impl Render for Todo {

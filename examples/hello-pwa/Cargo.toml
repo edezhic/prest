@@ -1,5 +1,5 @@
 [package]
-name = "with-pwa-assets"
+name = "hello-pwa"
 version = "0.0.1"
 edition = "2021"
 
@@ -13,11 +13,10 @@ path = "./serve.rs"
 [features]
 default = ["host"]
 host = ["prest/host", "tokio/full"]
-sw = ["prest/sw-bindings", "wasm-bindgen", "wasm-bindgen-futures"]
+sw = ["prest/sw", "wasm-bindgen", "wasm-bindgen-futures"]
 
 [dependencies]
 prest = { path = "../../" }
-rust-embed = { version = "8", features = ["interpolate-folder-path"] }
 tokio = { version = "1.32", optional = true }
 wasm-bindgen = { version = "0.2.87", optional = true }
 wasm-bindgen-futures = { version = "0.4.37", optional = true }

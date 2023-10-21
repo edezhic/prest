@@ -23,8 +23,8 @@ async fn main() {
         .route("/deploy", get(deploy))
         .route("/read", get(read))
         .route("/flip", get(flip))
-        .layer(Htmxify::wrap(full_html));
-    serve(service, Default::default()).await.unwrap();
+        .layer(HTMXify::wrap(full_html));
+    serve(service, Default::default()).await
 }
 
 async fn home() -> Markup {
