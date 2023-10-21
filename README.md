@@ -17,4 +17,4 @@ Most examples are supported on [replit](https://replit.com/) and you can [fork i
 
 Some examples require [nightly](https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust) toolchain, [WebAssembly](https://webassembly.org/) target (`rustup target add wasm32-unknown-unknown`), env vars (check out `.env.example`) or other setup.
 
-Temporarily deployed to replit by compiling into the `musl` target and including it into the repo due to [this issue](https://ask.replit.com/t/deployment-time-outs/73694).
+Temporarily deployed to replit by compiling into the `musl` target and including it into the repo due to [this issue](https://ask.replit.com/t/deployment-time-outs/73694). To rebuild the binary run `cargo build -p blog --target x86_64-unknown-linux-musl --release` and move `target/.../serve` it into the `_temp_deployment` folder.
