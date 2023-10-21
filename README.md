@@ -16,3 +16,5 @@
 Most examples are supported on [replit](https://replit.com/) and you can [fork it there](https://replit.com/@eDezhic/prest) to quickly run in the cloud. It includes [rust-analyzer](https://rust-analyzer.github.io/) and I suggest to use it in local development as well. If you also want to include Typescript then [VS Code](https://code.visualstudio.com/) might be a great choice.
 
 Some examples require [nightly](https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust) toolchain, [WebAssembly](https://webassembly.org/) target (`rustup target add wasm32-unknown-unknown`), env vars (check out `.env.example`) or other setup.
+
+Temporarily deployed to replit by compiling into the `musl` target and including it into the repo due to [this issue](https://ask.replit.com/t/deployment-time-outs/73694).
