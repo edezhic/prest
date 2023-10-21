@@ -22,6 +22,6 @@ pattern = "**/*.rs"
 start = "rust-analyzer"
 
 [deployment]
-run = ["sh", "-c", "./target/debug/serve"]
-build = ["sh", "-c", "cargo build -p blog"]
+run = ["sh", "-c", "chmod +x ./_temp_deployment/serve && ./_temp_deployment/serve"]
+#build = ["sh", "-c", "cargo build -p blog"]
 deploymentTarget = "cloudrun"
