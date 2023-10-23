@@ -1,14 +1,10 @@
 This is a hobby project, there are no solid long-term plans and api is unstable. However, [the overall idea](https://prest.blog/motivation) seems quite promising to me so there are things I'll likely build next:
 
 ### More examples
-- [with-askama](https://github.com/djc/askama) + `.sass`?
-- [with-tinytemplate](https://crates.io/crates/tinytemplate)
 - [with-tauri](https://beta.tauri.app/)
 - `with-mongo`
 - `with-diesel-postgres` on replit?
 - `with-openapi`
-- `with-ui-wasm`
-- `with-typescript-sw`
 - `into-wasi` [tokio partially supports WASI](https://docs.rs/tokio/latest/tokio/#wasm-support)
 
 ### Other

@@ -1,5 +1,5 @@
 [package]
-name = "with-typescript-window"
+name = "with-scss"
 version = "0.0.1"
 edition = "2021"
 
@@ -12,4 +12,4 @@ prest = { path = "../../", features = ["host"] }
 tokio = { version = "*", features = ["full"] }
 
 [build-dependencies]
-prest = { path = "../../", features = ["typescript"] }
+prest = { path = "../../", features = ["sass"] }

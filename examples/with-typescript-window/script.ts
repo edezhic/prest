@@ -1,2 +1,3 @@
-const message: string = "hello from typescript!";
+import { message } from './imported';
+
 console.log(message)
