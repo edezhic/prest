@@ -1,6 +1,6 @@
 fn main() {
     #[cfg(feature = "host")] {
-        prest::generate_pwa_assets();
+        prest::build_pwa(Default::default());
         prest::distribute("./styles.css");
     }
 }

@@ -5,7 +5,7 @@ pub use typescript::bundle_ts;
 #[cfg(feature = "pwa")]
 mod pwa;
 #[cfg(feature = "pwa")]
-pub use pwa::generate_pwa_assets;
+pub use pwa::build_pwa;
 #[cfg(feature = "sass")]
 mod sass;
 #[cfg(feature = "sass")]
@@ -35,7 +35,7 @@ pub static DIST_DIR: Lazy<String> = Lazy::new(|| {
 pub fn distribute(path: &str) {
     let path = Path::new(path);
     let filename = path.file_name().unwrap();
-    std::fs::copy(path, format!("{}/{}", *DIST_DIR, filename.to_str().unwrap())).unwrap();
+    copy(path, format!("{}/{}", *DIST_DIR, filename.to_str().unwrap())).unwrap();
 }
 
 pub fn out_path(filename: &str) -> String {

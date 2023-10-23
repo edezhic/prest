@@ -8,10 +8,10 @@
 - `with-oauth-google` includes [Google OAuth](https://developers.google.com/identity/protocols/oauth2) flow and in-memory session + user management
 - `with-candle-mistral` includes [Mistral](https://mistral.ai/news/announcing-mistral-7b/) LLM using [candle](https://github.com/huggingface/candle) ML framework
 - `with-substrate-contract` includes an [ink!](https://use.ink/)-based contract for [Substrate](https://substrate.io/)-based blockchains like [Polkadot](https://www.polkadot.network/)
+- `with-typescript-window` bundles and transpiles TypeScript for the UI
 - `with-scraper` includes [scraper](https://github.com/causal-agent/scraper-based)-based parser for a news website
 - `with-tracing` includes tracing on the host
 - `with-https` includes [Rustls](https://github.com/rustls/rustls)-based HTTPS server
-- `with-typescript` includes TypeScript bundle
 
 Most examples are supported on [replit](https://replit.com/) and you can [fork it there](https://replit.com/@eDezhic/prest) to quickly run in the cloud. It includes [rust-analyzer](https://rust-analyzer.github.io/) and I suggest to use it in local development as well. If you also want to include Typescript then [VS Code](https://code.visualstudio.com/) might be a great choice.
 

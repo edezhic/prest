@@ -1,5 +1,5 @@
 [package]
-name = "with-typescript"
+name = "with-typescript-window"
 version = "0.0.1"
 edition = "2021"
 

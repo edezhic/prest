@@ -1,5 +1,4 @@
 #![allow(dead_code, unused_imports)]
-
 pub(crate) use crate as prest;
 
 pub use anyhow::{self, Error, Result, bail};

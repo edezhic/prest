@@ -27,7 +27,7 @@ pub fn shared() -> Router {
 }
 
 fn full_html(content: Markup) -> Markup {
-    html!( html data-theme="dark" {
+    html!((DOCTYPE) html data-theme="dark" {
         (Head::pwa().title("Prest Blog").css("/dist/styles.css"))
         body hx-boost="true" hx-swap="innerHTML transition:true show:window:top" hx-target="main" {
             header."top container" {
