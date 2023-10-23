@@ -4,12 +4,12 @@ This is a hobby project, there are no solid long-term plans and api is unstable.
 - [with-tauri](https://beta.tauri.app/)
 - `with-mongo`
 - `with-diesel-postgres` on replit?
+- `with-redis`
 - `with-openapi`
 - `into-wasi` [tokio partially supports WASI](https://docs.rs/tokio/latest/tokio/#wasm-support)
 
 ### Other
 - logs for the SW: simple `console_log`s under cfg(debug_assrts) or maybe tracing ([1](https://github.com/old-storyai/tracing-wasm), [2](https://docs.rs/tracing-chrome/latest/tracing_chrome/))
-- move simplest examples into docs: tracing, TS, https?
 - dev hyperscript/wasm ui tools
 - GlueSQL on the client - [doc](https://gluesql.org/docs/0.14/getting-started/javascript-web)
 - update default logo+favicon and how they are used with PWAOptions
