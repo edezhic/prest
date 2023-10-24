@@ -58,7 +58,7 @@ embed!(Dist);
 #[cfg(feature = "host")]
 #[tokio::main(flavor = "current_thread")]
 pub async fn main() {
-    serve(shared().merge(Dist::routes()), Default::default()).await
+    serve(shared().merge(Dist::routes("/dist/")), Default::default()).await
 }
 
 #[cfg(feature = "sw")]

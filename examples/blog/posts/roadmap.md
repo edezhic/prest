@@ -2,8 +2,7 @@ This is a hobby project, there are no solid long-term plans and api is unstable.
 
 ### More examples
 - [with-tauri](https://beta.tauri.app/)
-- `with-mongo`
-- `with-diesel-postgres` on replit?
+- `with-diesel-postgres`
 - `with-redis`
 - `with-openapi`
 - `into-wasi` [tokio partially supports WASI](https://docs.rs/tokio/latest/tokio/#wasm-support)

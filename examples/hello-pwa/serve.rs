@@ -15,5 +15,5 @@ embed!(Dist);
 #[cfg(feature = "host")]
 #[tokio::main]
 pub async fn main() {
-    serve(shared().merge(Dist::routes()), Default::default()).await
+    serve(shared().merge(Dist::routes("/dist/")), Default::default()).await
 }

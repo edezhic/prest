@@ -17,37 +17,39 @@ macro_rules! embed {
 pub trait Embed where Self: 'static {
     fn get(file_path: &str) -> Option<EmbeddedFile>;
     fn iter() -> Filenames;
-    fn routes() -> Router {
-        let mut router = Router::new().route("/dist/*any", get(Self::handle));
+    fn routes(prefix: &str) -> Router {
+        let wildcard = &format!("{prefix}*any");
+        let mut router = Router::new().route(wildcard, get(|Path(path): Path<String>, headers: HeaderMap| async move {
+            embed_handler::<Self>(&path, headers)
+        }));
         if Self::get("sw.js").is_some() {
             router = router.route("/sw.js", get(|headers: HeaderMap| async {
-                Self::handle(Path("sw.js".to_owned()), headers).await
+                embed_handler::<Self>("sw.js", headers)
             }))
         }
         router
     }
-    fn handle(
-        Path(path): Path<String>,
-        headers: HeaderMap,
-    ) -> impl std::future::Future<Output = Response> + Send {
-        async move {
-            let Some(asset) = Self::get(&path) else {
-                return StatusCode::NOT_FOUND.into_response();
-            };
+}
 
-            let asset_etag = hex::encode(asset.metadata.sha256_hash());
-            if let Some(request_etag) = headers.get(header::IF_NONE_MATCH) {
-                if request_etag.as_bytes() == asset_etag.as_bytes() {
-                    return StatusCode::NOT_MODIFIED.into_response();
-                }
-            }
-            Response::builder()
-                .header(header::ETAG, asset_etag)
-                .header(header::CONTENT_TYPE, asset.metadata.mimetype())
-                .body(Body::from(asset.data))
-                .unwrap()
+fn embed_handler<T: Embed + ?Sized>(
+    path: &str,
+    headers: HeaderMap,
+) -> Response {
+    let Some(asset) = T::get(&path) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+
+    let asset_etag = hex::encode(asset.metadata.sha256_hash());
+    if let Some(request_etag) = headers.get(header::IF_NONE_MATCH) {
+        if request_etag.as_bytes() == asset_etag.as_bytes() {
+            return StatusCode::NOT_MODIFIED.into_response();
         }
     }
+    Response::builder()
+        .header(header::ETAG, asset_etag)
+        .header(header::CONTENT_TYPE, asset.metadata.mimetype())
+        .body(Body::from(asset.data))
+        .unwrap()
 }
 
 /// This enum exists for optimization purposes, to avoid boxing the iterator in
