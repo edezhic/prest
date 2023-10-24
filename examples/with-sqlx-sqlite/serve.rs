@@ -2,13 +2,25 @@ use prest::*;
 use serde::Deserialize;
 use sqlx::{migrate, query, query_as, FromRow, Sqlite, SqlitePool};
 
+static DB: Lazy<SqlitePool> = Lazy::new(|| SqlitePool::connect_lazy("sqlite::memory:").unwrap());
+
+#[derive(Debug, FromRow, Deserialize)]
+struct Todo {
+    #[serde(default = "new_uuid")]
+    pub uuid: String,
+    #[serde(default)]
+    pub task: String,
+    #[serde(default)]
+    pub done: bool,
+}
+
 #[tokio::main]
 async fn main() {
     migrate!().run(&*DB).await.unwrap();
     let service = Router::new()
         .route(
             "/",
-            get(html!(@for todo in get_todos().await {(todo)}))
+            get(|| async {html!(@for todo in get_todos().await {(todo)})})
                 .patch(|Form(todo): Form<Todo>| async move { toggle_todo(todo).await.render() })
                 .put(|Form(todo): Form<Todo>| async move { add_todo(todo).await.render() })
                 .delete(|Form(todo): Form<Todo>| async move {
@@ -21,18 +33,6 @@ async fn main() {
 
 fn new_uuid() -> String {
     uuid::Uuid::new_v4().to_string()
-}
-
-static DB: Lazy<SqlitePool> = Lazy::new(|| SqlitePool::connect_lazy("sqlite::memory:").unwrap());
-
-#[derive(FromRow, Deserialize)]
-struct Todo {
-    #[serde(default = "new_uuid")]
-    pub uuid: String,
-    #[serde(default)]
-    pub task: String,
-    #[serde(default)]
-    pub done: bool,
 }
 
 async fn get_todos() -> Vec<Todo> {
