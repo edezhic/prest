@@ -10,6 +10,7 @@
 - `with-mongodb` is a todo app powered by the [official rust mongo driver](https://github.com/mongodb/mongo-rust-driver) 
 - `with-sqlx-sqlite` is a todo app powered by [SQLx](https://github.com/launchbadge/sqlx)-based connection to [SQLite](https://www.sqlite.org/index.html) DB
 - `with-gluesql-sled` is a todo app powered by [sled](http://sled.rs/)-powered [GlueSQL](https://gluesql.org/docs/) DB
+- `with-redis` is a todo app powered by the [redis client](https://github.com/redis-rs/redis-rs) 
 - `with-oauth-google` includes [Google OAuth](https://developers.google.com/identity/protocols/oauth2) flow and in-memory session + user management
 - `with-candle-mistral` includes [Mistral](https://mistral.ai/news/announcing-mistral-7b/) LLM using [candle](https://github.com/huggingface/candle) ML framework
 - `with-substrate-contract` includes an [ink!](https://use.ink/)-based contract for [Substrate](https://substrate.io/)-based blockchains like [Polkadot](https://www.polkadot.network/)

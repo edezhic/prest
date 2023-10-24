@@ -1,7 +1,6 @@
 This is a hobby project, there are no solid long-term plans and api is unstable. However, [the overall idea](https://prest.blog/motivation) seems quite promising to me so there are things I'll likely build next:
 
 ### More examples
-- `with-redis`
 - `with-diesel-postgres`
 - [with-tauri](https://beta.tauri.app/)
 - `with-openapi` json-based?
