@@ -1,0 +1,16 @@
+[package]
+name = "with-diesel-postgres"
+version = "0.0.1"
+edition = "2021"
+
+[[bin]]
+name = "serve"
+path = "./serve.rs"
+
+[dependencies]
+prest = { path = "../../", features = ["host"] }
+tokio = { version = "1.32", features = ["full"] }
+diesel = { version = "2.1.0", features = ["postgres", "uuid"] }
+dotenvy = "0.15"
+uuid = { version = "1.5.0", features = ["serde", "v4"] }
+serde = { version = "*", features = ["derive"] }
