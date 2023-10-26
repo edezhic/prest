@@ -1,0 +1,12 @@
+[package]
+name = "into-wasi"
+version = "0.0.1"
+edition = "2021"
+
+[[bin]]
+name = "serve"
+path = "./serve.rs"
+
+[dependencies]
+prest = { path = "../../", features = ["host-wasi"] }
+tokio_wasi = { version = "1", features = ["rt", "macros", "net", "time", "io-util"] }

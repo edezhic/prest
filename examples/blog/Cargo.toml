@@ -19,7 +19,7 @@ sw = ["prest/sw", "wasm-bindgen", "wasm-bindgen-futures"]
 prest = { path = "../../" }
 markdown = "1.0.0-alpha.14"
 
-tokio = { version = "1.32", optional = true, features = ["rt", "net", "macros"] }
+tokio = { version = "*", optional = true, features = ["rt", "net", "macros"] }
 wasm-bindgen = { version = "0.2.87", optional = true }
 wasm-bindgen-futures = { version = "0.4.37", optional = true }
 

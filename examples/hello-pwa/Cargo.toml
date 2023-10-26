@@ -17,7 +17,7 @@ sw = ["prest/sw", "wasm-bindgen", "wasm-bindgen-futures"]
 
 [dependencies]
 prest = { path = "../../" }
-tokio = { version = "1.32", optional = true }
+tokio = { version = "*", optional = true }
 wasm-bindgen = { version = "0.2.87", optional = true }
 wasm-bindgen-futures = { version = "0.4.37", optional = true }
 

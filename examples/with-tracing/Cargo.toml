@@ -9,4 +9,4 @@ path = "./serve.rs"
 
 [dependencies]
 prest = { path = "../../", features = ["host", "print-traces"] }
-tokio = { version = "1.32", features = ["full"] }
+tokio = { version = "*", features = ["full"] }

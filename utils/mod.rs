@@ -1,13 +1,18 @@
 use crate::*;
+pub use std::net::SocketAddr;
 
-#[macro_export]
-macro_rules! template {
-    ($($markup:tt)*) => { get(|| async { html!($($markup)*) })};
+pub struct Addr {
+    pub ip: [u8; 4],
+    pub port: u16
 }
 
-#[macro_export]
-macro_rules! redirect {
-    ($path:literal) => { all(|| async { Redirect::to($path) })};
+impl Default for Addr {
+    fn default() -> Self {
+        Self {
+            ip: [0, 0, 0, 0],
+            port: 80,
+        }
+    }
 }
 
 #[cfg(feature = "sw")]
@@ -19,6 +24,29 @@ pub use sw::*;
 mod host;
 #[cfg(feature = "host")]
 pub use host::*;
+
+#[cfg(feature = "host-wasi")]
+mod host_wasi {
+    use crate::*;
+    use hyper::server::conn::Http;
+    use tokio::net::TcpListener;
+    
+    pub async fn serve(router: Router, opts: Addr) {        
+        let addr = SocketAddr::from((opts.ip, opts.port));
+        let listener = TcpListener::bind(addr).await.unwrap();
+        loop {
+            let (stream, _) = listener.accept().await.unwrap();
+            let svc = router.clone();
+            tokio::task::spawn(async move {
+                if let Err(err) = Http::new().serve_connection(stream, svc).await {
+                    println!("Error serving connection: {:?}", err);
+                }
+            });
+        }
+    }    
+}
+#[cfg(feature = "host-wasi")]
+pub use host_wasi::serve;
 
 #[cfg(feature = "print-traces")]
 pub fn start_printing_traces() {

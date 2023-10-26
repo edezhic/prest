@@ -3,10 +3,8 @@
 - `blog` describes the project at [prest.blog](https://prest.blog)
 - `hello-world` is the simplest server
 - `hello-pwa` is the simplest [Progressive Web App](https://web.dev/what-are-pwas/)
-- `with-typescript` bundles and transpiles TypeScript for the UI
-- `with-scss` includes [grass](https://github.com/connorskees/grass)-based [SASS/SCSS](https://sass-lang.com/) compiler
-- `with-tracing` includes tracing on the server
-- `with-https` includes [Rustls](https://github.com/rustls/rustls)-based HTTPS server
+- `into-native-wry` builds into a native app for desktops and [mobile](https://github.com/tauri-apps/wry/blob/dev/MOBILE.md) using [WRY](https://github.com/tauri-apps/wry)
+- `into-wasi` builds into `--target=wasm32-wasi`
 - `with-mongodb` is a todo app powered by the [official rust mongo driver](https://github.com/mongodb/mongo-rust-driver) 
 - `with-sqlx-sqlite` is a todo app powered by [SQLx](https://github.com/launchbadge/sqlx)-based connection to [SQLite](https://www.sqlite.org/index.html) DB
 - `with-diesel-postgres` is a todo app powered by [Diesel](https://github.com/launchbadge/sqlx) ORM with [PostgreSQL](https://www.postgresql.org/) DB
@@ -17,6 +15,10 @@
 - `with-substrate-contract` includes an [ink!](https://use.ink/)-based contract for [Substrate](https://substrate.io/)-based blockchains like [Polkadot](https://www.polkadot.network/)
 - `with-scraper` includes [scraper](https://github.com/causal-agent/scraper-based)-based parser for a news website
 - `with-askama` includes [Askama](https://github.com/djc/askama) (Jinja-like templates)
+- `with-typescript` bundles and transpiles TypeScript for the UI
+- `with-scss` includes [grass](https://github.com/connorskees/grass)-based [SASS/SCSS](https://sass-lang.com/) compiler
+- `with-tracing` includes tracing on the server
+- `with-https` includes [Rustls](https://github.com/rustls/rustls)-based HTTPS server
 
 Most examples are supported on [replit](https://replit.com/) and you can [fork it there](https://replit.com/@eDezhic/prest) to quickly run in the cloud. It includes [rust-analyzer](https://rust-analyzer.github.io/) and I suggest to use it in local development as well. If you also want to include Typescript then [VS Code](https://code.visualstudio.com/) might be a great choice.
 
