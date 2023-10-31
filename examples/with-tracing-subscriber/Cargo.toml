@@ -1,5 +1,5 @@
 [package]
-name = "with-scss"
+name = "with-tracing-subscriber"
 version = "0.0.1"
 edition = "2021"
 
@@ -10,6 +10,6 @@ path = "./serve.rs"
 [dependencies]
 prest = { path = "../../", features = ["host"] }
 tokio = { version = "*", features = ["full"] }
+tracing-subscriber = { version = "*", features = ["fmt"] } 
+tower-http = { version = "*", features = ["trace"] }
 
-[build-dependencies]
-prest = { path = "../../", features = ["sass"] }

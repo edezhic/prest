@@ -1,5 +1,5 @@
 [package]
-name = "with-https"
+name = "with-jinja-askama"
 version = "0.0.1"
 edition = "2021"
 
@@ -8,5 +8,6 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../", features = ["host", "tls"] }
+prest = { path = "../../", features = ["host"] }
 tokio = { version = "*", features = ["full"] }
+askama = "*"

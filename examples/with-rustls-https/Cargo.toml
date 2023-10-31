@@ -1,5 +1,5 @@
 [package]
-name = "with-tracing"
+name = "with-rustls-https"
 version = "0.0.1"
 edition = "2021"
 
@@ -8,5 +8,6 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../", features = ["host", "print-traces"] }
+prest = { path = "../../" }
 tokio = { version = "*", features = ["full"] }
+hyper-server = { version = "*", features = ["tls-rustls"] }

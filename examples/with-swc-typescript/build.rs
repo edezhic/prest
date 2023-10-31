@@ -1,18 +1,10 @@
-use super::{bench, out_path, track_non_rust_path};
-use anyhow::Error;
-
-pub fn bundle_ts(input: &str, filename: &str) {
-    let start = std::time::Instant::now();
-    track_non_rust_path(input); // track imports?
-    let contents = swc_run(input, false, false).unwrap();
-    std::fs::write(out_path(filename), contents).unwrap();
-    bench(
-        &format!("{input} transpiled and bundled as {filename}"),
-        start,
-    );
-}
-
+use prest::{out_path, Error};
 use std::{collections::HashMap, sync::Arc};
+
+fn main() {
+    let contents = swc_run("./script.ts", false, false).unwrap();
+    std::fs::write(out_path("script.js"), contents).unwrap();
+}
 
 use swc_bundler::{Bundler, Hook, Load, ModuleData, ModuleRecord};
 use swc_common::{
@@ -76,7 +68,7 @@ fn swc_run(main: &str, minify: bool, tree_shaking: bool) -> Result<String, Error
     let code = GLOBALS.set(&Globals::new(), || {
         let globals = Box::leak(Box::new(Globals::default()));
 
-        let mut prest = Bundler::new(
+        let mut bundler = Bundler::new(
             globals,
             source_map_rc.clone(),
             loader,
@@ -85,7 +77,7 @@ fn swc_run(main: &str, minify: bool, tree_shaking: bool) -> Result<String, Error
             hook,
         );
 
-        let mut bundles = prest
+        let mut bundles = bundler
             .bundle(entries)
             .map_err(|err| println!("{:?}", err))
             .expect("should bundle stuff");

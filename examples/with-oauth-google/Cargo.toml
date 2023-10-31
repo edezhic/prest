@@ -8,5 +8,13 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../", features = ["host", "oauth"] }
+prest = { path = "../../", features = ["host"] }
 tokio = { version = "*", features = ["full"] }
+
+# --- fork to switch axum to the latest(unstable) main like in prest
+axum-login = { git = "https://github.com/edezhic/axum-login" }
+
+rand = { version = "0.8.5", features = ["min_const_gen"] }
+openidconnect = "*"
+dotenv = "*"
+serde = "*"

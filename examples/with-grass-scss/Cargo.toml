@@ -1,5 +1,5 @@
 [package]
-name = "with-askama"
+name = "with-grass-scss"
 version = "0.0.1"
 edition = "2021"
 
@@ -10,4 +10,8 @@ path = "./serve.rs"
 [dependencies]
 prest = { path = "../../", features = ["host"] }
 tokio = { version = "*", features = ["full"] }
-askama = "*"
+
+[build-dependencies]
+prest = { path = "../../" }
+grass = { version = "0.13.1", default-features = false }
+

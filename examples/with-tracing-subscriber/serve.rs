@@ -1,8 +1,12 @@
+use tracing_subscriber::{filter::LevelFilter, fmt, prelude::*, Layer};
+use tower_http::trace::TraceLayer;
 use prest::*;
 
 #[tokio::main]
 async fn main() {
-    start_printing_traces();
+    let fmt_layer = fmt::Layer::default().with_filter(LevelFilter::TRACE);
+    tracing_subscriber::registry().with(fmt_layer).init();
+
     let svc = Router::new()
         .route(
             "/",
@@ -11,6 +15,6 @@ async fn main() {
                 body { h1{"With tracing (check out the terminal!)"}}
             )),
         )
-        .layer(http_tracing());
+        .layer(TraceLayer::new_for_http());
     serve(svc, Default::default()).await
 }

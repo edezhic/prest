@@ -1,5 +1,5 @@
 [package]
-name = "with-redis"
+name = "with-mongo-driver"
 version = "0.0.1"
 edition = "2021"
 
@@ -10,7 +10,6 @@ path = "./serve.rs"
 [dependencies]
 prest = { path = "../../", features = ["host"] }
 tokio = { version = "*", features = ["full"] }
-redis = "0.23.3"
-uuid = { version = "*", features = ["v4"] }
+mongodb = { version = "2.7.0", features = ["bson-uuid-1"] }
 serde = { version = "*", features = ["derive"] }
-serde_json = "*"
+futures = "*"

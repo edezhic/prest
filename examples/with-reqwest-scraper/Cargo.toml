@@ -1,5 +1,5 @@
 [package]
-name = "with-typescript"
+name = "with-reqwest-scraper"
 version = "0.0.1"
 edition = "2021"
 
@@ -10,6 +10,6 @@ path = "./serve.rs"
 [dependencies]
 prest = { path = "../../", features = ["host"] }
 tokio = { version = "*", features = ["full"] }
-
-[build-dependencies]
-prest = { path = "../../", features = ["typescript"] }
+reqwest = { version = "*", default-features=false, features = ["rustls-tls"] }
+scraper = "*"
+futures = "*"

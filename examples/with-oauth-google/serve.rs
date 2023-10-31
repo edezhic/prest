@@ -1,9 +1,8 @@
-use prest::{*, oauth::*};
-use std::{
-    collections::HashMap,
-    hash::Hash,
-    sync::Arc,
-};
+mod oauth;
+use oauth::*;
+
+use prest::*;
+use std::{collections::HashMap, hash::Hash, sync::Arc};
 use tokio::sync::RwLock;
 
 static GCLIENT: Lazy<GoogleClient> = Lazy::new(|| {
@@ -37,7 +36,7 @@ pub type RequireAuthzLayer = RequireAuthorizationLayer<u64, User>;
 
 #[tokio::main]
 async fn main() {
-    set_dot_env_variables();
+    dotenv::dotenv().unwrap();
     let (auth_svc, session, authn) = init_auth::<u64, User>();
     let service = Router::new()
         .route("/protected", get(html!(h1{"Authorized!"})))
@@ -70,7 +69,7 @@ pub fn init_auth<Id: Hash + Eq + Clone + Send + Sync + 'static, User: AuthUser<I
     SessionLayer<SessionMemoryStore>,
     AuthLayer<AuthMemoryStore<Id, User>, Id, User>,
 ) {
-    let secret = generate_secret::<[u8; 64]>();
+    let secret = rand::Rng::gen::<[u8; 64]>(&mut rand::thread_rng());
     let session_store = SessionMemoryStore::new();
     let auth_store = Arc::new(RwLock::new(HashMap::new()));
 
@@ -98,8 +97,12 @@ pub async fn callback(
     Query(query): Query<OAuthQuery>,
     mut auth: AuthCtx,
 ) -> impl IntoResponse {
-    let Some(initial_csrf) = session.get::<CsrfToken>("csrf") else { panic!("missing csrf!") };
-    let Some(nonce) = session.get::<Nonce>("nonce") else { panic!("missing nonce!") };
+    let Some(initial_csrf) = session.get::<CsrfToken>("csrf") else {
+        panic!("missing csrf!")
+    };
+    let Some(nonce) = session.get::<Nonce>("nonce") else {
+        panic!("missing nonce!")
+    };
 
     // remove existing/anonymous session
     drop(session);

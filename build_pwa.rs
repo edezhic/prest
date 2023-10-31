@@ -1,4 +1,4 @@
-use super::{bench, out_path, read_lib_name, PROFILE, SW_TARGET_DIR, WASM_UNK};
+use crate::out_path;
 use std::{
     format as f,
     fs::{read_to_string, rename, write},
@@ -8,8 +8,14 @@ use std::{
 use wasm_bindgen_cli_support::Bindgen;
 use webmanifest::{DisplayMode, Icon, Manifest};
 
-static DEFAULT_LOGO: &[u8] = include_bytes!("dist/logo.png");
-static DEFAULT_FAVICON: &[u8] = include_bytes!("dist/favicon.ico");
+#[cfg(debug_assertions)]
+const PROFILE: &str = "debug";
+#[cfg(not(debug_assertions))]
+const PROFILE: &str = "release";
+
+static SW_TARGET_DIR: &str = "target_sw";
+static DEFAULT_LOGO: &[u8] = include_bytes!("assets/logo.png");
+static DEFAULT_FAVICON: &[u8] = include_bytes!("assets/favicon.ico");
 static LISTENER_TEMPLATE: &str = "self.addEventListener('NAME', event => LISTENER);\n";
 
 pub struct PWAOptions<'a> {
@@ -63,7 +69,7 @@ impl Default for ManifestOptions<'_> {
 pub fn build_pwa(opts: PWAOptions) {
     let start = Instant::now();
     let lib_name = &read_lib_name();
-    let target_dir = &f!("{SW_TARGET_DIR}/{WASM_UNK}/{PROFILE}");
+    let target_dir = &f!("{SW_TARGET_DIR}/wasm32-unknown-unknown/{PROFILE}");
     let target_path = &f!("{target_dir}/{lib_name}");
 
     // build in a separate target dir to avoid build deadlock with the host
@@ -73,7 +79,7 @@ pub fn build_pwa(opts: PWAOptions) {
         .args(["--crate-type", "cdylib"])
         .arg("--no-default-features")
         .args(["--features", &opts.build_features])
-        .args(["--target", WASM_UNK])
+        .args(["--target", "wasm32-unknown-unknown"])
         .args(["--target-dir", SW_TARGET_DIR]);
     if !cfg!(debug_assertions) {
         cmd.arg("--release");
@@ -114,7 +120,10 @@ pub fn build_pwa(opts: PWAOptions) {
     // for completeness?
     write(out_path("favicon.ico"), DEFAULT_FAVICON).unwrap();
 
-    bench(&f!("built PWA dist"), start);
+    println!(
+        "cargo:warning={}",
+        f!("composed PWA in {}ms", start.elapsed().as_millis())
+    );
 }
 
 fn gen_manifest(opts: ManifestOptions) -> String {
@@ -128,4 +137,22 @@ fn gen_manifest(opts: ManifestOptions) -> String {
         manifest = manifest.icon(icon);
     }
     manifest.build().unwrap()
+}
+
+fn read_lib_name() -> String {
+    use toml::{Table, Value};
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+    let manifest_path = &format!("{manifest_dir}/Cargo.toml");
+    let manifest = read_to_string(manifest_path).unwrap();
+    let parsed = manifest.parse::<Table>().unwrap();
+    let lib_name = if let Value::Table(lib_table) = &parsed["lib"] {
+        if lib_table.contains_key("name") {
+            lib_table["name"].as_str().unwrap().to_owned()
+        } else {
+            parsed["package"]["name"].as_str().unwrap().to_owned()
+        }
+    } else {
+        parsed["package"]["name"].as_str().unwrap().to_owned()
+    };
+    lib_name.replace("-", "_")
 }

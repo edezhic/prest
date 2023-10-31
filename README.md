@@ -4,21 +4,21 @@
 - `hello-world` is the simplest server
 - `hello-pwa` is the simplest [Progressive Web App](https://web.dev/what-are-pwas/)
 - `into-native-wry` builds into a native app for desktops and [mobile](https://github.com/tauri-apps/wry/blob/dev/MOBILE.md) using [WRY](https://github.com/tauri-apps/wry)
-- `into-wasi` builds into `--target=wasm32-wasi`
-- `with-mongodb` is a todo app powered by the [official rust mongo driver](https://github.com/mongodb/mongo-rust-driver) 
+- `into-wasi-host` builds into a [WASI](https://github.com/bytecodealliance/wasmtime/blob/main/docs/WASI-intro.md)-powered host
+- `with-mongo-driver` is a todo app powered by the [official rust mongo driver](https://github.com/mongodb/mongo-rust-driver) 
 - `with-sqlx-sqlite` is a todo app powered by [SQLx](https://github.com/launchbadge/sqlx)-based connection to [SQLite](https://www.sqlite.org/index.html) DB
 - `with-diesel-postgres` is a todo app powered by [Diesel](https://github.com/launchbadge/sqlx) ORM with [PostgreSQL](https://www.postgresql.org/) DB
 - `with-gluesql-sled` is a todo app powered by [GlueSQL](https://gluesql.org/docs/)-wrapped [sled](http://sled.rs/) DB
-- `with-redis` is a todo app powered by the [redis client](https://github.com/redis-rs/redis-rs) 
+- `with-redis-driver` is a todo app powered by the [redis client](https://github.com/redis-rs/redis-rs) 
 - `with-oauth-google` includes [Google OAuth](https://developers.google.com/identity/protocols/oauth2) flow and in-memory session + user management
 - `with-candle-mistral` includes [Mistral](https://mistral.ai/news/announcing-mistral-7b/) LLM using [candle](https://github.com/huggingface/candle) ML framework
 - `with-substrate-contract` includes an [ink!](https://use.ink/)-based contract for [Substrate](https://substrate.io/)-based blockchains like [Polkadot](https://www.polkadot.network/)
-- `with-scraper` includes [scraper](https://github.com/causal-agent/scraper-based)-based parser for a news website
-- `with-askama` includes [Askama](https://github.com/djc/askama) (Jinja-like templates)
-- `with-typescript` bundles and transpiles TypeScript for the UI
-- `with-scss` includes [grass](https://github.com/connorskees/grass)-based [SASS/SCSS](https://sass-lang.com/) compiler
-- `with-tracing` includes tracing on the server
-- `with-https` includes [Rustls](https://github.com/rustls/rustls)-based HTTPS server
+- `with-reqwest-scraper` includes [scraper](https://github.com/causal-agent/scraper-based)-based parser for a news website
+- `with-jinja-askama` includes [Askama](https://github.com/djc/askama) (Jinja-like templates)
+- `with-swc-typescript` bundles and transpiles [TypeScript](https://www.typescriptlang.org/) using [SWC](https://swc.rs/)
+- `with-grass-scss` bundles and compiles [SCSS](https://sass-lang.com/) using [grass](https://github.com/connorskees/grass)
+- `with-tracing-subscriber` prints host traces into the terminal
+- `with-rustls-https` includes [Rustls](https://github.com/rustls/rustls)-based HTTPS server
 
 Most examples are supported on [replit](https://replit.com/) and you can [fork it there](https://replit.com/@eDezhic/prest) to quickly run in the cloud. It includes [rust-analyzer](https://rust-analyzer.github.io/) and I suggest to use it in local development as well. If you also want to include Typescript then [VS Code](https://code.visualstudio.com/) might be a great choice.
 
