@@ -13,7 +13,10 @@ const PROFILE: &str = "debug";
 #[cfg(not(debug_assertions))]
 const PROFILE: &str = "release";
 
+// Replace with dynamic target-based path? An example how to figure out target dir:
+// https://github.com/dtolnay/cxx/blob/306019c5a7434aa7424a83720a09c40e1ea12343/gen/build/src/target.rs
 static SW_TARGET_DIR: &str = "target_sw";
+
 static DEFAULT_LOGO: &[u8] = include_bytes!("assets/logo.png");
 static DEFAULT_FAVICON: &[u8] = include_bytes!("assets/favicon.ico");
 static LISTENER_TEMPLATE: &str = "self.addEventListener('NAME', event => LISTENER);\n";
@@ -30,7 +33,7 @@ impl Default for PWAOptions<'_> {
             build_features: "sw",
             types_path: None,
             listeners: vec![
-                ("install", "event.waitUntil(Promise.all([__wbg_init('/dist/sw.wasm'), self.skipWaiting()]))"),
+                ("install", "event.waitUntil(Promise.all([__wbg_init('/sw.wasm'), self.skipWaiting()]))"),
                 ("activate", "event.waitUntil(self.clients.claim())"),
                 ("fetch", "handle_fetch(self, event)")
             ],

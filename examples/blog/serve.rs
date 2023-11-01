@@ -1,34 +1,51 @@
-use markdown::{to_html_with_options, Options};
 use prest::*;
 
-embed!(Posts, "./posts");
+#[derive(Embed)]
+#[folder = "../../"]
+#[include = "*.md"]
+struct Docs;
+
+fn load_doc(path: &str) -> Result<String> {
+    use markdown::{to_html_with_options, Options};
+    let Some(doc) = Docs::get(path) else {
+        bail!("Doc at {path} was not found")
+    };
+    let Ok(doc_str) = std::str::from_utf8(&doc.data) else {
+        bail!("Doc at {path} contains invalid UTF-8")
+    };
+    let Ok(doc_html) = to_html_with_options(doc_str, &Options::gfm()) else {
+        bail!("Doc at {path} likely contains MDX syntax errors")
+    };
+    Ok(doc_html)
+}
 
 pub fn shared() -> Router {
-    Router::new()
-        .route(
-            "/",
-            get({
-                let content = include_str!("../../README.md");
-                to_html_with_options(content, &Options::gfm()).unwrap()
+    let mut router = Router::new()
+        .route("/", get(|| async { load_doc("README.md").unwrap() }));
+
+    for path in Docs::iter() {
+        println!("{}", path);
+        let rel_url = match path.as_ref() {
+            "README.md" => "/",
+            p if p.starts_with("docs/") => "",
+            p if p.starts_with("examples/with-") => "",
+            p if p.starts_with("examples/into-") => "",
+            _ => "/other"
+        };
+    }
+        
+    router = router.route(
+            "/:doc",
+            get(|Path(doc): Path<String>| async move {
+                load_doc(&format!("docs/{doc}.md")).unwrap()
             }),
-        )
-        .route(
-            "/:post",
-            get(|Path(post): Path<String>| async {
-                let Some(post) = Posts::get(&(post + ".md")) else {
-                    return StatusCode::NOT_FOUND.into_response();
-                };
-                let markdown = std::str::from_utf8(&post.data).unwrap();
-                let html = to_html_with_options(markdown, &Options::gfm()).unwrap();
-                Body::from(html).into_response()
-            }),
-        )
-        .route_layer(HTMXify::wrap(full_html))
+        );
+    router.route_layer(HTMXify::wrap(full_html))
 }
 
 fn full_html(content: Markup) -> Markup {
     html!((DOCTYPE) html data-theme="dark" {
-        (Head::pwa().title("Prest Blog").css("/dist/styles.css"))
+        (Head::pwa().title("Prest Blog").css("/styles.css"))
         body hx-boost="true" hx-swap="innerHTML transition:true show:window:top" hx-target="main" {
             header."top container" {
                 nav {
@@ -54,11 +71,10 @@ fn full_html(content: Markup) -> Markup {
 }
 
 #[cfg(feature = "host")]
-embed!(Dist);
-#[cfg(feature = "host")]
 #[tokio::main(flavor = "current_thread")]
 pub async fn main() {
-    serve(shared().merge(Dist::routes("/dist/")), Default::default()).await
+    #[derive(Embed)] struct Dist;
+    serve(shared().embed::<Dist>(), Default::default()).await
 }
 
 #[cfg(feature = "sw")]

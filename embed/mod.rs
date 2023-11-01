@@ -1,40 +1,26 @@
 use crate::*;
 
-#[macro_export]
-macro_rules! embed {
-    ($struct_name:ident) => {
-        #[derive(Embed)]
-        #[folder = "$OUT_DIR/dist"]
-        struct $struct_name;
-    };
-    ($struct_name:ident, $path:literal) => {
-        #[derive(Embed)]
-        #[folder = $path]
-        struct $struct_name;
-    };
-}
-
-pub trait Embed where Self: 'static {
+pub trait Embed {
     fn get(file_path: &str) -> Option<EmbeddedFile>;
     fn iter() -> Filenames;
-    fn routes(prefix: &str) -> Router {
-        let wildcard = &format!("{prefix}*any");
-        let mut router = Router::new().route(wildcard, get(|Path(path): Path<String>, headers: HeaderMap| async move {
-            embed_handler::<Self>(&path, headers)
-        }));
-        if Self::get("sw.js").is_some() {
-            router = router.route("/sw.js", get(|headers: HeaderMap| async {
-                embed_handler::<Self>("sw.js", headers)
-            }))
+}
+
+pub trait EmbedRoutes {
+    fn embed<T: Embed>(self) -> Self;
+}
+impl EmbedRoutes for Router {
+    fn embed<T: Embed>(mut self) -> Self {
+        for path in T::iter() {
+            self = self.route(
+                &format!("/{path}"),
+                get(|headers: HeaderMap| async move { file_handler::<T>(&path, headers) })
+            )
         }
-        router
+        self
     }
 }
 
-fn embed_handler<T: Embed + ?Sized>(
-    path: &str,
-    headers: HeaderMap,
-) -> Response {
+fn file_handler<T: Embed + ?Sized>(path: &str, headers: HeaderMap) -> Response {
     let Some(asset) = T::get(&path) else {
         return StatusCode::NOT_FOUND.into_response();
     };
@@ -57,12 +43,12 @@ fn embed_handler<T: Embed + ?Sized>(
 /// depending on the compilation context.
 pub enum Filenames {
     /// Release builds use a named iterator type, which can be stack-allocated.
-    #[cfg(any(not(debug_assertions), feature = "debug-embed"))]
+    #[cfg(any(not(debug_assertions), feature = "lazy-embed"))]
     Embedded(std::slice::Iter<'static, &'static str>),
 
     /// The debug iterator type is currently unnameable and still needs to be
     /// boxed.
-    #[cfg(all(debug_assertions, not(feature = "debug-embed")))]
+    #[cfg(all(debug_assertions, not(feature = "lazy-embed")))]
     Dynamic(Box<dyn Iterator<Item = std::borrow::Cow<'static, str>>>),
 }
 
@@ -70,10 +56,10 @@ impl Iterator for Filenames {
     type Item = std::borrow::Cow<'static, str>;
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            #[cfg(any(not(debug_assertions), feature = "debug-embed"))]
+            #[cfg(any(not(debug_assertions), feature = "lazy-embed"))]
             Filenames::Embedded(names) => names.next().map(|x| std::borrow::Cow::from(*x)),
 
-            #[cfg(all(debug_assertions, not(feature = "debug-embed")))]
+            #[cfg(all(debug_assertions, not(feature = "lazy-embed")))]
             Filenames::Dynamic(boxed) => boxed.next(),
         }
     }

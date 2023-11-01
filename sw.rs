@@ -1,6 +1,5 @@
 use crate::*;
 
-extern crate console_error_panic_hook;
 pub use console_error_panic_hook::set_once as set_panic_hook;
 use js_sys::{Array, Reflect, Set, Uint8Array, Promise};
 pub use web_sys::{FetchEvent, ServiceWorkerGlobalScope, console};
@@ -9,8 +8,10 @@ use wasm_bindgen::{JsCast, JsValue};
 pub use wasm_bindgen::prelude::wasm_bindgen;
 
 pub async fn serve(mut router: Router, sw: ServiceWorkerGlobalScope, event: FetchEvent) {
-    let host = &sw.location().host();
     set_panic_hook();
+    
+    let host = &sw.location().host();
+    
     let request = fetch_into_axum_request(&event).await;
     // process only requests to our host
     if request.uri().host() != Some(host) {

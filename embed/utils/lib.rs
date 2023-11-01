@@ -6,7 +6,7 @@ use std::path::Path;
 use std::time::SystemTime;
 use std::{fs, io};
 
-#[cfg_attr(all(debug_assertions, not(feature = "debug-embed")), allow(unused))]
+#[cfg_attr(all(debug_assertions, not(feature = "lazy-embed")), allow(unused))]
 pub struct FileEntry {
   pub rel_path: String,
   pub full_canonical_path: String,
@@ -45,14 +45,21 @@ pub fn is_path_included(rel_path: &str, includes: &[&str], excludes: &[&str]) ->
   false
 }
 
-#[cfg_attr(all(debug_assertions, not(feature = "debug-embed")), allow(unused))]
+#[cfg_attr(all(debug_assertions, not(feature = "lazy-embed")), allow(unused))]
 pub fn get_files<'patterns>(folder_path: String, includes: &'patterns [&str], excludes: &'patterns [&str]) -> impl Iterator<Item = FileEntry> + 'patterns {
   walkdir::WalkDir::new(&folder_path)
     .follow_links(true)
     .sort_by_file_name()
     .into_iter()
+    // filter out child target dirs
+    .filter_entry(|e| 
+      !(e.file_type().is_dir() && (e.path().ends_with("target") || e.path().ends_with("target_sw")))
+    )
+    // ignore errors
     .filter_map(|e| e.ok())
+    // only files
     .filter(|e| e.file_type().is_file())
+    // respect includes and excludes
     .filter_map(move |e| {
       let rel_path = path_to_str(e.path().strip_prefix(&folder_path).unwrap());
       let full_canonical_path = path_to_str(std::fs::canonicalize(e.path()).expect("Could not get canonical path"));

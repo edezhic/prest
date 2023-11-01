@@ -39,9 +39,9 @@ fn embedded(
 
   let array_len = list_values.len();
 
-  // If debug-embed is on, unconditionally include the code below. Otherwise,
+  // If lazy-embed is on, unconditionally include the code below. Otherwise,
   // make it conditional on cfg(not(debug_assertions)).
-  let not_debug_attr = if cfg!(feature = "debug-embed") {
+  let not_debug_attr = if cfg!(feature = "lazy-embed") {
     quote! {}
   } else {
     quote! { #[cfg(not(debug_assertions))]}
@@ -183,7 +183,7 @@ fn generate_assets(
     &includes,
     &excludes,
   );
-  if cfg!(feature = "debug-embed") {
+  if cfg!(feature = "lazy-embed") {
     return embedded_impl;
   }
   let embedded_impl = embedded_impl?;
@@ -250,13 +250,16 @@ fn impl_rust_embed(ast: &syn::DeriveInput) -> syn::Result<TokenStream2> {
   };
 
   let mut folder_paths = find_attribute_values(ast, "folder");
-  if folder_paths.len() != 1 {
+  let folder_path = if folder_paths.is_empty() {
+    "$OUT_DIR".to_owned()
+  } else if folder_paths.len() == 1 {
+    folder_paths.remove(0)
+  } else {
     return Err(syn::Error::new_spanned(
       ast,
-      "#[derive(Embed)] must contain one attribute like this #[folder = \"examples/public/\"]",
+      "Can only embed one base directory like this #[folder = \"assets/\"], but you can customize it with include and exclude attibutes",
     ));
-  }
-  let folder_path = folder_paths.remove(0);
+  };
 
   let prefix = find_attribute_values(ast, "prefix").into_iter().next();
   let includes = find_attribute_values(ast, "include");
@@ -280,7 +283,7 @@ fn impl_rust_embed(ast: &syn::DeriveInput) -> syn::Result<TokenStream2> {
 
   if !Path::new(&absolute_folder_path).exists() {
     let message = format!(
-      "#[derive(Embed)] folder '{}' does not exist. cwd: '{}'",
+      "The embedded folder '{}' does not exist. cwd: '{}'",
       absolute_folder_path,
       std::env::current_dir().unwrap().to_str().unwrap()
     );

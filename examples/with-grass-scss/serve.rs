@@ -1,11 +1,12 @@
 use prest::*;
 
-embed!(Dist);
+#[derive(Embed)] 
+struct Dist;
 
 #[tokio::main]
 async fn main() {
     let service = Router::new()
-        .route("/", get(html!{(Head::default().css("/dist/styles.css")) h1{"Hello SASS!"}}))
-        .merge(Dist::routes("/dist/"));
+        .route("/", get(html!{(Head::default().css("/styles.css")) h1{"Hello SASS!"}}))
+        .embed::<Dist>();
     serve(service, Default::default()).await
 }

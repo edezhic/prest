@@ -13,4 +13,4 @@ mime_guess = "2.0.4"
 globset = "0.4.8"
 
 [features]
-debug-embed = []
+lazy-embed = []
