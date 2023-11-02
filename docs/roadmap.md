@@ -1,8 +1,12 @@
 This is a hobby project, there are no solid long-term plans and api is unstable. However, [the overall idea](https://prest.blog/motivation) seems quite promising to me so there are things I'll likely build next:
 
+- fix markdown links and use transitions with them
+- menu UI for modules and examples 
 - readmes for examples and include them into the blog
 - clarify prios in the roadmap
 - update default logo+favicon and how they are used with PWAOptions
+- embed blog styles.css without build.rs
+- extract todo ui into a separate crate to refine Storybook-like workflow
 
 ### Examples
 + with-[seaql](https://www.sea-ql.org/) toolkit stuff

@@ -13,6 +13,6 @@ pub async fn handle_fetch(sw: ServiceWorkerGlobalScope, fe: FetchEvent) {
 #[cfg(feature = "host")]
 #[tokio::main]
 pub async fn main() {
-    #[derive(Embed)] struct Dist;
-    serve(shared().embed::<Dist>(), Default::default()).await
+    include_build_output_as!(Dist);
+    serve(shared().embed(Dist), Default::default()).await
 }

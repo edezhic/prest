@@ -1,12 +1,11 @@
 use prest::*;
 
-#[derive(Embed)] 
-struct Dist;
+include_build_output_as!(Dist);
 
 #[tokio::main]
 async fn main() {
     let service = Router::new()
         .route("/", get(html!{(Head::default().js("/script.js")) h1{"Hello TypeScript!"}}))
-        .embed::<Dist>();
+        .embed(Dist);
     serve(service, Default::default()).await
 }
