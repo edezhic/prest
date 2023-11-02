@@ -1,0 +1,1 @@
+is a todo app powered by [SQLx](https://github.com/launchbadge/sqlx)-based connection to [SQLite](https://www.sqlite.org/index.html) DB

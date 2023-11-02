@@ -11,9 +11,32 @@ header.top {
   }
 }
 
-.icon {
+svg {
   color: #bbb;
+}
+footer svg {
   margin-left: 0.75rem;
+}
+
+#menu-bar {
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  top: 75px;
+  padding: 0 16px;
+  text-align: right;
+  background: #141e26;
+  opacity: 0;
+  visibility: hidden;
+  height: 0px;
+  overflow: hidden;
+  transition: visibility 0.3s, opacity 0.3s ease-out;
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+    height: auto;
+  }
 }
 
 /*

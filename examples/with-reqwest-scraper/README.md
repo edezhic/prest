@@ -1,0 +1,1 @@
+includes [scraper](https://github.com/causal-agent/scraper-based)-based parser for a news website

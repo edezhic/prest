@@ -1,84 +1,70 @@
 use prest::*;
 
 include_as!(Notes from "../../" only "*.md");
-impl Notes {
-    async fn get_html(path: Cow<'_, str>) -> String {
-        use markdown::{to_html_with_options, Options};
-        let file = Self::get(&path).unwrap();
-        let md = std::str::from_utf8(&file.data).unwrap();
-        to_html_with_options(md, &Options::gfm()).unwrap()
-    }
-}
 
-#[derive(Clone)]
-enum MenuItemKind {
-    Example,
-    Module,
-    Doc,
-}
-#[derive(Clone)]
-struct MenuItem {
-    pub kind: MenuItemKind,
-    pub name: String,
-    pub path: String,
+async fn note(path: Cow<'_, str>) -> String {
+    use markdown::{to_html_with_options, Options};
+    let file = Notes::get(&path).unwrap();
+    let md = std::str::from_utf8(&file.data).unwrap().to_owned();
+    #[cfg(debug_assertions)]
+    let md = md.replace("https://prest.blog", "http://localhost");
+    to_html_with_options(&md, &Options::gfm()).unwrap()
 }
 
 pub fn shared() -> Router {
-    let mut router = Router::new();
-    let mut menu = vec![];
-    for file_path in Notes::iter() {
-        let (name, kind) = match file_path.as_ref() {
-            "README.md" => ("", None),
-            p if p.starts_with("docs/") => (
-                p.trim_start_matches("docs/").trim_end_matches(".md"),
-                Some(MenuItemKind::Doc),
-            ),
-            p if p.starts_with("examples/") => (
-                extract_last_dir_name(p).unwrap(),
-                Some(MenuItemKind::Example),
-            ),
-            p => (
-                extract_last_dir_name(p).unwrap(),
-                Some(MenuItemKind::Module),
-            ),
+    let mut router = Router::new().route("/", get(|| note("README.md".into())));
+    let (mut docs, mut examples, mut modules) = (vec![], vec![], vec![]);
+
+    for path in Notes::iter() {
+        let (name, menu) = match path.as_ref().trim_end_matches(".md") {
+            p if p.starts_with("docs/") => (p.trim_start_matches("docs/"), &mut docs),
+            p if p.starts_with("examples/") => (last_dir(p), &mut examples),
+            p if p.contains("/") => (last_dir(p), &mut modules),
+            _ => continue,
         };
-        let url_path = "/".to_owned() + name;
-        if let Some(kind) = kind {
-            menu.push(MenuItem {
-                kind,
-                name: name.to_owned(),
-                path: url_path.clone(),
-            })
-        }
-        router = router.route(&url_path, get(move || Notes::get_html(file_path)));
+        let url = format!("/{name}");
+        let display_name = name.replace("-", " ");
+        menu.push((display_name, url.clone()));
+        router = router.route(&url, get(move || note(path)));
     }
-    router.route_layer(HTMXify::wrap(move |content| page(&menu, content)))
+    
+    router.route_layer(HTMXify::wrap(move |content| {
+        page(&docs, &modules, &examples, content)
+    }))
 }
 
-fn page(menu: &Vec<MenuItem>, content: Markup) -> Markup {
+fn page(
+    docs: &Vec<(String, String)>,
+    modules: &Vec<(String, String)>,
+    examples: &Vec<(String, String)>,
+    content: Markup,
+) -> Markup {
     html!((DOCTYPE) html data-theme="dark" {
         (Head::pwa().title("Prest Blog").css("/styles.css"))
-        body hx-boost="true" hx-swap="innerHTML transition:true show:window:top" hx-target="main" {
+        body hx-boost="true" hx-swap="innerHTML transition:true show:window:top" hx-target="main" _="on click remove .visible from #menu-bar" {
             header."top container" {
-                nav {
-                    ul { li { a {
-                        (PreEscaped(include_str!("assets/menu.svg")))
-                    }}}
-                    ul { h3."logo"{ li { a href="/" {"prest"} } } }
+                nav style="position:relative; padding:0 16px"{
                     ul {
-                        @for item in menu { @if let MenuItemKind::Doc = item.kind {
-                            li { a href={(item.path)} {(item.name)} }
-                        }}
-                        li { a."icon" href="https://github.com/edezhic/prest" target="_blank" {(PreEscaped(include_str!("assets/github.svg")))}}
+                        li { a href="https://github.com/edezhic/prest" target="_blank" {(PreEscaped(include_str!("assets/github.svg")))}}
+                        h3."logo"{ li { a href="/" {"prest"}}}
+                    }
+                    ul { 
+                        @for (name, url) in docs { li { a."contrast" href={(url)} {(name)}}}
+                        li { a #"menu-btn" _="on click toggle .visible on #menu-bar then halt the event" {(PreEscaped(include_str!("assets/menu.svg")))}}
+                        aside #"menu-bar" { 
+                            ul { @for (name, url) in modules { li { a href={(url)} {(name)}}} }
+                            hr {}
+                            ul { @for (name, url) in examples { li { a href={(url)} {small{(name)}}}} }    
+                        }
                     }
                 }
             }
-            main."container slide-transition" {(content)}
-            footer."container" styles="padding: 24px;" {
+            main."container slide-transition" style="padding:16px" {(content)}
+            footer."container" style="padding:24px" {
                 small{i{"Made by Egor Dezhic"
-                    a."icon" href="https://twitter.com/eDezhic" target="_blank" {(PreEscaped(include_str!("assets/twitter.svg")))}
-                    a."icon" href="https://edezhic.medium.com" target="_blank" {(PreEscaped(include_str!("assets/medium.svg")))}
-                    a."icon" href="mailto:edezhic@gmail.com" target="_blank" {(PreEscaped(include_str!("assets/email.svg")))}
+                    a href="https://twitter.com/eDezhic" target="_blank" {(PreEscaped(include_str!("assets/twitter.svg")))}
+                    a href="https://edezhic.medium.com" target="_blank" {(PreEscaped(include_str!("assets/medium.svg")))}
+                    a href="mailto:edezhic@gmail.com" target="_blank" {(PreEscaped(include_str!("assets/email.svg")))}
                 }}
             }
         }
@@ -98,11 +84,14 @@ pub async fn handle_fetch(sw: ServiceWorkerGlobalScope, fe: FetchEvent) {
     serve(shared(), sw, fe).await
 }
 
-fn extract_last_dir_name(p: &str) -> Option<&str> {
+fn last_dir(p: &str) -> &str {
     std::path::Path::new(p)
-        .parent()?
+        .parent()
+        .unwrap()
         .components()
-        .last()?
+        .last()
+        .unwrap()
         .as_os_str()
         .to_str()
+        .unwrap()
 }

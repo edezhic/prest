@@ -1,0 +1,1 @@
+builds into a native app for desktops and [mobile](https://github.com/tauri-apps/wry/blob/dev/MOBILE.md) using [WRY](https://github.com/tauri-apps/wry)
