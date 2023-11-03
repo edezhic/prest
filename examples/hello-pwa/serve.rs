@@ -1,7 +1,10 @@
 use prest::*;
 
 pub fn shared() -> Router {
-    Router::new().route("/", get(html!((Head::pwa()) h1{"Hello from PWA!"})))
+    Router::new().route("/", get(html!(
+            (Head::default().webmanifest("/.webmanifest")) 
+            body { h1{"Hello from PWA!"} (Scripts::default().with_sw())}
+    )))
 }
 
 #[cfg(feature = "sw")]

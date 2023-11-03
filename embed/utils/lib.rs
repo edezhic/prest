@@ -51,10 +51,6 @@ pub fn get_files<'patterns>(folder_path: String, includes: &'patterns [&str], ex
     .follow_links(true)
     .sort_by_file_name()
     .into_iter()
-    // filter out child target dirs
-    .filter_entry(|e| 
-      !(e.file_type().is_dir() && (e.path().ends_with("target") || e.path().ends_with("target_sw")))
-    )
     // ignore errors
     .filter_map(|e| e.ok())
     // only files

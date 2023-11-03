@@ -99,6 +99,7 @@ pub fn page(content: Markup) -> Markup {
                 button type="submit" {"Add"}
             }
             article {(content)}
+            (Scripts::default())
         }
     }}
 }

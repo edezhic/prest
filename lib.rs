@@ -77,3 +77,94 @@ pub async fn serve(router: Router, opts: ServeOptions) {
         });
     }
 }    
+
+/// A CSS response.
+///
+/// Will automatically get `Content-Type: text/css`.
+#[derive(Clone, Copy, Debug)]
+#[must_use]
+pub struct Css<T>(pub T);
+impl<T> IntoResponse for Css<T>
+where
+    T: Into<Body>,
+{
+    fn into_response(self) -> Response {
+        (
+            [(
+                header::CONTENT_TYPE,
+                HeaderValue::from_static("text/css"),
+            )],
+            self.0.into(),
+        )
+            .into_response()
+    }
+}
+impl<T> From<T> for Css<T> {
+    fn from(inner: T) -> Self {
+        Self(inner)
+    }
+}
+
+/// A favicon response.
+///
+/// Will automatically get `Content-Type: image/x-icon`.
+#[derive(Clone, Copy, Debug)]
+#[must_use]
+pub struct Favicon<T>(pub T);
+impl<T> IntoResponse for Favicon<T>
+where
+    T: Into<Body>,
+{
+    fn into_response(self) -> Response {
+        (
+            [(
+                header::CONTENT_TYPE,
+                HeaderValue::from_static("image/x-icon"),
+            )],
+            self.0.into(),
+        )
+            .into_response()
+    }
+}
+impl<T> From<T> for Favicon<T> {
+    fn from(inner: T) -> Self {
+        Self(inner)
+    }
+}
+
+use std::{path::PathBuf, ffi::OsStr};
+pub fn find_target_dir() -> Option<String> {
+    if let Some(target_dir) = std::env::var_os("CARGO_TARGET_DIR") {
+        let target_dir = PathBuf::from(target_dir);
+        if target_dir.is_absolute() {
+            if let Some(str) = target_dir.to_str() {
+                return Some(str.to_owned());
+            } else {
+                return None;
+            }
+        } else {
+            return None;
+        };
+    }
+
+    let mut dir = PathBuf::from(out_path(""));
+    loop {
+        if dir.join(".rustc_info.json").exists()
+            || dir.join("CACHEDIR.TAG").exists()
+            || dir.file_name() == Some(OsStr::new("target"))
+                && dir
+                    .parent()
+                    .map_or(false, |parent| parent.join("Cargo.toml").exists())
+        {
+            if let Some(str) = dir.to_str() {
+                return Some(str.to_owned());
+            } else {
+                return None;
+            }
+        }
+        if dir.pop() {
+            continue;
+        }
+        return None;
+    }
+}

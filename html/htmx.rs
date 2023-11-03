@@ -68,6 +68,9 @@ where
                 let response = Response::from_parts(parts, body);
                 Ok(response)
             } else {
+                parts
+                    .headers
+                    .insert(header::CACHE_CONTROL, HeaderValue::from_static("max-age=0, no-cache, must-revalidate, proxy-revalidate"));
                 Ok(Response::from_parts(parts, body))
             }
         })

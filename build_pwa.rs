@@ -1,4 +1,4 @@
-use crate::out_path;
+use crate::{out_path, find_target_dir};
 use std::{
     format as f,
     fs::{read_to_string, rename, write},
@@ -13,12 +13,10 @@ const PROFILE: &str = "debug";
 #[cfg(not(debug_assertions))]
 const PROFILE: &str = "release";
 
-// Replace with dynamic target-based path? An example how to figure out target dir:
-// https://github.com/dtolnay/cxx/blob/306019c5a7434aa7424a83720a09c40e1ea12343/gen/build/src/target.rs
-static SW_TARGET_DIR: &str = "target_sw";
+const SW_TARGET: &str = "wasm32-sw";
 
-static DEFAULT_LOGO: &[u8] = include_bytes!("assets/logo.png");
-static DEFAULT_FAVICON: &[u8] = include_bytes!("assets/favicon.ico");
+static LOGO: &[u8] = include_bytes!("logo.png");
+
 static LISTENER_TEMPLATE: &str = "self.addEventListener('NAME', event => LISTENER);\n";
 
 pub struct PWAOptions<'a> {
@@ -72,8 +70,9 @@ impl Default for ManifestOptions<'_> {
 pub fn build_pwa(opts: PWAOptions) {
     let start = Instant::now();
     let lib_name = &read_lib_name();
-    let target_dir = &f!("{SW_TARGET_DIR}/wasm32-unknown-unknown/{PROFILE}");
-    let target_path = &f!("{target_dir}/{lib_name}");
+    let target_dir = sw_target_dir();
+    let profile_dir = &f!("{target_dir}/wasm32-unknown-unknown/{PROFILE}");
+    let lib_path = &f!("{profile_dir}/{lib_name}");
 
     // build in a separate target dir to avoid build deadlock with the host
     let mut cmd = Command::new("cargo");
@@ -83,7 +82,7 @@ pub fn build_pwa(opts: PWAOptions) {
         .arg("--no-default-features")
         .args(["--features", &opts.build_features])
         .args(["--target", "wasm32-unknown-unknown"])
-        .args(["--target-dir", SW_TARGET_DIR]);
+        .args(["--target-dir", &target_dir]);
     if !cfg!(debug_assertions) {
         cmd.arg("--release");
     }
@@ -91,21 +90,21 @@ pub fn build_pwa(opts: PWAOptions) {
 
     // generate bindings for the wasm binary
     Bindgen::new()
-        .input_path(f!("{target_path}.wasm"))
+        .input_path(f!("{lib_path}.wasm"))
         .web(true)
         .unwrap()
         .typescript(opts.types_path.is_some())
         .remove_name_section(true)
         .remove_producers_section(true)
         .omit_default_module_path(true)
-        .generate(target_dir)
+        .generate(profile_dir)
         .unwrap();
 
     // move the processed wasm binary into final dist
-    rename(&f!("{target_path}_bg.wasm"), out_path("sw.wasm")).unwrap();
+    rename(&f!("{lib_path}_bg.wasm"), out_path("sw.wasm")).unwrap();
 
     // append event listeners and save js bindings
-    let mut js = read_to_string(&f!("{target_path}.js")).unwrap();
+    let mut js = read_to_string(&f!("{lib_path}.js")).unwrap();
     for listener in opts.listeners {
         js += LISTENER_TEMPLATE
             .replace("NAME", listener.0)
@@ -118,10 +117,7 @@ pub fn build_pwa(opts: PWAOptions) {
     write(out_path(".webmanifest"), gen_manifest(opts.manifest)).unwrap();
 
     // at least one logo is required for PWA installability
-    write(out_path("logo.png"), DEFAULT_LOGO).unwrap();
-
-    // for completeness?
-    write(out_path("favicon.ico"), DEFAULT_FAVICON).unwrap();
+    write(out_path("logo.png"), LOGO).unwrap();
 
     println!(
         "cargo:warning={}",
@@ -158,4 +154,13 @@ fn read_lib_name() -> String {
         parsed["package"]["name"].as_str().unwrap().to_owned()
     };
     lib_name.replace("-", "_")
+}
+
+
+fn sw_target_dir() -> String {
+    if let Some(dir) = find_target_dir() {
+        dir + "/" + SW_TARGET
+    } else {
+        "target/".to_owned() + SW_TARGET
+    }
 }

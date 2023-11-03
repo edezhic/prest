@@ -1,6 +1,6 @@
 mod escape;
-mod head;
-pub use head::*;
+mod common;
+pub use common::*;
 mod htmx;
 pub use htmx::*;
 

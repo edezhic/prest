@@ -51,14 +51,12 @@ async fn main() {
 async fn homepage() -> Markup {
     html!(
         html {
-            head {
-                title {"With OAuth"}
-                link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css" {}
-            }
+            (Head::default().title("With OAuth"))
             body {
                 h1{"With OAuth"}
                 a href="/oauth/google" {"Click me to initiate Google OAuth flow"}
                 a href="/protected" {"Click me to go to the authorized route"}
+                (Scripts::default())
             }
         }
     )

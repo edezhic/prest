@@ -26,15 +26,9 @@ async fn main() {
 }
 
 async fn homepage() -> Markup {
-    html!(
-        html {
-            head {
-                title {"With scraping"}
-                link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css" {}
-            }
-            body {h1{"Check out terminal for scraping results!"}}
-        }
-    )
+    html!(html {(Head::default().title("With scraping"))
+        body {h1{"Check out terminal for scraping results!"}}
+    })
 }  
 
 struct Story {

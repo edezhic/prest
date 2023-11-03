@@ -51,6 +51,7 @@ async fn page() -> Markup {
             } @else {
                 article hx-get="/" hx-target="body" hx-trigger="load delay:1s" aria-busy="true"{}
             }
+            (Scripts::default())
         }
     })
 }
