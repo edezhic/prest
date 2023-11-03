@@ -1,4 +1,6 @@
-**prest** is a **P**rogressive **REST**ful framework designed to simplify web and cross-platform app development. Beware that [it's still very early](https://prest.blog/roadmap), but I think that the [overall idea](https://prest.blog/intro) has potential. To get started you'll need the latest stable [rust toolchain](https://rustup.rs/). You can run examples with `cargo run -p NAME`.
+**prest** is a **P**rogressive **REST**ful framework designed to simplify cross-platform app development.
+
+Beware that [it's still very early](https://prest.blog/roadmap), but I think that the [overall idea](https://prest.blog/intro) has potential. To get started you'll need the latest stable [rust toolchain](https://rustup.rs/). You can run examples with `cargo run -p NAME`.
 
 Most examples are supported on [replit](https://replit.com/) and you can [fork it there](https://replit.com/@eDezhic/prest) to quickly run in the cloud. It includes [rust-analyzer](https://rust-analyzer.github.io/) and I suggest to use it in local development as well. If you also want to include Typescript then [VS Code](https://code.visualstudio.com/) might be a great choice.
 

@@ -18,8 +18,8 @@ requiredFiles = [".replit", "replit.nix"]
 [languages.rust]
 pattern = "**/*.rs"
 
-[languages.rust.languageServer]
-start = "rust-analyzer"
+#[languages.rust.languageServer]
+#start = "rust-analyzer"
 
 [deployment]
 run = ["sh", "-c", "chmod +x ./_temp_deployment/serve && ./_temp_deployment/serve"]
