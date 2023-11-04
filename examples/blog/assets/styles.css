@@ -1,4 +1,18 @@
+* {
+  transition: all 0.2s ease-out;
+}
+code {
+  padding: 0.15rem 0.5rem !important;
+}
+svg {
+  color: #bbb;
+  margin: 0 0.5rem;
+}
+a:has(svg):hover svg {
+  color: #fff;
+}
 header.top {
+  user-select: none;
   padding: 0.5rem;
   .logo {
     margin-bottom: 0;
@@ -8,35 +22,31 @@ header.top {
         color: rgb(63 193 237);
       }
     }
-  }
-}
-
-svg {
-  color: #bbb;
-}
-footer svg {
-  margin-left: 0.75rem;
-}
-
-#menu-bar {
-  position: absolute;
-  z-index: 2;
-  right: 0;
-  top: 75px;
-  padding: 0 16px;
-  text-align: right;
-  background: #141e26;
-  opacity: 0;
-  visibility: hidden;
-  height: 0px;
-  overflow: hidden;
-  transition: visibility 0.3s, opacity 0.3s ease-out;
-
-  &.visible {
-    opacity: 1;
-    visibility: visible;
-    height: auto;
-  }
+  };
+  #examples-btn:hover {
+    color: #fff;
+  };
+  #examples-btn:hover svg {
+    color: #fff !important;
+  }; 
+  #examples-menu {
+    position: absolute;
+    z-index: 2;
+    right: 0;
+    top: 75px;
+    padding: 0 16px;
+    text-align: right;
+    background: #141e26;
+    opacity: 0;
+    visibility: hidden;
+    height: 0px;
+    overflow: hidden;
+    &.visible {
+      opacity: 1;
+      visibility: visible;
+      height: auto;
+    }
+  }  
 }
 
 /*
