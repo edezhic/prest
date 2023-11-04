@@ -15,9 +15,9 @@ pub use axum::{
     Router,
     middleware::{from_fn, from_fn_with_state, from_extractor, from_extractor_with_state}
 };
-pub use embed::Embed;
+pub use embed::*;
 pub use embed_macro::Embed;
-pub use embed_utils::{EmbeddedFile, Metadata as EmbeddedFileMetadata};
+pub use embed_utils::*;
 pub use html::*;
 pub use html_macro::html;
 pub use http ::{self, Uri, header, HeaderMap, HeaderValue, StatusCode};

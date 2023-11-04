@@ -11,7 +11,7 @@ use std::borrow::Cow;
 
 pub trait Embed {
     fn get(file_path: &str) -> Option<EmbeddedFile>;
-    fn iter() -> Filenames;
+    fn iter() -> __Filenames;
 }
 
 pub trait EmbedRoutes {
@@ -75,7 +75,7 @@ macro_rules! include_as {
 /// This enum exists for optimization purposes, to avoid boxing the iterator in
 /// some cases. Do not try and match on it, as different variants will exist
 /// depending on the compilation context.
-pub enum Filenames {
+pub enum __Filenames {
     /// Release builds use a named iterator type, which can be stack-allocated.
     #[cfg(any(not(debug_assertions), feature = "lazy-embed"))]
     Embedded(std::slice::Iter<'static, &'static str>),
@@ -86,15 +86,15 @@ pub enum Filenames {
     Dynamic(Box<dyn Iterator<Item = Cow<'static, str>>>),
 }
 
-impl Iterator for Filenames {
+impl Iterator for __Filenames {
     type Item = Cow<'static, str>;
     fn next(&mut self) -> Option<Self::Item> {
         match self {
             #[cfg(any(not(debug_assertions), feature = "lazy-embed"))]
-            Filenames::Embedded(names) => names.next().map(|x| Cow::from(*x)),
+            __Filenames::Embedded(names) => names.next().map(|x| Cow::from(*x)),
 
             #[cfg(all(debug_assertions, not(feature = "lazy-embed")))]
-            Filenames::Dynamic(boxed) => boxed.next(),
+            __Filenames::Dynamic(boxed) => boxed.next(),
         }
     }
 }

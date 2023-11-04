@@ -102,8 +102,8 @@ fn embedded(
           fn get(file_path: &str) -> Option<prest::EmbeddedFile> {
             #ident::get(file_path)
           }
-          fn iter() -> prest::Filenames {
-            prest::Filenames::Embedded(#ident::names())
+          fn iter() -> prest::__Filenames {
+            prest::__Filenames::Embedded(#ident::names())
           }
         }
     })
@@ -187,9 +187,9 @@ fn dynamic(
           fn get(file_path: &str) -> Option<prest::EmbeddedFile> {
             #ident::get(file_path)
           }
-          fn iter() -> prest::Filenames {
+          fn iter() -> prest::__Filenames {
             // the return type of iter() is unnamable, so we have to box it
-            prest::Filenames::Dynamic(Box::new(#ident::iter()))
+            prest::__Filenames::Dynamic(Box::new(#ident::iter()))
           }
         }
     }
