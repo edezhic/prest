@@ -1,6 +1,13 @@
 use crate::*;
 use std::task::{Context, Poll};
 
+/// Layer that modifies non-HTMX requests with the provided [`Fn`]
+/// 
+/// Function or closure must take a single [`Markup`] argument and return [`Markup`]
+/// 
+/// Can be used like this: `router.layer(HTMXify::wrap(|content| html!{body {(content)}}))`
+/// 
+/// It also sets a proper html content type header and disables caching for htmx responses
 #[derive(Clone)]
 pub struct HTMXify<F> {
     pub wrapper: F,
@@ -26,6 +33,7 @@ where
     }
 }
 
+/// Underlying middleware that powers [`HTMXify`] layer
 #[derive(Clone)]
 pub struct HtmxMiddleware<S, F> {
     wrapper: F,

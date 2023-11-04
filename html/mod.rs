@@ -1,3 +1,9 @@
+//! Fork of [maud](https://github.com/lambda-fairy/maud) adjusted to be used in prest. Thanks to Chris Wong <lambda.fairy@gmail.com> and other contributors!
+//! Changes in the API:
+//! - added utils for easier integration with HTMX
+//! - added utils for common HTML elements: head, scripts
+//! - native axum support and removed support for other frameworks
+
 mod escape;
 mod common;
 pub use common::*;
@@ -9,6 +15,7 @@ use std::{borrow::Cow, boxed::Box, string::String, sync::Arc};
 use core::fmt::{self, Arguments, Display, Write};
 
 
+/// Wrapper of a buffer that escapes HTML chars when it is written using [`fmt::Write`]
 pub struct Escaper<'a>(&'a mut String);
 
 impl<'a> Escaper<'a> {
@@ -25,6 +32,7 @@ impl<'a> fmt::Write for Escaper<'a> {
     }
 }
 
+/// Trait that defines how something is rendered into HTML
 pub trait Render {
     /// Renders `self` as a block of `Markup`.
     fn render(&self) -> Markup {
@@ -129,6 +137,7 @@ impl_render_with_itoa! {
     u8 u16 u32 u64 u128 usize
 }
 
+/// Utility that renders any value that implements [`Display`]
 pub fn display(value: impl Display) -> impl Render {
     struct DisplayWrapper<T>(T);
 

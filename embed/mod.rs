@@ -1,5 +1,13 @@
+//! Fork of [rust-embed](https://github.com/pyrossh/rust-embed) adjusted to be used in prest. Thanks to Peter John <pyros2097@gmail.com> and other contributors!
+//! Changes in the API: 
+//! - Implemented `.embed` function for the axum Router that adds routes to the embedded files
+//! - Added shorthand macros for embedding: `include_as` and `include_build_output_as` 
+//! - `interpolate-folder-path` and `include-exclude` are enabled without additional features
+//! - `compression` feature is removed because RAM and cold starts are more important than disk space for most prest use cases 
+//! - Derive macro is renamed RustEmbed -> Embed
+
 use crate::*;
-pub use std::borrow::Cow;
+use std::borrow::Cow;
 
 pub trait Embed {
     fn get(file_path: &str) -> Option<EmbeddedFile>;
@@ -39,6 +47,9 @@ fn file_handler<T: Embed + ?Sized>(path: &str, headers: HeaderMap) -> Response {
         .unwrap()
 }
 
+/// Shorthand to embed build artifacts like PWA assets and others
+/// 
+/// Usage: `include_build_output_as!(StructName);`
 #[macro_export]
 macro_rules! include_build_output_as {
     ($struct_name:ident) => {
@@ -47,12 +58,14 @@ macro_rules! include_build_output_as {
         struct $struct_name;
     };
 }
-
+/// One-liner for structs with derived Embed
+///
+/// Usage: `include_as!(StructName from "path" only "*.rs" except "secret.rs");` where `only...` and `except...` parts are optional and accept 1+ comma-separated arg
 #[macro_export]
 macro_rules! include_as {
-    ($struct_name:ident $(from $path:literal)? $(only $($inc:literal),+)? $(except $($exc:literal),+)?) => {
+    ($struct_name:ident from $path:literal $(only $($inc:literal),+)? $(except $($exc:literal),+)?) => {
         #[derive(Embed)]
-        $( #[folder = $path] )?
+        #[folder = $path]
         $( $( #[include = $inc] )+ )?
         $( $( #[exclude = $exc] )+ )?
         struct $struct_name;

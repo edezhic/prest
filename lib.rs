@@ -4,7 +4,7 @@ mod embed;
 
 pub(crate) use crate as prest;
 
-pub use anyhow::{Error, Result, bail, anyhow};
+pub use anyhow::{self, Error, Result, bail, anyhow as anyway};
 pub use axum::{
     self,
     body::{Body, HttpBody},
@@ -13,22 +13,24 @@ pub use axum::{
     response::*,
     routing::{any, delete, get, patch, post, put},
     Router,
-    middleware::*,
+    middleware::{from_fn, from_fn_with_state, from_extractor, from_extractor_with_state}
 };
-pub use embed::*;
-pub use embed_macro::*;
-pub use embed_utils::*;
-use futures_util::Future;
+pub use embed::Embed;
+pub use embed_macro::Embed;
+pub use embed_utils::{EmbeddedFile, Metadata as EmbeddedFileMetadata};
 pub use html::*;
 pub use html_macro::html;
-pub use http::{self, Uri, header, HeaderMap, HeaderValue, StatusCode};
+pub use http ::{self, Uri, header, HeaderMap, HeaderValue, StatusCode};
 pub use tower::{self, Layer, Service};
 pub use once_cell::sync::Lazy;
 
+/// Default doctype for HTML
 pub const DOCTYPE: PreEscaped<&'static str> = PreEscaped("<!DOCTYPE html>");
+/// Default javascript code that registers a service worker from `/sw.js`
 pub const REGISTER_SW_SNIPPET: &str = 
     "if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {type: 'module'});";
 
+/// Utility for composition of paths to build artifacts
 pub fn out_path(filename: &str) -> String {
     let dir = std::env::var("OUT_DIR").unwrap();
     format!("{dir}/{filename}")
@@ -40,6 +42,8 @@ mod build_pwa;
 pub use build_pwa::*;
 
 use std::net::SocketAddr;
+
+/// Configuration for the server
 pub struct ServeOptions {
     pub addr: SocketAddr,
 }
@@ -133,6 +137,7 @@ impl<T> From<T> for Favicon<T> {
 }
 
 use std::{path::PathBuf, ffi::OsStr};
+/// Utility that attempts to find the path of the current build's target path
 pub fn find_target_dir() -> Option<String> {
     if let Some(target_dir) = std::env::var_os("CARGO_TARGET_DIR") {
         let target_dir = PathBuf::from(target_dir);

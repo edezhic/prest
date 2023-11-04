@@ -1,5 +1,6 @@
 use crate::*;
 
+/// Renders into a `<head>` tag with builder-like interface
 pub struct Head<'a> {
     title: &'a str,
     styles: Option<Vec<&'a str>>,
@@ -78,20 +79,21 @@ impl<'a> Render for Head<'a> {
     }
 }
 
+/// Renders into a bunch of `<script>` tags with builder-like interface
 pub struct Scripts<'a> {
     pub register_sw: bool,
     pub include_htmx: bool,
     pub include_hyperscript: bool,
-    pub other_srcs: Option<Vec<&'a str>>,
+    pub other_deferred: Option<Vec<&'a str>>,
     pub other: Option<Markup>,
 }
 
 impl<'a> Scripts<'a> {
     pub fn include(mut self, path: &'a str) -> Self {
-        if let Some(srcs) = &mut self.other_srcs {
+        if let Some(srcs) = &mut self.other_deferred {
             srcs.push(path)
         } else {
-            self.other_srcs = Some(vec![path])
+            self.other_deferred = Some(vec![path])
         }
         self
     }
@@ -100,7 +102,7 @@ impl<'a> Scripts<'a> {
             register_sw: false,
             include_htmx: false,
             include_hyperscript: false,
-            other_srcs: None,
+            other_deferred: None,
             other: None,
         }
     }
@@ -123,7 +125,7 @@ impl<'a> Default for Scripts<'a> {
             register_sw: false,
             include_htmx: true,
             include_hyperscript: true,
-            other_srcs: None,
+            other_deferred: None,
             other: None,
         }
     }
@@ -132,8 +134,8 @@ impl<'a> Render for Scripts<'a> {
     fn render(&self) -> Markup {
         html!(
             @if self.register_sw { script {(REGISTER_SW_SNIPPET)} }
-            @if let Some(srcs) = self.other_srcs.clone() { @for src in srcs {
-                script src={(src)} {}
+            @if let Some(srcs) = self.other_deferred.clone() { @for src in srcs {
+                script defer src={(src)} {}
             }}
             @if self.include_htmx { script defer src="https://unpkg.com/htmx.org@1.9.0" crossorigin="anonymous"{} }
             @if self.include_hyperscript { script defer src="https://unpkg.com/hyperscript.org@0.9.11" crossorigin="anonymous"{} }

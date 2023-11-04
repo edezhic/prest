@@ -258,7 +258,7 @@ fn embed_file(
 
           prest::EmbeddedFile {
               data: std::borrow::Cow::Borrowed(&BYTES),
-              metadata: prest::Metadata::__rust_embed_new([#(#hash),*], #last_modified #mimetype_tokens)
+              metadata: prest::EmbeddedFileMetadata::__rust_embed_new([#(#hash),*], #last_modified #mimetype_tokens)
           }
         }
     })
@@ -350,6 +350,7 @@ fn impl_rust_embed(ast: &syn::DeriveInput) -> syn::Result<TokenStream2> {
     )
 }
 
+/// Derive macro that embeds files and provides access to them through the given struct
 #[proc_macro_derive(Embed, attributes(folder, prefix, include, exclude))]
 pub fn derive_input_object(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
