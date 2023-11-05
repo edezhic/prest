@@ -1,0 +1,14 @@
+[package]
+name = "with-turbosql-sqlite"
+version = "0.0.1"
+edition = "2021"
+
+[[bin]]
+name = "serve"
+path = "./serve.rs"
+
+[dependencies]
+prest = { path = "../../", features = ["host"] }
+serde = { version = "*", features = ["derive"] }
+tokio = { version = "*", features = ["full"] }
+turbosql = "*"
