@@ -1,1 +1,0 @@
-for some reason DB select results don't change until app is restarted, at least on windows

@@ -1,0 +1,17 @@
+[package]
+name = "with-seaorm-postgres"
+version = "0.0.1"
+edition = "2021"
+
+[[bin]]
+name = "serve"
+path = "./serve.rs"
+
+[dependencies]
+prest = { path = "../../", features = ["host"] }
+serde = { version = "*", features = ["derive"] }
+tokio = { version = "*", features = ["full"] }
+sea-orm = { version = "^0.12.0", features = [ "sqlx-postgres", "runtime-tokio-rustls", "macros", "with-uuid"] }
+sea-orm-migration = "^0.12.0"
+futures = "*"
+uuid = { version = "*", features = ["v4"] }

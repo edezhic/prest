@@ -12,7 +12,7 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 
 The simplest ones are [hello](https://prest.blog/hello) - casual restful server in just a couple of lines, and [hello PWA](https://prest.blog/hello-pwa) which also packs [everything necessary for the app to be installable](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable). Their tutorials describe the basic components of prest and how they fit together. Based on them you can add other things:
 
-- all kinds of databases - [postgres](https://prest.blog/with-diesel-postgres), sqlite through [sqlx](https://prest.blog/with-sqlx-sqlite) or [turbosql](https://prest.blog/with-turbosql-sqlite), [mongo](https://prest.blog/with-mongo-driver), [redis](https://prest.blog/with-redis-driver) and even a full rust combo [gluesql + sled](https://prest.blog/with-gluesql-sled)
+- all kinds of databases - postgres through [seaorm](https://prest.blog/with-seaorm-postgres) or [diesel](https://prest.blog/with-diesel-postgres), sqlite through [sqlx](https://prest.blog/with-sqlx-sqlite) or [turbosql](https://prest.blog/with-turbosql-sqlite), [mongo](https://prest.blog/with-mongo-driver), [redis](https://prest.blog/with-redis-driver) and even a full rust combo [gluesql + sled](https://prest.blog/with-gluesql-sled)
 - authentication, authorization, user and session management with [OpenID/OAuth](https://prest.blog/with-oauth-google)  
 - other templating engines like [Askama](https://prest.blog/with-jinja-askama) which provides Jinja-like syntax
 - compilation and bundling of [SASS/SCSS](https://prest.blog/with-grass-scss), [TypeScript](https://prest.blog/with-swc-typescript) and other sources in the build pipeline

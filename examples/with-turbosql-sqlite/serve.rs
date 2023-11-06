@@ -1,5 +1,5 @@
 use prest::*;
-use turbosql::{Turbosql, select, execute};
+use turbosql::{execute, select, Turbosql};
 
 #[derive(Default, Turbosql, serde::Deserialize)]
 pub struct Todo {
@@ -13,7 +13,7 @@ async fn main() {
     let service = Router::new()
         .route(
             "/",
-            get(html!(@for todo in select!(Vec<Todo>).unwrap() {(todo)}))
+            get(|| async { html!(@for todo in select!(Vec<Todo>).unwrap() {(todo)}) })
                 .put(|Form(mut todo): Form<Todo>| async move {
                     todo.done = Some(false);
                     todo.insert().unwrap();
