@@ -1,1 +1,3 @@
-for some reason DB select results don't change until app is restarted, at least on windows
+To regenerate entities after schema changes:
+
+`sea-orm-cli generate entity -u postgres://postgres:password@localhost/prest -o ./entities --with-serde both`
