@@ -7,6 +7,7 @@ use wasm_bindgen::{JsCast, JsValue};
 
 pub use wasm_bindgen::prelude::wasm_bindgen;
 
+/// Process request to the same host using the router and respond if status < 400
 pub async fn serve(mut router: Router, sw: ServiceWorkerGlobalScope, event: FetchEvent) {
     set_panic_hook();
     

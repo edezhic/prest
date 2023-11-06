@@ -258,7 +258,7 @@ fn embed_file(
 
           prest::EmbeddedFile {
               data: std::borrow::Cow::Borrowed(&BYTES),
-              metadata: prest::Metadata::__rust_embed_new([#(#hash),*], #last_modified #mimetype_tokens)
+              metadata: prest::EmbeddedFileMetadata::__rust_embed_new([#(#hash),*], #last_modified #mimetype_tokens)
           }
         }
     })

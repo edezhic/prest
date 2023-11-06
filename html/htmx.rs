@@ -34,6 +34,7 @@ where
 }
 
 /// Underlying middleware that powers [`HTMXify`] layer
+#[doc(hidden)]
 #[derive(Clone)]
 pub struct HtmxMiddleware<S, F> {
     wrapper: F,

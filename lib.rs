@@ -1,4 +1,7 @@
+//! These docs are focused on technical details. For tutorials check out [prest.blog](https://prest.blog)
+#![doc(html_favicon_url = "https://prest.blog/favicon.ico")]
 #![allow(dead_code, unused_imports)]
+
 mod html;
 mod embed;
 
@@ -8,8 +11,7 @@ pub use anyhow::{self, Error, Result, bail, anyhow as anyway};
 pub use axum::{
     self,
     body::{Body, HttpBody},
-    Form,
-    extract::*,
+    extract::{Extension, Form, FromRequest, FromRequestParts, Host, MatchedPath, NestedPath, OriginalUri, Path, Query, Request, State},
     response::*,
     routing::{any, delete, get, patch, post, put},
     Router,
@@ -42,7 +44,6 @@ mod build_pwa;
 pub use build_pwa::*;
 
 use std::net::SocketAddr;
-
 /// Configuration for the server
 pub struct ServeOptions {
     pub addr: SocketAddr,
@@ -55,6 +56,7 @@ impl Default for ServeOptions {
     }
 }
 
+/// Start hyper-based server
 #[cfg(feature = "host")]
 pub async fn serve(router: Router, opts: ServeOptions) {
     let svc = router.into_make_service();
@@ -66,6 +68,7 @@ mod sw;
 #[cfg(feature = "sw")]
 pub use sw::*;
 
+/// Start simplified hyper_wasi-based server
 #[cfg(all(target = "wasm32-wasi", feature = "host-wasi"))]
 pub async fn serve(router: Router, opts: ServeOptions) { 
     use hyper::server::conn::Http;
@@ -136,9 +139,9 @@ impl<T> From<T> for Favicon<T> {
     }
 }
 
-use std::{path::PathBuf, ffi::OsStr};
 /// Utility that attempts to find the path of the current build's target path
 pub fn find_target_dir() -> Option<String> {
+    use std::{path::PathBuf, ffi::OsStr};
     if let Some(target_dir) = std::env::var_os("CARGO_TARGET_DIR") {
         let target_dir = PathBuf::from(target_dir);
         if target_dir.is_absolute() {

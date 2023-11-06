@@ -9,11 +9,14 @@
 use crate::*;
 use std::borrow::Cow;
 
+/// Derived trait for structs that embed files
 pub trait Embed {
     fn get(file_path: &str) -> Option<EmbeddedFile>;
     fn iter() -> __Filenames;
 }
 
+/// Convenience trait that generates routes for the embedded files
+#[doc(hidden)]
 pub trait EmbedRoutes {
     fn embed<T: Embed>(self, _: T) -> Self;
 }
@@ -75,6 +78,7 @@ macro_rules! include_as {
 /// This enum exists for optimization purposes, to avoid boxing the iterator in
 /// some cases. Do not try and match on it, as different variants will exist
 /// depending on the compilation context.
+#[doc(hidden)]
 pub enum __Filenames {
     /// Release builds use a named iterator type, which can be stack-allocated.
     #[cfg(any(not(debug_assertions), feature = "lazy-embed"))]

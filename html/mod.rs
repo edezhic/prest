@@ -138,6 +138,7 @@ impl_render_with_itoa! {
 }
 
 /// Utility that renders any value that implements [`Display`]
+#[doc(hidden)]
 pub fn display(value: impl Display) -> impl Render {
     struct DisplayWrapper<T>(T);
 

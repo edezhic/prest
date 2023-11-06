@@ -6,12 +6,15 @@ use std::path::Path;
 use std::time::SystemTime;
 use std::{fs, io};
 
+/// Utility used for debug and lazy embeddings
+#[doc(hidden)]
 #[cfg_attr(all(debug_assertions, not(feature = "lazy-embed")), allow(unused))]
 pub struct FileEntry {
   pub rel_path: String,
   pub full_canonical_path: String,
 }
 
+#[doc(hidden)]
 pub fn is_path_included(rel_path: &str, includes: &[&str], excludes: &[&str]) -> bool {
   use globset::Glob;
 
@@ -45,6 +48,8 @@ pub fn is_path_included(rel_path: &str, includes: &[&str], excludes: &[&str]) ->
   false
 }
 
+/// Utility that finds files to embed
+#[doc(hidden)]
 #[cfg_attr(all(debug_assertions, not(feature = "lazy-embed")), allow(unused))]
 pub fn get_files<'patterns>(folder_path: String, includes: &'patterns [&str], excludes: &'patterns [&str]) -> impl Iterator<Item = FileEntry> + 'patterns {
   walkdir::WalkDir::new(&folder_path)
@@ -78,18 +83,19 @@ pub fn get_files<'patterns>(folder_path: String, includes: &'patterns [&str], ex
 #[derive(Clone)]
 pub struct EmbeddedFile {
   pub data: Cow<'static, [u8]>,
-  pub metadata: Metadata,
+  pub metadata: EmbeddedFileMetadata,
 }
 
-/// Metadata about an embedded file
+/// EmbeddedFileMetadata about an embedded file
+#[doc(hidden)]
 #[derive(Clone)]
-pub struct Metadata {
+pub struct EmbeddedFileMetadata {
   hash: [u8; 32],
   last_modified: Option<u64>,
   mimetype: Cow<'static, str>,
 }
 
-impl Metadata {
+impl EmbeddedFileMetadata {
   #[doc(hidden)]
   pub const fn __rust_embed_new(hash: [u8; 32], last_modified: Option<u64>, mimetype: &'static str) -> Self {
     Self {
@@ -116,6 +122,7 @@ impl Metadata {
   }
 }
 
+#[doc(hidden)]
 pub fn read_file_from_fs(file_path: &Path) -> io::Result<EmbeddedFile> {
   let data = fs::read(file_path)?;
   let data = Cow::from(data);
@@ -140,7 +147,7 @@ pub fn read_file_from_fs(file_path: &Path) -> io::Result<EmbeddedFile> {
 
   Ok(EmbeddedFile {
     data,
-    metadata: Metadata {
+    metadata: EmbeddedFileMetadata {
       hash,
       last_modified: source_date_epoch.or(last_modified),
       mimetype: mimetype.into(),
