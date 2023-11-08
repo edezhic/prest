@@ -4,7 +4,8 @@ version = "0.0.1"
 edition = "2021"
 
 [lib]
-path = "./serve.rs"
+name = "shared"
+path = "./shared.rs"
 
 [[bin]]
 name = "serve"
@@ -18,7 +19,6 @@ sw = ["prest/sw", "wasm-bindgen", "wasm-bindgen-futures"]
 prest = { path = "../../" }
 wasm-bindgen = { version = "0.2.87", optional = true }
 wasm-bindgen-futures = { version = "0.4.37", optional = true }
-
 markdown = "1.0.0-alpha.14"
 
 [build-dependencies]

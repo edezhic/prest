@@ -4,7 +4,8 @@ version = "0.0.1"
 edition = "2021"
 
 [lib]
-path = "./serve.rs"
+name = "shared"
+path = "./shared.rs"
 
 [[bin]]
 name = "serve"

@@ -1,20 +1,6 @@
 use prest::*;
 
-pub fn shared() -> Router {
-    Router::new().route("/", get(html!(
-            (Head::example().webmanifest("/.webmanifest")) 
-            body { h1{"Hello from PWA!"} (Scripts::default().with_sw())}
-    )))
-}
-
-#[cfg(feature = "sw")]
-#[wasm_bindgen]
-pub async fn handle_fetch(sw: ServiceWorkerGlobalScope, fe: FetchEvent) {
-    serve(shared(), sw, fe).await
-}
-
-#[cfg(feature = "host")]
-pub fn main() {
+fn main() {
     include_build_output_as!(Dist);
-    serve(shared().embed(Dist), Default::default())
+    serve(shared::routes().embed(Dist), Default::default())
 }
