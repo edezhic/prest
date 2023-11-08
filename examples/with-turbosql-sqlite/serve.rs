@@ -8,9 +8,8 @@ pub struct Todo {
     pub done: Option<bool>,
 }
 
-#[tokio::main]
-async fn main() {
-    let service = Router::new()
+fn main() {
+    let router = Router::new()
         .route(
             "/",
             get(|| async { html!(@for todo in select!(Vec<Todo>).unwrap() {(todo)}) })
@@ -30,7 +29,7 @@ async fn main() {
         )
         .layer(HTMXify::wrap(page));
 
-    serve(service, Default::default()).await
+    serve(router, Default::default())
 }
 
 impl Render for Todo {

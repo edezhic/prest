@@ -17,7 +17,7 @@ path = "./lib.rs"
 members = ["examples/*", "html/macro", "embed/macro", "embed/utils"]
 
 [features]
-host = ["hyper-server"]
+host = ["tokio", "hyper-server"]
 host-wasi = ["tokio_wasi", "hyper_wasi"]
 sw = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "web-sys", "console_error_panic_hook"]
 build-pwa = ["toml", "wasm-bindgen-cli-support", "webmanifest"]
@@ -45,6 +45,7 @@ webmanifest = { version = "1.1.1", optional = true }
 wasm-bindgen-cli-support = { version = "0.2.87", optional = true }
 
 # host deps:
+tokio = { version = "1.33.0", features = ["rt", "net"], optional = true }
 hyper-server = { version = "0.6.0", optional = true }
 
 #[target.wasm32-wasi.dependencies]

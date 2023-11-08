@@ -10,5 +10,4 @@ path = "./serve.rs"
 [dependencies]
 prest = { path = "../../", features = ["host"] }
 serde = { version = "*", features = ["derive"] }
-tokio = { version = "*", features = ["full"] }
 turbosql = "*"

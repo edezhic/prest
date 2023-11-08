@@ -13,9 +13,8 @@ struct Prompt {
     pub content: String
 }
 
-#[tokio::main(flavor = "current_thread")]
-async fn main() {
-    let service = Router::new()
+fn main() {
+    let router = Router::new()
         .route("/", get(page))
         .route("/prompt", post(|Form(prompt): Form<Prompt>| async move {
             LLM.lock().await.prompt(&prompt.content).unwrap();
@@ -33,7 +32,7 @@ async fn main() {
             Redirect::to("/")
         }));
     
-    serve(service, Default::default()).await
+    serve(router, Default::default())
 }
 
 async fn page() -> Markup {

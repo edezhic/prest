@@ -52,18 +52,17 @@ pub fn routes() -> Router {
     router.route_layer(HTMXify::wrap(move |content| page(content, &menu)))
 }
 
-#[cfg(feature = "host")]
-#[tokio::main(flavor = "current_thread")]
-pub async fn main() {
+#[cfg(feature = "default")]
+pub fn main() {
     include_build_output_as!(Dist);
-    let host_svc = routes()
+    let host_routes = routes()
         .embed(Dist)
         .route("/styles.css", get(Css(include_str!("assets/styles.css"))))
         .route(
             "/favicon.ico",
             get(Favicon(include_bytes!("assets/favicon.ico").as_slice())),
         );
-    serve(host_svc, Default::default()).await
+    serve(host_routes, Default::default())
 }
 
 #[cfg(feature = "sw")]

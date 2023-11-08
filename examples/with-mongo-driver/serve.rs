@@ -27,9 +27,8 @@ pub struct Todo {
     pub done: bool,
 }
 
-#[tokio::main]
-async fn main() {
-    let service = Router::new()
+fn main() {
+    let router = Router::new()
         .route(
             "/",
             get(|| async {
@@ -62,7 +61,7 @@ async fn main() {
             }),
         )
         .layer(HTMXify::wrap(page));
-    serve(service, Default::default()).await
+    serve(router, Default::default())
 }
 
 impl Render for Todo {

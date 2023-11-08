@@ -33,9 +33,8 @@ struct DeleteTodo {
     uuid: Uuid,
 }
 
-#[tokio::main]
-async fn main() {
-    let service = Router::new()
+fn main() {
+    let router = Router::new()
         .route(
             "/",
             get(|| async { html!(@for todo in Todos::find().all(&*DB).await.unwrap() {(todo)}) })
@@ -76,7 +75,7 @@ async fn main() {
         )
         .layer(HTMXify::wrap(page));
 
-    serve(service, Default::default()).await
+    serve(router, Default::default())
 }
 
 impl Render for todos::Model {

@@ -17,7 +17,7 @@ struct Todo {
 #[tokio::main]
 async fn main() {
     migrate!().run(&*DB).await.unwrap();
-    let service = Router::new()
+    let router = Router::new()
         .route(
             "/",
             get(|| async {html!(@for todo in get_todos().await {(todo)})})
@@ -28,7 +28,7 @@ async fn main() {
                 }),
         )
         .layer(HTMXify::wrap(page));
-    serve(service, Default::default()).await
+    serve(router, Default::default()).await
 }
 
 fn new_uuid() -> String {

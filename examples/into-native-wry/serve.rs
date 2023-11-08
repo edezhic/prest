@@ -9,12 +9,11 @@ use wry::{
   };
 
 fn main() -> Result<()> {
-    let host_rt = tokio::runtime::Runtime::new().unwrap();
-    host_rt.spawn(async {
-        let service = Router::new().route("/", get(html!((Head::default()) h1{"Hello world!"})));
-        serve(service, Default::default()).await
+    std::thread::spawn({
+        let router = Router::new().route("/", get(html!((Head::default()) h1{"Hello world!"})));
+        serve(router, Default::default())
     });
-
+    
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
         .with_title("Hello world!")

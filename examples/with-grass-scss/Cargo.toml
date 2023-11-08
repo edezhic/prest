@@ -9,7 +9,6 @@ path = "./serve.rs"
 
 [dependencies]
 prest = { path = "../../", features = ["host"] }
-tokio = { version = "*", features = ["full"] }
 
 [build-dependencies]
 prest = { path = "../../" }

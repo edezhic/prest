@@ -13,10 +13,8 @@ static NODE: Lazy<Arc<Mutex<std::process::Child>>> = Lazy::new(|| {
 
 static CONTRACT_ADDR: Lazy<Arc<Mutex<Option<String>>>> = Lazy::new(|| { Arc::new(Mutex::new(None)) });
 
-
-#[tokio::main]
-async fn main() {
-    let service = Router::new()
+fn main() {
+    let router = Router::new()
         .route("/", get(home))
         .route("/build", get(build))
         .route("/test", get(test))
@@ -24,7 +22,7 @@ async fn main() {
         .route("/read", get(read))
         .route("/flip", get(flip))
         .layer(HTMXify::wrap(full_html));
-    serve(service, Default::default()).await
+    serve(router, Default::default())
 }
 
 async fn home() -> Markup {

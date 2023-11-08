@@ -24,9 +24,8 @@ pub struct TodoForm {
     pub done: bool,
 }
 
-#[tokio::main]
-async fn main() {
-    let service = Router::new()
+fn main() {
+    let router = Router::new()
         .route(
             "/",
             get(|| async {
@@ -48,7 +47,7 @@ async fn main() {
         )
         .layer(HTMXify::wrap(page));
      
-    serve(service, Default::default()).await
+    serve(router, Default::default())
 }
 
 fn get_todos() -> Vec<(String, Todo)> {

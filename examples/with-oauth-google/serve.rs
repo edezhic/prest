@@ -34,18 +34,17 @@ impl AuthUser<u64> for User {
 pub type AuthCtx = AuthContext<u64, User, AuthMemoryStore<u64, User>>;
 pub type RequireAuthzLayer = RequireAuthorizationLayer<u64, User>;
 
-#[tokio::main]
-async fn main() {
+fn main() {
     dotenv::dotenv().unwrap();
     let (auth_svc, session, authn) = init_auth::<u64, User>();
-    let service = Router::new()
+    let router = Router::new()
         .route("/protected", get(html!(h1{"Authorized!"})))
         .route_layer(RequireAuthzLayer::login()) // routes above this layer require logged-in state
         .route("/", get(homepage))
         .merge(auth_svc)
         .layer(authn)
         .layer(session);
-    serve(service, Default::default()).await
+    serve(router, Default::default())
 }
 
 async fn homepage() -> Markup {

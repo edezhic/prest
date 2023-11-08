@@ -9,8 +9,7 @@ struct Target {
     pub content: Selector,
 }
 
-#[tokio::main]
-async fn main() {
+fn main() {
     // starting scraping in a separate OS thread because it involves some !Send values
     std::thread::spawn(|| {
         scrape(Target {
@@ -21,8 +20,8 @@ async fn main() {
         })
     });
 
-    let service = Router::new().route("/", get(homepage));
-    serve(service, Default::default()).await
+    let router = Router::new().route("/", get(homepage));
+    serve(router, Default::default())
 }
 
 async fn homepage() -> Markup {

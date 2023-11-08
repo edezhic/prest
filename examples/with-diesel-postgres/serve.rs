@@ -16,9 +16,8 @@ fn establish_connection() -> PgConnection {
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
-#[tokio::main]
-async fn main() {
-    let service = Router::new()
+fn main() {
+    let router = Router::new()
         .route(
             "/",
             get(|| async {html!(@for todo in get_todos() {(todo)})})
@@ -27,7 +26,7 @@ async fn main() {
                 .delete(|Form(todo): Form<Todo>| async move { delete_todo(todo); }),
         )
         .layer(HTMXify::wrap(page));
-    serve(service, Default::default()).await
+    serve(router, Default::default())
 }
 
 fn get_todos() -> Vec<Todo> {

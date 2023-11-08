@@ -1,4 +1,4 @@
 fn main() {
-    #[cfg(feature = "host")]
+    #[cfg(feature = "default")]
     prest::build_pwa(Default::default());
 }

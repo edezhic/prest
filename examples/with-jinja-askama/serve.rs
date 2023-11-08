@@ -7,11 +7,10 @@ struct HelloTemplate<'a> {
     name: &'a str,
 }
 
-#[tokio::main]
-async fn main() {
-    let service = Router::new().route(
+fn main() {
+    let router = Router::new().route(
         "/",
         get(Html(HelloTemplate { name: "world" }.render().unwrap())),
     );
-    serve(service, Default::default()).await
+    serve(router, Default::default())
 }

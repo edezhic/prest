@@ -56,11 +56,18 @@ impl Default for ServeOptions {
     }
 }
 
-/// Start hyper-based server
+/// Start tokio+hyper based server
 #[cfg(feature = "host")]
-pub async fn serve(router: Router, opts: ServeOptions) {
+pub fn serve(router: Router, opts: ServeOptions) {
+    use tokio::runtime::Builder;
     let svc = router.into_make_service();
-    hyper_server::bind(opts.addr).serve(svc).await.unwrap();
+    let server = hyper_server::bind(opts.addr).serve(svc);
+    Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(server)
+        .unwrap();
 }
 
 #[cfg(feature = "sw")]
@@ -71,18 +78,20 @@ pub use sw::*;
 /// Start simplified hyper_wasi-based server
 #[cfg(all(target = "wasm32-wasi", feature = "host-wasi"))]
 pub async fn serve(router: Router, opts: ServeOptions) { 
-    use hyper::server::conn::Http;
     use tokio::net::TcpListener;       
-    let listener = TcpListener::bind(opts.addr).await.unwrap();
-    loop {
-        let (stream, _) = listener.accept().await.unwrap();
-        let svc = router.clone();
-        tokio::task::spawn(async move {
-            if let Err(err) = Http::new().serve_connection(stream, svc).await {
-                println!("Error serving connection: {:?}", err);
-            }
-        });
-    }
+    use hyper::server::conn::Http;
+    tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+        let listener = TcpListener::bind(opts.addr).await.unwrap();
+        loop {
+            let (stream, _) = listener.accept().await.unwrap();
+            let svc = router.clone();
+            tokio::task::spawn(async move {
+                if let Err(err) = Http::new().serve_connection(stream, svc).await {
+                    println!("Error serving connection: {:?}", err);
+                }
+            });
+        }
+    });
 }    
 
 /// A CSS response.

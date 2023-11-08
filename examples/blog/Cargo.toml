@@ -11,17 +11,15 @@ name = "serve"
 path = "./serve.rs"
 
 [features]
-default = ["host"]
-host = ["prest/host", "tokio"]
+default = ["prest/host"]
 sw = ["prest/sw", "wasm-bindgen", "wasm-bindgen-futures"]
 
 [dependencies]
 prest = { path = "../../" }
-markdown = "1.0.0-alpha.14"
-
-tokio = { version = "*", optional = true, features = ["rt", "net", "macros"] }
 wasm-bindgen = { version = "0.2.87", optional = true }
 wasm-bindgen-futures = { version = "0.4.37", optional = true }
+
+markdown = "1.0.0-alpha.14"
 
 [build-dependencies]
 prest = { path = "../../", features = ["build-pwa"] }

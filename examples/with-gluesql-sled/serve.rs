@@ -56,8 +56,7 @@ async fn get_todos() -> Vec<Todo> {
     rows.into_iter().map(Todo::from_row).collect::<Vec<Todo>>()
 }
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let _migration = exec_sync(
         table(TODOS)
             .create_table_if_not_exists()
@@ -65,7 +64,7 @@ async fn main() {
             .add_column("task TEXT NOT NULL")
             .add_column("done BOOLEAN NOT NULL"),
     );
-    let service = Router::new()
+    let router = Router::new()
         .route(
             "/",
             get(html!(@for todo in get_todos().await {(todo)}))
@@ -92,7 +91,7 @@ async fn main() {
         )
         .layer(HTMXify::wrap(page));
 
-    serve(service, Default::default()).await
+    serve(router, Default::default())
 }
 
 impl Render for Todo {

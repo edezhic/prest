@@ -2,8 +2,7 @@ use tracing_subscriber::{filter::LevelFilter, fmt, prelude::*, Layer};
 use tower_http::trace::TraceLayer;
 use prest::*;
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let fmt_layer = fmt::Layer::default().with_filter(LevelFilter::TRACE);
     tracing_subscriber::registry().with(fmt_layer).init();
 
@@ -16,5 +15,5 @@ async fn main() {
             )),
         )
         .layer(TraceLayer::new_for_http());
-    serve(svc, Default::default()).await
+    serve(svc, Default::default())
 }
