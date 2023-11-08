@@ -13,42 +13,41 @@ a:has(svg):hover svg {
 }
 header.top {
   user-select: none;
-  padding: 0.5rem;
-  .logo {
-    margin-bottom: 0;
-    a {
-      color: rgb(26, 179, 230);
-      :hover {
-        color: rgb(63 193 237);
-      }
-    }
-  };
-  #examples-btn:hover {
-    color: #fff;
-  };
-  #examples-btn:hover svg {
-    color: #fff !important;
-  }; 
-  #examples-menu {
-    position: absolute;
-    z-index: 2;
-    right: 0;
-    top: 75px;
-    padding: 0 16px;
-    text-align: right;
-    background: #141e26;
-    opacity: 0;
-    visibility: hidden;
-    height: 0px;
-    overflow: hidden;
-    &.visible {
-      opacity: 1;
-      visibility: visible;
-      height: auto;
-    }
-  }  
+  padding: 0.5rem;  
 }
-
+#examples-btn:hover {
+  color: #fff;
+}
+#examples-btn:hover svg {
+  color: #fff !important;
+} 
+#examples-menu {
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  top: 75px;
+  padding: 0 16px;
+  text-align: right;
+  background: #141e26;
+  opacity: 0;
+  visibility: hidden;
+  height: 0px;
+  overflow: hidden;
+}
+#examples-menu.visible {
+  opacity: 1;
+  visibility: visible;
+  height: auto;
+}
+.logo {
+  margin-bottom: 0; 
+}
+.logo a {
+  color: rgb(26, 179, 230);
+}
+.logo a:hover {
+  color: rgb(63 193 237);
+}
 /*
  * View Transition styles
  */
