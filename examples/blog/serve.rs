@@ -2,7 +2,7 @@ use prest::*;
 
 fn page(content: Markup, menu: &Vec<(String, String)>) -> Markup {
     html!((DOCTYPE) html data-theme="dark" {
-        (Head::default_pwa().title("Prest Blog").css("/styles.css"))
+        (Head::example().title("Prest Blog").css("/styles.css").release_pwa())
         body hx-boost="true" hx-swap="innerHTML transition:true show:window:top" hx-target="main" _="on click remove .visible from #examples-menu" {
             header."top container" {
                 nav style="position:relative; padding:0 16px"{

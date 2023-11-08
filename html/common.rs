@@ -8,7 +8,6 @@ pub struct Head<'a> {
     webmanifest: Option<&'a str>,
     viewport: Option<&'a str>,
     theme_color: Option<&'a str>,
-    include_picocss: bool,
     other: Option<Markup>,
 }
 
@@ -37,12 +36,17 @@ impl<'a> Head<'a> {
         self.webmanifest = Some(path);
         self
     }
-    pub fn default_pwa() -> Self {
+    #[allow(unused_mut)]
+    pub fn release_pwa(mut self) -> Self {
         if cfg!(debug_assertions) {
-            Self::default().title("Prest PWA")
+            self
         } else {
-            Self::default().title("Prest PWA").webmanifest("/.webmanifest")
+            self.webmanifest("/.webmanifest")
         }
+    }
+    /// Builds a [`Head`] with configs used across examples
+    pub fn example() -> Self {
+        Self::default().with(html!{link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"{}})
     }
 }
 
@@ -51,7 +55,6 @@ impl<'a> Default for Head<'a> {
         Self {
             title: "Prest app",
             viewport: Some("width=device-width, initial-scale=1.0"),
-            include_picocss: true,
             styles: None,
             favicon: None,
             webmanifest: None,
@@ -73,7 +76,7 @@ impl<'a> Render for Head<'a> {
                 @if let Some(stylesheets) = self.styles.clone() { @for stylesheet in stylesheets {
                     link href={(stylesheet.clone())} rel="stylesheet" {}
                 }}
-                @if self.include_picocss { link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"{} }
+                @if let Some(markup) = self.other.clone() {(markup)}
             }
         )
     }

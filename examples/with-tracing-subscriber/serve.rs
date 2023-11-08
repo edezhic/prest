@@ -10,7 +10,7 @@ fn main() {
         .route(
             "/",
             get(html!(
-                (Head::default())
+                (Head::example())
                 body { h1{"With tracing (check out the terminal!)"}}
             )),
         )

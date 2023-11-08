@@ -5,7 +5,7 @@ use std::net::SocketAddr;
 #[tokio::main]
 async fn main() {
     let router = Router::new().route("/", get(html!((DOCTYPE) html {
-        (Head::default().title("With TLS"))
+        (Head::example().title("With TLS"))
         body {h1{"Check out the connection / protocol!"}}
     })));
 

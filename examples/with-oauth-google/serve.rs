@@ -50,7 +50,7 @@ fn main() {
 async fn homepage() -> Markup {
     html!(
         html {
-            (Head::default().title("With OAuth"))
+            (Head::example().title("With OAuth"))
             body {
                 h1{"With OAuth"}
                 a href="/oauth/google" {"Click me to initiate Google OAuth flow"}

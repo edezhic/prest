@@ -145,7 +145,7 @@ async fn flip() -> Markup {
 fn full_html(content: Markup) -> Markup {
     html!(
         html data-theme="dark" {
-            (Head::default())
+            (Head::example())
             body { 
                 main."container" hx-target="main" hx-swap="beforeend" {(content)} 
                 (Scripts::default())
