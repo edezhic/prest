@@ -1,25 +1,35 @@
 use crate::*;
 use std::task::{Context, Poll};
 
+/// Convenience trait to easily add [`HtmxLayer`] to the [`Router`] 
+pub trait HtmxRouting<F> {
+    fn wrap_non_htmx(self, wrapper: F) -> Self;
+}
+impl<F: Fn(Markup) -> Markup + Clone + Send + 'static> HtmxRouting<F> for Router {
+    fn wrap_non_htmx(self, wrapper: F) -> Self {
+        self.route_layer(HtmxLayer::wrap(wrapper))
+    }
+}
+
 /// Layer that modifies non-HTMX requests with the provided [`Fn`]
 /// 
 /// Function or closure must take a single [`Markup`] argument and return [`Markup`]
 /// 
-/// Can be used like this: `router.layer(HTMXify::wrap(|content| html!{body {(content)}}))`
+/// Can be used like this: `router.layer(HtmxLayer::wrap(|content| html!{body {(content)}}))`
 /// 
 /// It also sets a proper html content type header and disables caching for htmx responses
 #[derive(Clone)]
-pub struct HTMXify<F> {
+pub struct HtmxLayer<F> {
     pub wrapper: F,
 }
 
-impl<F> HTMXify<F> {
+impl<F> HtmxLayer<F> {
     pub fn wrap(wrapper: F) -> Self {
         Self { wrapper }
     }
 }
 
-impl<S, F> Layer<S> for HTMXify<F>
+impl<S, F> Layer<S> for HtmxLayer<F>
 where
     F: Clone,
 {
@@ -33,7 +43,7 @@ where
     }
 }
 
-/// Underlying middleware that powers [`HTMXify`] layer
+/// Underlying middleware that powers [`HtmxLayer`] layer
 #[doc(hidden)]
 #[derive(Clone)]
 pub struct HtmxMiddleware<S, F> {

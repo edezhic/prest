@@ -21,7 +21,7 @@ fn main() {
         .route("/deploy", get(deploy))
         .route("/read", get(read))
         .route("/flip", get(flip))
-        .layer(HTMXify::wrap(full_html));
+        wrap_non_htmx(full_html);
     serve(router, Default::default())
 }
 

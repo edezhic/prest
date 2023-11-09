@@ -1,6 +1,8 @@
 use prest::*;
 
+include_build_output_as!(Dist);
+
 fn main() {
-    include_build_output_as!(Dist);
-    serve(shared::routes().embed(Dist), Default::default())
+    let host_routes = shared::routes().embed(Dist);
+    serve(host_routes, Default::default())
 }

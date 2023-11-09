@@ -27,7 +27,7 @@ async fn main() {
                     delete_todo(todo).await;
                 }),
         )
-        .layer(HTMXify::wrap(page));
+        .wrap_non_htmx(page);
     serve(router, Default::default()).await
 }
 

@@ -62,7 +62,7 @@ pub fn serve(router: Router, opts: ServeOptions) {
     use tokio::runtime::Builder;
     let svc = router.into_make_service();
     let server = hyper_server::bind(opts.addr).serve(svc);
-    Builder::new_current_thread()
+    Builder::new_multi_thread()
         .enable_all()
         .build()
         .unwrap()

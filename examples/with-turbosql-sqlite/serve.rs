@@ -27,7 +27,7 @@ fn main() {
                     Redirect::to("/")
                 }),
         )
-        .layer(HTMXify::wrap(page));
+        .wrap_non_htmx(page);
 
     serve(router, Default::default())
 }

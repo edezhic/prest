@@ -1,6 +1,8 @@
 use prest::*;
-pub fn main() {
-    include_build_output_as!(Dist);
+
+include_build_output_as!(Dist);
+
+fn main() {
     let host_routes = shared::routes()
         .embed(Dist)
         .route("/styles.css", get(Css(include_str!("assets/styles.css"))))

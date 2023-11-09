@@ -15,7 +15,7 @@ pub fn routes() -> Router {
         router = router.route(&url, get(md_to_html(&(Examples::get(&path).unwrap().data))));
         menu.push((url.clone(), url.replace("/", "").replace("-", " ")));
     }
-    router.route_layer(HTMXify::wrap(move |content| page(content, &menu)))
+    router.wrap_non_htmx(move |content| page(content, &menu))
 }
 
 fn page(content: Markup, menu: &Vec<(String, String)>) -> Markup {

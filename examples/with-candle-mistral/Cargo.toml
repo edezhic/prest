@@ -10,6 +10,7 @@ path = "./serve.rs"
 [dependencies]
 prest = { path = "../../", features = ["host"] }
 serde = "*"
+tokio = { version = "*", features = ["sync"] }
 
 hf-hub = "0.3.0"
 tokenizers = { version = "0.13.4", default-features = false }

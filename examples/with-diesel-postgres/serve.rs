@@ -25,7 +25,7 @@ fn main() {
                 .put(|Form(todo): Form<Todo>| async move { add_todo(todo).render() })
                 .delete(|Form(todo): Form<Todo>| async move { delete_todo(todo); }),
         )
-        .layer(HTMXify::wrap(page));
+        .wrap_non_htmx(page);
     serve(router, Default::default())
 }
 
