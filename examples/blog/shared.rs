@@ -11,7 +11,11 @@ pub fn routes() -> Router {
     let mut router = Router::new().route("/", get(md_to_html(include_bytes!("../../README.md"))));
     let mut menu = vec![];
     for path in Examples::iter() {
-        let url = format!("/{}", &path.trim_end_matches("/README.md"));
+        let url = if path.starts_with("blog") {
+            "/about".to_owned()
+        } else {
+            format!("/{}", &path.trim_end_matches("/README.md"))
+        };
         router = router.route(&url, get(md_to_html(&(Examples::get(&path).unwrap().data))));
         menu.push((url.clone(), url.replace("/", "").replace("-", " ")));
     }
