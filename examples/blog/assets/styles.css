@@ -15,13 +15,13 @@ header.top {
   user-select: none;
   padding: 0.5rem;  
 }
-#examples-btn:hover {
+#tutorials-btn:hover {
   color: #fff;
 }
-#examples-btn:hover svg {
+#tutorials-btn:hover svg {
   color: #fff !important;
 } 
-#examples-menu {
+#tutorials-menu {
   position: absolute;
   z-index: 2;
   right: 0;
@@ -34,7 +34,7 @@ header.top {
   height: 0px;
   overflow: hidden;
 }
-#examples-menu.visible {
+#tutorials-menu.visible {
   opacity: 1;
   visibility: visible;
   height: auto;

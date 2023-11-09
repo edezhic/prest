@@ -1,6 +1,6 @@
-require [WebAssembly](https://webassembly.org/) target (`rustup target add wasm32-unknown-unknown`)
+Requires [WebAssembly](https://webassembly.org/) target (`rustup target add wasm32-unknown-unknown`)
 
-Currently `hello-pwa` is the simplest example with [Progressive Web App](https://web.dev/what-are-pwas/) capabilities so I want to explain how it works step-by-step:
+This examples extends previous ones with [Progressive Web App](https://web.dev/what-are-pwas/). How it works step-by-step:
 1. When you invoke `cargo run -p hello-pwa` it checks out the `Cargo.toml` manifest for general information about the crate, it's dependencies, available features etc. By default it uses the `host` feature which includes the `tokio` runtime and some prest utils for the server.
 2. Once the build process is started and all the dependencies are resolved cargo automatically detects a `build.rs`, compiles and runs it before the compilation of the host itself. Note that this script includes just one function call that runs only with the `host` feature to avoid running it the second time while building the SW.
 3. This script invokes a prest utility `build_pwa` that builds the same crate into WASM but with `sw` feature instead of default ones. With this feature it includes a few different dependencies, an empty build script and finally compiles `serve.rs` to be used in the service worker. It will include the `shared` function that composes the shared routes into a service and `handle_fetch` which uses this service on [fetch events](https://developer.mozilla.org/en-US/docs/Web/API/FetchEvent) to handle requests on the client side.

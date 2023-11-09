@@ -17,7 +17,9 @@ pub fn routes() -> Router {
             format!("/{}", &path.trim_end_matches("/README.md"))
         };
         router = router.route(&url, get(md_to_html(&(Examples::get(&path).unwrap().data))));
-        menu.push((url.clone(), url.replace("/", "").replace("-", " ")));
+        if path.starts_with("into") || path.starts_with("with") {
+            menu.push((url.clone(), url.replace("/", "").replace("-", " ")));
+        }
     }
     router.wrap_non_htmx(move |content| page(content, &menu))
 }
@@ -25,19 +27,25 @@ pub fn routes() -> Router {
 fn page(content: Markup, menu: &Vec<(String, String)>) -> Markup {
     html!((DOCTYPE) html data-theme="dark" {
         (Head::example().title("Prest Blog").css("/styles.css").release_pwa())
-        body hx-boost="true" hx-swap="innerHTML transition:true show:window:top" hx-target="main" _="on click remove .visible from #examples-menu" {
+        body hx-boost="true" hx-swap="innerHTML transition:true show:window:top" hx-target="main" _="on click remove .visible from #tutorials-menu" {
             header."top container" {
                 nav style="position:relative; padding:0 16px"{
                     ul { h3."logo"{ li { a href="/" {"PREST"}}}}
                     ul {
-                        //li { a href="https://docs.rs/prest" target="_blank" {(PreEscaped(include_str!("assets/docs.svg")))}}
+                        li { a href="https://docs.rs/prest" target="_blank" {(PreEscaped(include_str!("assets/docs.svg")))}}
                         li { a href="https://github.com/edezhic/prest" target="_blank" {(PreEscaped(include_str!("assets/github.svg")))}}
-                        li #"examples-btn" _="on click toggle .visible on #examples-menu then halt the event" {
-                            "examples"(PreEscaped(include_str!("assets/menu.svg")))
+                        li #"tutorials-btn" _="on click toggle .visible on #tutorials-menu then halt the event" {
+                            "tutorials"(PreEscaped(include_str!("assets/menu.svg")))
                         }
-                        aside #"examples-menu" { ul { @for (url, name) in menu {
+                        aside #"tutorials-menu" { ul { 
+                            li { a href="/server" {small{"1. Server"}}}
+                            li { a href="/client" {small{"2. Client"}}}
+                            li { a href="/pwa" {small{"3. PWA"}}}
+                            li { a href="/about" {small{"About"}}}
+                            @for (url, name) in menu {
                                 li { a href={(url)} {small{(name)}}} hr{}
-                        }}}
+                            }
+                        }}
                     }
                 }
             }

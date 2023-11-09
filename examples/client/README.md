@@ -1,0 +1,1 @@
+Extending client side with maud, htmx and hyperscript
