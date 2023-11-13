@@ -25,26 +25,37 @@ pub fn routes() -> Router {
 }
 
 fn page(content: Markup, menu: &Vec<(String, String)>) -> Markup {
+    let into = menu.iter().filter(|(_, label)| label.starts_with("into"));
+    let with = menu.iter().filter(|(_, label)| label.starts_with("with"));
     html!((DOCTYPE) html data-theme="dark" {
         (Head::example().title("Prest Blog").css("/styles.css").release_pwa())
-        body hx-boost="true" hx-swap="innerHTML transition:true show:window:top" hx-target="main" _="on click remove .visible from #tutorials-menu" {
+        body hx-boost="true" hx-swap="innerHTML transition:true show:window:top" hx-target="main" _="on click remove .visible from #examples-menu" {
             header."top container" {
                 nav style="position:relative; padding:0 16px"{
                     ul { h3."logo"{ li { a href="/" {"PREST"}}}}
                     ul {
                         li { a href="https://docs.rs/prest" target="_blank" {(PreEscaped(include_str!("assets/docs.svg")))}}
                         li { a href="https://github.com/edezhic/prest" target="_blank" {(PreEscaped(include_str!("assets/github.svg")))}}
-                        li #"tutorials-btn" _="on click toggle .visible on #tutorials-menu then halt the event" {
-                            "tutorials"(PreEscaped(include_str!("assets/menu.svg")))
+                        li #"examples-btn" _="on click toggle .visible on #examples-menu then halt the event" {
+                            "examples"(PreEscaped(include_str!("assets/menu.svg")))
                         }
-                        aside #"tutorials-menu" { ul { 
-                            li { a href="/server" {small{"1. Server"}}}
-                            li { a href="/client" {small{"2. Client"}}}
-                            li { a href="/pwa" {small{"3. PWA"}}}
-                            li { a href="/about" {small{"About"}}}
-                            @for (url, name) in menu {
-                                li { a href={(url)} {small{(name)}}} hr{}
+                        aside #"examples-menu" { ul { 
+                            li { h6{"step by step"} }
+                            li { a href="/server" {small{"server"}}}
+                            li { a href="/client" {small{"client"}}}
+                            li { a href="/pwa" {small{"pwa"}}}
+                            hr{}
+                            li { h6{"with"} }
+                            @for (url, name) in with {
+                                li { a href={(url)} {small{(name.trim_start_matches("with "))}}}
                             }
+                            hr{}
+                            li { h6{"into"} }
+                            @for (url, name) in into {
+                                li { a href={(url)} {small{(name.trim_start_matches("into "))}}} 
+                            }
+                            hr{}
+                            li { a href="/about" {small{"about"}}}
                         }}
                     }
                 }

@@ -1,4 +1,4 @@
-//! These docs are focused on technical details. For tutorials check out [prest.blog](https://prest.blog)
+//! These docs are focused on technical details. For examples check out [prest.blog](https://prest.blog)
 #![doc(html_favicon_url = "https://prest.blog/favicon.ico")]
 #![allow(dead_code, unused_imports)]
 

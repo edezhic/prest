@@ -1,4 +1,4 @@
-**P**rogressive **REST**ful framework written in [Rust](https://www.rust-lang.org/) to simplify cross-platform full-stack development. All it's tutorials(wip) are available in the [blog](https://prest.blog/) which is also [made with prest](https://prest.blog/about).
+**P**rogressive **REST**ful framework written in [Rust](https://www.rust-lang.org/) to simplify cross-platform full-stack development. All the docs are available in the [blog](https://prest.blog/) which is also [made with prest](https://prest.blog/about) based on examples readmes.
 
 ### Why & How
 Initial inspiration came from [this proof-of-concept](https://github.com/richardanaya/wasm-service) - combination of a rust-based [Service Worker](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API) compiled into [WebAssembly](https://webassembly.org/) with [HTMX](https://htmx.org/) library. This will likely sound pretty wild if you haven't worked with these technologies, but the underlying idea is simple - extend the regular [REST architecture](https://htmx.org/essays/rest-explained/) with a client-side worker that can respond to some of the requests. Thanks to the rich wasm support in rust you can easily cross-compile some of your server code into this worker. Thanks to HTMX you can easily build dynamic UIs without writing a single line of javascript. And thanks to [progressive web capabilities](https://web.dev/what-are-pwas/) this combo easily becomes a native-like installable application.
@@ -15,12 +15,12 @@ On the other hand:
 So, for now it's only recommended for personal projects and experimentation.
 
 ### Getting started
-Current introduction is based on 3 examples with tutorials:
+Current introduction is based on 3 examples:
 1. [Server](https://prest.blog/server) which describes the basics of the prest's server side
 2. [Client](https://prest.blog/client) which extends the server with more interactive UI features
-3. [PWA](https://prest.blog/pwa) which extends both with progressive app features to [make the app installable](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable)
+3. [PWA](https://prest.blog/pwa) which extends both with progressive app features to [become installable](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable)
 
-To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/). Most examples are supported on [replit](https://replit.com/) so you can [fork it there](https://replit.com/@eDezhic/prest) and run in the cloud. It includes [rust-analyzer](https://rust-analyzer.github.io/) and I recommend it for local development as well. Some examples require additional setup which is described in their tutorials. To build & start them use `cargo run -p EXAMPLE-NAME`
+To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/). Most examples are supported on [replit](https://replit.com/) so you can [fork it there](https://replit.com/@eDezhic/prest) and run in the cloud. It includes [rust-analyzer](https://rust-analyzer.github.io/) and I recommend it for local development as well. Some examples require additional setup which is described in their readmes. To build & start them use `cargo run -p EXAMPLE-NAME`
 
 There is also a whole bunch of examples that show how you can use other things with prest:
 - all kinds of databases - postgres through [seaorm](https://prest.blog/with-seaorm-postgres) or [diesel](https://prest.blog/with-diesel-postgres), sqlite through [sqlx](https://prest.blog/with-sqlx-sqlite) or [turbosql](https://prest.blog/with-turbosql-sqlite), [mongo](https://prest.blog/with-mongo-driver), [redis](https://prest.blog/with-redis-driver) and even a full rust combo [gluesql + sled](https://prest.blog/with-gluesql-sled)

@@ -15,29 +15,28 @@ header.top {
   user-select: none;
   padding: 0.5rem;  
 }
-#tutorials-btn:hover {
+#examples-btn:hover {
   color: #fff;
 }
-#tutorials-btn:hover svg {
+#examples-btn:hover svg {
   color: #fff !important;
 } 
-#tutorials-menu {
+#examples-menu {
   position: absolute;
   z-index: 2;
   right: 0;
   top: 75px;
   padding: 0 16px;
-  text-align: right;
+  border-radius: 8px;
   background: #141e26;
   opacity: 0;
-  visibility: hidden;
-  height: 0px;
-  overflow: hidden;
 }
-#tutorials-menu.visible {
+#examples-menu.visible {
   opacity: 1;
-  visibility: visible;
-  height: auto;
+}
+#examples-menu h6 {
+  margin: 8px 32px 0;
+  text-align: center;
 }
 .logo {
   margin-bottom: 0; 
