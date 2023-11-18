@@ -1,10 +1,8 @@
-use std::collections::HashMap;
 use prest::*;
 use redis::{Client, Commands};
+use std::collections::HashMap;
 
-static CLIENT: Lazy<Client> = Lazy::new(|| {
-    Client::open("redis://127.0.0.1").unwrap()
-});
+static CLIENT: Lazy<Client> = Lazy::new(|| Client::open("redis://127.0.0.1").unwrap());
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Todo {
@@ -25,7 +23,7 @@ pub struct TodoForm {
 }
 
 fn main() {
-    let router = Router::new()
+    Router::new()
         .route(
             "/",
             get(|| async {
@@ -35,26 +33,26 @@ fn main() {
             .put(|Form(TodoForm { task, .. }): Form<TodoForm>| async move {
                 add_todo(task);
                 Redirect::to("/")
-            }) 
-            .patch(|Form(TodoForm { uuid, done, .. }): Form<TodoForm>| async move {
-                toggle_todo(uuid, done);
-                Redirect::to("/")
             })
+            .patch(
+                |Form(TodoForm { uuid, done, .. }): Form<TodoForm>| async move {
+                    toggle_todo(uuid, done);
+                    Redirect::to("/")
+                },
+            )
             .delete(|Form(TodoForm { uuid, .. }): Form<TodoForm>| async move {
                 delete_todo(uuid);
                 Redirect::to("/")
             }),
         )
-        .wrap_non_htmx(page);
-     
-    serve(router, Default::default())
+        .wrap_non_htmx(page)
+        .serve(Default::default())
 }
 
 fn get_todos() -> Vec<(String, Todo)> {
     let mut con = CLIENT.get_connection().unwrap();
     let map: HashMap<String, String> = con.hgetall("todos").unwrap();
-    map
-        .into_iter()
+    map.into_iter()
         .map(|(uuid, todo)| {
             let todo = serde_json::from_str::<Todo>(&todo).unwrap();
             (uuid, todo)
@@ -65,7 +63,12 @@ fn get_todos() -> Vec<(String, Todo)> {
 fn add_todo(task: String) {
     let mut con = CLIENT.get_connection().unwrap();
     let uuid = uuid::Uuid::new_v4().to_string();
-    con.hset_nx("todos", uuid, serde_json::to_string(&Todo {task, done: false}).unwrap()).unwrap()
+    con.hset_nx(
+        "todos",
+        uuid,
+        serde_json::to_string(&Todo { task, done: false }).unwrap(),
+    )
+    .unwrap()
 }
 
 fn toggle_todo(uuid: String, done: bool) {
@@ -73,14 +76,14 @@ fn toggle_todo(uuid: String, done: bool) {
     let todo: String = con.hget("todos", &uuid).unwrap();
     let mut todo: Todo = serde_json::from_str(&todo).unwrap();
     todo.done = !done;
-    con.hset("todos", uuid, serde_json::to_string(&todo).unwrap()).unwrap()
+    con.hset("todos", uuid, serde_json::to_string(&todo).unwrap())
+        .unwrap()
 }
 
 fn delete_todo(uuid: String) {
     let mut con = CLIENT.get_connection().unwrap();
     con.hdel("todos", uuid).unwrap()
 }
-
 
 fn render_item(uuid: String, todo: Todo) -> Markup {
     let id = format!("uuid-{}", uuid);

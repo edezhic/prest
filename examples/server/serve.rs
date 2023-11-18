@@ -1,5 +1,6 @@
 use prest::*;
 fn main() {
-    let router = Router::new().route("/", get("Hello world!"));
-    serve(router, Default::default())
+    Router::new()
+        .route("/", get("Hello world!"))
+        .serve(Default::default())
 }

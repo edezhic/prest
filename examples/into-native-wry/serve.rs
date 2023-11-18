@@ -1,19 +1,20 @@
 use prest::*;
 use wry::{
     application::{
-      event::{Event, WindowEvent},
-      event_loop::{ControlFlow, EventLoop},
-      window::WindowBuilder,
+        event::{Event, WindowEvent},
+        event_loop::{ControlFlow, EventLoop},
+        window::WindowBuilder,
     },
     webview::WebViewBuilder,
-  };
+};
 
 fn main() -> Result<()> {
     std::thread::spawn({
-        let router = Router::new().route("/", get(html!((Head::example()) h1{"Hello world!"})));
-        serve(router, Default::default())
+        Router::new()
+            .route("/", get(html!((Head::example()) h1{"Hello world!"})))
+            .serve(Default::default())
     });
-    
+
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
         .with_title("Hello world!")
@@ -25,7 +26,11 @@ fn main() -> Result<()> {
     event_loop.run(move |event, _, control_flow| {
         println!("{:?}", event);
         *control_flow = ControlFlow::Wait;
-        if let Event::WindowEvent { event: WindowEvent::CloseRequested, .. } = event {
+        if let Event::WindowEvent {
+            event: WindowEvent::CloseRequested,
+            ..
+        } = event
+        {
             *control_flow = ControlFlow::Exit
         }
     });

@@ -37,14 +37,14 @@ pub type RequireAuthzLayer = RequireAuthorizationLayer<u64, User>;
 fn main() {
     dotenv::dotenv().unwrap();
     let (auth_svc, session, authn) = init_auth::<u64, User>();
-    let router = Router::new()
+    Router::new()
         .route("/protected", get(html!(h1{"Authorized!"})))
         .route_layer(RequireAuthzLayer::login()) // routes above this layer require logged-in state
         .route("/", get(homepage))
         .merge(auth_svc)
         .layer(authn)
-        .layer(session);
-    serve(router, Default::default())
+        .layer(session)
+        .serve(Default::default())
 }
 
 async fn homepage() -> Markup {

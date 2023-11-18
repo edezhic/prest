@@ -64,7 +64,7 @@ fn main() {
             .add_column("task TEXT NOT NULL")
             .add_column("done BOOLEAN NOT NULL"),
     );
-    let router = Router::new()
+    Router::new()
         .route(
             "/",
             get(html!(@for todo in get_todos().await {(todo)}))
@@ -89,9 +89,8 @@ fn main() {
                     Redirect::to("/")
                 }),
         )
-        .wrap_non_htmx(page);
-
-    serve(router, Default::default())
+        .wrap_non_htmx(page)
+        .serve(Default::default())
 }
 
 impl Render for Todo {

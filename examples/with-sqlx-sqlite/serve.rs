@@ -2,7 +2,11 @@ use prest::*;
 use serde::Deserialize;
 use sqlx::{migrate, query, query_as, FromRow, Sqlite, SqlitePool};
 
-static DB: Lazy<SqlitePool> = Lazy::new(|| SqlitePool::connect_lazy("sqlite::memory:").unwrap());
+static DB: Lazy<SqlitePool> = Lazy::new(|| {
+    let conn = SqlitePool::connect_lazy("sqlite::memory:").unwrap();
+    block_on(migrate!().run(&*DB).await.unwrap());
+    conn
+});
 
 #[derive(Debug, FromRow, Deserialize)]
 struct Todo {
@@ -14,21 +18,19 @@ struct Todo {
     pub done: bool,
 }
 
-#[tokio::main]
-async fn main() {
-    migrate!().run(&*DB).await.unwrap();
-    let router = Router::new()
+fn main() {
+    Router::new()
         .route(
             "/",
-            get(|| async {html!(@for todo in get_todos().await {(todo)})})
+            get(|| async { html!(@for todo in get_todos().await {(todo)}) })
                 .patch(|Form(todo): Form<Todo>| async move { toggle_todo(todo).await.render() })
                 .put(|Form(todo): Form<Todo>| async move { add_todo(todo).await.render() })
                 .delete(|Form(todo): Form<Todo>| async move {
                     delete_todo(todo).await;
                 }),
         )
-        .wrap_non_htmx(page);
-    serve(router, Default::default()).await
+        .wrap_non_htmx(page)
+        .serve(Default::default())
 }
 
 fn new_uuid() -> String {

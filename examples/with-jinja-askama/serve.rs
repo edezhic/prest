@@ -8,9 +8,10 @@ struct HelloTemplate<'a> {
 }
 
 fn main() {
-    let router = Router::new().route(
-        "/",
-        get(Html(HelloTemplate { name: "world" }.render().unwrap())),
-    );
-    serve(router, Default::default())
+    Router::new()
+        .route(
+            "/",
+            get(Html(HelloTemplate { name: "world" }.render().unwrap())),
+        )
+        .serve(Default::default())
 }

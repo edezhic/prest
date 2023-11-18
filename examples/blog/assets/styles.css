@@ -30,9 +30,11 @@ header.top {
   border-radius: 8px;
   background: #141e26;
   opacity: 0;
+  visibility: hidden;
 }
 #examples-menu.visible {
   opacity: 1;
+  visibility: visible;
 }
 #examples-menu h6 {
   margin: 8px 32px 0;

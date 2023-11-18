@@ -9,7 +9,7 @@ pub struct Todo {
 }
 
 fn main() {
-    let router = Router::new()
+    Router::new()
         .route(
             "/",
             get(|| async { html!(@for todo in select!(Vec<Todo>).unwrap() {(todo)}) })
@@ -27,9 +27,8 @@ fn main() {
                     Redirect::to("/")
                 }),
         )
-        .wrap_non_htmx(page);
-
-    serve(router, Default::default())
+        .wrap_non_htmx(page)
+        .serve(Default::default())
 }
 
 impl Render for Todo {

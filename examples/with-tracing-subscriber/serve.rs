@@ -1,12 +1,12 @@
-use tracing_subscriber::{filter::LevelFilter, fmt, prelude::*, Layer};
-use tower_http::trace::TraceLayer;
 use prest::*;
+use tower_http::trace::TraceLayer;
+use tracing_subscriber::{filter::LevelFilter, fmt, prelude::*, Layer};
 
 fn main() {
     let fmt_layer = fmt::Layer::default().with_filter(LevelFilter::TRACE);
     tracing_subscriber::registry().with(fmt_layer).init();
 
-    let svc = Router::new()
+    Router::new()
         .route(
             "/",
             get(html!(
@@ -14,6 +14,6 @@ fn main() {
                 body { h1{"With tracing (check out the terminal!)"}}
             )),
         )
-        .layer(TraceLayer::new_for_http());
-    serve(svc, Default::default())
+        .layer(TraceLayer::new_for_http())
+        .serve(Default::default())
 }

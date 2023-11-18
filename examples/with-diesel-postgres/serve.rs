@@ -17,7 +17,7 @@ fn establish_connection() -> PgConnection {
 }
 
 fn main() {
-    let router = Router::new()
+    Router::new()
         .route(
             "/",
             get(|| async {html!(@for todo in get_todos() {(todo)})})
@@ -25,8 +25,8 @@ fn main() {
                 .put(|Form(todo): Form<Todo>| async move { add_todo(todo).render() })
                 .delete(|Form(todo): Form<Todo>| async move { delete_todo(todo); }),
         )
-        .wrap_non_htmx(page);
-    serve(router, Default::default())
+        .wrap_non_htmx(page)
+        .serve(Default::default())
 }
 
 fn get_todos() -> Vec<Todo> {

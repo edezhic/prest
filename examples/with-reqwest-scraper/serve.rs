@@ -20,15 +20,16 @@ fn main() {
         })
     });
 
-    let router = Router::new().route("/", get(homepage));
-    serve(router, Default::default())
+    Router::new()
+        .route("/", get(homepage))
+        .serve(Default::default())
 }
 
 async fn homepage() -> Markup {
     html!(html {(Head::example().title("With scraping"))
         body {h1{"Check out terminal for scraping results!"}}
     })
-}  
+}
 
 struct Story {
     pub title: String,

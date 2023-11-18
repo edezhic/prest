@@ -34,7 +34,7 @@ struct DeleteTodo {
 }
 
 fn main() {
-    let router = Router::new()
+    Router::new()
         .route(
             "/",
             get(|| async { html!(@for todo in Todos::find().all(&*DB).await.unwrap() {(todo)}) })
@@ -73,9 +73,8 @@ fn main() {
                     Redirect::to("/")
                 }),
         )
-        .wrap_non_htmx(page);
-
-    serve(router, Default::default())
+        .wrap_non_htmx(page)
+        .serve(Default::default())
 }
 
 impl Render for todos::Model {

@@ -14,7 +14,7 @@ struct Prompt {
 }
 
 fn main() {
-    let router = Router::new()
+    Router::new()
         .route("/", get(page))
         .route("/prompt", post(|Form(prompt): Form<Prompt>| async move {
             LLM.lock().await.prompt(&prompt.content).unwrap();
@@ -30,9 +30,8 @@ fn main() {
                 *llm = llm::init(Default::default()).unwrap();
             });
             Redirect::to("/")
-        }));
-    
-    serve(router, Default::default())
+        }))
+        .serve(Default::default())
 }
 
 async fn page() -> Markup {

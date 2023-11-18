@@ -1,37 +1,41 @@
 use prest::*;
-use std::{sync::Arc, process::Command};
+use std::{process::Command, sync::Arc};
 use tokio::sync::Mutex;
 
-static NODE: Lazy<Arc<Mutex<std::process::Child>>> = Lazy::new(|| { 
+static NODE: Lazy<Arc<Mutex<std::process::Child>>> = Lazy::new(|| {
     println!("Starting the node...");
     let node = Arc::new(Mutex::new(
-        Command::new("substrate-contracts-node").spawn().unwrap()
+        Command::new("substrate-contracts-node").spawn().unwrap(),
     ));
     std::thread::sleep(std::time::Duration::from_secs(1)); // wait for node to init
     node
 });
 
-static CONTRACT_ADDR: Lazy<Arc<Mutex<Option<String>>>> = Lazy::new(|| { Arc::new(Mutex::new(None)) });
+static CONTRACT_ADDR: Lazy<Arc<Mutex<Option<String>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
 
 fn main() {
-    let router = Router::new()
+    Router::new()
         .route("/", get(home))
         .route("/build", get(build))
         .route("/test", get(test))
         .route("/deploy", get(deploy))
         .route("/read", get(read))
         .route("/flip", get(flip))
-        wrap_non_htmx(full_html);
-    serve(router, Default::default())
+        .wrap_non_htmx(full_html)
+        .serve(Default::default())
 }
 
 async fn home() -> Markup {
-    let cargo_contract_error = if let Err(e) = Command::new("cargo").arg("contract").arg("help").output() {
-        Some(e.to_string())
-    } else {
-        None
-    };
-    let substrate_node_error = if let Err(e) = Command::new("substrate-contracts-node").arg("chain-info").output() {
+    let cargo_contract_error =
+        if let Err(e) = Command::new("cargo").arg("contract").arg("help").output() {
+            Some(e.to_string())
+        } else {
+            None
+        };
+    let substrate_node_error = if let Err(e) = Command::new("substrate-contracts-node")
+        .arg("chain-info")
+        .output()
+    {
         Some(e.to_string())
     } else {
         None
@@ -62,22 +66,31 @@ async fn home() -> Markup {
                 code {(PreEscaped(e))}
             }
         }
-        
+
     )
 }
 
 async fn test() -> Markup {
-    let output = match Command::new("cargo").arg("test").current_dir(contract_path()).output() {
+    let output = match Command::new("cargo")
+        .arg("test")
+        .current_dir(contract_path())
+        .output()
+    {
         Ok(output) => String::from_utf8(output.stdout).unwrap(),
-        Err(e) => e.to_string()
+        Err(e) => e.to_string(),
     };
     html!(code {(PreEscaped(output))})
 }
 
 async fn build() -> Markup {
-    let output = match Command::new("cargo").arg("contract").arg("build").current_dir(contract_path()).output() {
+    let output = match Command::new("cargo")
+        .arg("contract")
+        .arg("build")
+        .current_dir(contract_path())
+        .output()
+    {
         Ok(output) => String::from_utf8(output.stdout).unwrap(),
-        Err(e) => e.to_string()
+        Err(e) => e.to_string(),
     };
     html!(code {(PreEscaped(output))})
 }
@@ -93,9 +106,10 @@ async fn deploy() -> Markup {
         .arg("-x")
         .arg("--skip-confirm")
         .current_dir(contract_path())
-        .output() {
-            Ok(output) => String::from_utf8(output.stdout).unwrap(),
-            Err(e) => e.to_string()
+        .output()
+    {
+        Ok(output) => String::from_utf8(output.stdout).unwrap(),
+        Err(e) => e.to_string(),
     };
     let addr = output.split(" ").last().unwrap().replace("\n", "");
     let mut guard = CONTRACT_ADDR.lock().await;
@@ -117,9 +131,10 @@ async fn read() -> Markup {
         .args(["--message", "get"])
         .args(["--suri", r#"//Alice"#])
         .current_dir(contract_path())
-        .output() {
-            Ok(output) => String::from_utf8(output.stdout).unwrap(),
-            Err(e) => e.to_string()
+        .output()
+    {
+        Ok(output) => String::from_utf8(output.stdout).unwrap(),
+        Err(e) => e.to_string(),
     };
     html!(code {(PreEscaped(output))})
 }
@@ -135,9 +150,10 @@ async fn flip() -> Markup {
         .arg("-x")
         .arg("--skip-confirm")
         .current_dir(contract_path())
-        .output() {
-            Ok(output) => String::from_utf8(output.stdout).unwrap(),
-            Err(e) => e.to_string()
+        .output()
+    {
+        Ok(output) => String::from_utf8(output.stdout).unwrap(),
+        Err(e) => e.to_string(),
     };
     html!(code {(PreEscaped(output))})
 }
@@ -146,8 +162,8 @@ fn full_html(content: Markup) -> Markup {
     html!(
         html data-theme="dark" {
             (Head::example())
-            body { 
-                main."container" hx-target="main" hx-swap="beforeend" {(content)} 
+            body {
+                main."container" hx-target="main" hx-swap="beforeend" {(content)}
                 (Scripts::default())
             }
         }
