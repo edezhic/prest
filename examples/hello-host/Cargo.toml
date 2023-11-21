@@ -1,5 +1,5 @@
 [package]
-name = "into-wasi-host"
+name = "hello-host"
 version = "0.0.1"
 edition = "2021"
 
@@ -8,4 +8,4 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../", features = ["host-wasi"] }
+prest = { path = "../../", features = ["host"] }

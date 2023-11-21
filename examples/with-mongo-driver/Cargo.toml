@@ -11,4 +11,3 @@ path = "./serve.rs"
 prest = { path = "../../", features = ["host"] }
 mongodb = { version = "2.7.0", features = ["bson-uuid-1"] }
 serde = { version = "*", features = ["derive"] }
-futures = "*"

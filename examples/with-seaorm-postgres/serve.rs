@@ -7,9 +7,11 @@ use sea_orm::{ActiveModelTrait, ActiveValue, Database, DatabaseConnection, Entit
 use sea_orm_migration::migrator::MigratorTrait;
 use uuid::Uuid;
 
+const DB_URL: &str = "postgres://postgres:password@localhost/prest";
+
 static DB: Lazy<DatabaseConnection> = Lazy::new(|| {
-    futures::executor::block_on(async {
-        let db = Database::connect("postgres://postgres:password@localhost/prest")
+    block_on(async {
+        let db = Database::connect(DB_URL)
             .await
             .unwrap();
         migrator::Migrator::refresh(&db).await.unwrap();

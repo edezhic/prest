@@ -9,7 +9,6 @@ path = "./serve.rs"
 
 [dependencies]
 prest = { path = "../../", features = ["host"] }
-tokio = { version = "*", features = ["full"] }
 sqlx = { version = "0.7", features = [ "runtime-tokio", "tls-rustls", "sqlite", "macros" ] }
 serde = "*"
 uuid = { version = "*", features = ["v4"] }

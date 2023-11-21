@@ -23,6 +23,7 @@ pub use embed_utils::*;
 pub use html::*;
 pub use html_macro::html;
 pub use http ::{self, Uri, header, HeaderMap, HeaderValue, StatusCode};
+pub use futures::{executor::block_on, stream::{StreamExt, TryStreamExt}};
 pub use tower::{self, Layer, Service};
 pub use once_cell::sync::Lazy;
 
@@ -50,19 +51,24 @@ pub struct ServeOptions {
 }
 impl Default for ServeOptions {
     fn default() -> Self {
+        let port = if let Ok(v) = std::env::var("PORT") {
+            v.parse::<u16>().unwrap_or(80)
+        } else {
+            80
+        };
         Self {
-            addr: SocketAddr::from(([0, 0, 0, 0], 80))
+            addr: SocketAddr::from(([0, 0, 0, 0], port))
         }
     }
 }
 
-pub trait Server {
+pub trait Serving {
     fn serve(self, opts: ServeOptions);
 }
 
 /// Start tokio+hyper based server
 #[cfg(feature = "host")]
-impl Server for Router {
+impl Serving for Router {
     fn serve(self, opts: ServeOptions) {
         use tokio::runtime::Builder;
         let svc = self.into_make_service();
@@ -80,27 +86,6 @@ impl Server for Router {
 mod sw;
 #[cfg(feature = "sw")]
 pub use sw::*;
-
-/// Start simplified hyper_wasi-based server
-#[cfg(all(target = "wasm32-wasi", feature = "host-wasi"))]
-impl Server for Router {
-    async fn serve(self, opts: ServeOptions) { 
-        use tokio::net::TcpListener;       
-        use hyper::server::conn::Http;
-        tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
-            let listener = TcpListener::bind(opts.addr).await.unwrap();
-            loop {
-                let (stream, _) = listener.accept().await.unwrap();
-                let svc = router.clone();
-                tokio::task::spawn(async move {
-                    if let Err(err) = Http::new().serve_connection(stream, svc).await {
-                        println!("Error serving connection: {:?}", err);
-                    }
-                });
-            }
-        });
-    }        
-}
 
 /// A CSS response.
 ///

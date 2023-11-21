@@ -4,7 +4,7 @@ use sqlx::{migrate, query, query_as, FromRow, Sqlite, SqlitePool};
 
 static DB: Lazy<SqlitePool> = Lazy::new(|| {
     let conn = SqlitePool::connect_lazy("sqlite::memory:").unwrap();
-    block_on(migrate!().run(&*DB).await.unwrap());
+    block_on(migrate!().run(&*DB)).unwrap();
     conn
 });
 

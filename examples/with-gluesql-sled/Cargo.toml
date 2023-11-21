@@ -10,6 +10,6 @@ path = "./serve.rs"
 [dependencies]
 prest = { path = "../../", features = ["host"] }
 serde = "*"
-futures = "*"
 uuid = { version = "*", features = ["v4"] }
 gluesql = { git = "https://github.com/gluesql/gluesql", default-features = false, features = ["sled-storage"]}
+tokio = "*"

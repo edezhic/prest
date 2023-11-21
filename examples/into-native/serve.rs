@@ -9,7 +9,7 @@ use wry::{
 };
 
 fn main() -> Result<()> {
-    std::thread::spawn({
+    std::thread::spawn(|| {
         Router::new()
             .route("/", get(html!((Head::example()) h1{"Hello world!"})))
             .serve(Default::default())

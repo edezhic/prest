@@ -8,18 +8,10 @@ use prest::*;
 static DB: Lazy<SledStorage> = Lazy::new(|| SledStorage::new("sled_db").unwrap());
 
 // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1245
-fn exec_inside_async(stmt: impl BuildSQL) -> Result<Payload> {
-    use tokio::{runtime::Handle, task::block_in_place};
-    Ok(block_in_place(|| Handle::current().block_on(exec(stmt)))?)
-}
-
-fn exec_sync(stmt: impl BuildSQL) -> Result<Payload> {
-    use futures::executor::block_on;
-    Ok(block_on(exec(stmt))?)
-}
-
-async fn exec(stmt: impl BuildSQL) -> Result<Payload> {
-    Ok(Glue::new(DB.clone()).execute_stmt(&stmt.build()?).await?)
+fn exec(stmt: impl BuildSQL) -> Result<Payload> {
+    let statement = stmt.build()?;
+    let payload = block_on(Glue::new(DB.clone()).execute_stmt(&statement))?;
+    Ok(payload)
 }
 
 static TODOS: &str = "Todos";
@@ -36,28 +28,23 @@ pub struct Todo {
 
 impl Todo {
     pub fn from_row(row: Vec<Value>) -> Self {
-        let Value::Uuid(uuid) = row[0].clone() else {
+        let [Value::Uuid(uuid), Value::Str(ref task), Value::Bool(done)] = row[..] else {
             panic!("missing uuid");
         };
         let uuid = uuid::Uuid::from_u128(uuid).to_string();
-        let Value::Str(task) = row[1].clone() else {
-            panic!("missing task");
-        };
-        let Value::Bool(done) = row[2].clone() else {
-            panic!("missing done");
-        };
+        let task = task.clone();
         Todo { uuid, task, done }
     }
 }
 async fn get_todos() -> Vec<Todo> {
-    let Ok(Payload::Select { rows, .. }) = exec_inside_async(table(TODOS).select()) else {
+    let Ok(Payload::Select { rows, .. }) = exec(table(TODOS).select()) else {
         panic!("failed select query");
     };
     rows.into_iter().map(Todo::from_row).collect::<Vec<Todo>>()
 }
 
 fn main() {
-    let _migration = exec_sync(
+    let _migration = exec(
         table(TODOS)
             .create_table_if_not_exists()
             .add_column("uuid UUID PRIMARY KEY")
@@ -67,14 +54,14 @@ fn main() {
     Router::new()
         .route(
             "/",
-            get(html!(@for todo in get_todos().await {(todo)}))
+            get(|| async { html!(@for todo in get_todos().await {(todo)}) })
                 .put(|Form(Todo { task, .. }): Form<Todo>| async move {
                     let values = format!("GENERATE_UUID(), '{task}', false");
-                    exec_inside_async(table(TODOS).insert().values(vec![values])).unwrap();
+                    exec(table(TODOS).insert().values(vec![values])).unwrap();
                     Redirect::to("/")
                 })
                 .patch(|Form(Todo { uuid, done, .. }): Form<Todo>| async move {
-                    exec_inside_async(
+                    exec(
                         table(TODOS)
                             .update()
                             .set("done", !done)
@@ -84,8 +71,7 @@ fn main() {
                     Redirect::to("/")
                 })
                 .delete(|Form(Todo { uuid, .. }): Form<Todo>| async move {
-                    exec_inside_async(table(TODOS).delete().filter(format!("uuid = '{uuid}'")))
-                        .unwrap();
+                    exec(table(TODOS).delete().filter(format!("uuid = '{uuid}'"))).unwrap();
                     Redirect::to("/")
                 }),
         )

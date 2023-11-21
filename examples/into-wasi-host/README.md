@@ -1,1 +1,0 @@
-builds into a [WASI](https://github.com/bytecodealliance/wasmtime/blob/main/docs/WASI-intro.md)-powered host

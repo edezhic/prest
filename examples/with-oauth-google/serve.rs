@@ -6,13 +6,13 @@ use std::{collections::HashMap, hash::Hash, sync::Arc};
 use tokio::sync::RwLock;
 
 static GCLIENT: Lazy<GoogleClient> = Lazy::new(|| {
-    tokio::task::block_in_place(|| {
-        tokio::runtime::Handle::current().block_on(GoogleClient::init(
-            "http://localhost",
-            std::env::var("GOOGLE_CLIENT_ID").unwrap(),
-            std::env::var("GOOGLE_CLIENT_SECRET").unwrap(),
-        ))
-    })
+    let client_id = std::env::var("GOOGLE_CLIENT_ID").unwrap();
+    let client_secret = std::env::var("GOOGLE_CLIENT_SECRET").unwrap();
+    block_on(GoogleClient::init(
+        "http://localhost",
+        client_id,
+        client_secret,
+    ))
 });
 
 #[derive(Debug, Clone)]

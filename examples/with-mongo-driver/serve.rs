@@ -1,4 +1,3 @@
-use futures::{executor::block_on, stream::TryStreamExt};
 use mongodb::{
     bson::{doc, Uuid},
     options::ClientOptions,
@@ -6,15 +5,13 @@ use mongodb::{
 };
 use prest::*;
 
+const DB_URL: &str = "mongodb://localhost:27017";
+
 static COLLECTION: Lazy<Collection<Todo>> = Lazy::new(|| {
-    block_on(async {
-        let opts = ClientOptions::parse("mongodb://localhost:27017")
-            .await
-            .unwrap();
-        let client = Client::with_options(opts).unwrap();
-        let db = client.database("todosdb");
-        db.collection::<Todo>("todos")
-    })
+    let opts = block_on(ClientOptions::parse(DB_URL)).unwrap();
+    let client = Client::with_options(opts).unwrap();
+    let db = client.database("todosdb");
+    db.collection::<Todo>("todos")
 });
 
 #[derive(serde::Serialize, serde::Deserialize)]

@@ -1,5 +1,5 @@
 [package]
-name = "into-native-wry"
+name = "hello-html"
 version = "0.0.1"
 edition = "2021"
 
@@ -9,4 +9,3 @@ path = "./serve.rs"
 
 [dependencies]
 prest = { path = "../../", features = ["host"] }
-wry = "*"

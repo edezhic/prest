@@ -12,5 +12,4 @@ prest = { path = "../../", features = ["host"] }
 serde = { version = "*", features = ["derive"] }
 sea-orm = { version = "^0.12.0", features = [ "sqlx-postgres", "runtime-tokio-rustls", "macros", "with-uuid"] }
 sea-orm-migration = "^0.12.0"
-futures = "*"
 uuid = { version = "*", features = ["v4"] }

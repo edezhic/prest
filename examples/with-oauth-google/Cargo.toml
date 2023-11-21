@@ -17,3 +17,4 @@ rand = { version = "0.8.5", features = ["min_const_gen"] }
 openidconnect = "*"
 dotenv = "*"
 serde = "*"
+tokio = "*"
