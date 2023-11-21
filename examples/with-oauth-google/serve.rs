@@ -44,7 +44,7 @@ fn main() {
         .merge(auth_svc)
         .layer(authn)
         .layer(session)
-        .serve(Default::default())
+        .serve(ServeOptions::default())
 }
 
 async fn homepage() -> Markup {

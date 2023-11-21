@@ -26,7 +26,7 @@ fn main() {
                 .delete(|Form(todo): Form<Todo>| async move { delete_todo(todo); }),
         )
         .wrap_non_htmx(page)
-        .serve(Default::default())
+        .serve(ServeOptions::default())
 }
 
 fn get_todos() -> Vec<Todo> {

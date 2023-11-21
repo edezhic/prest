@@ -10,5 +10,5 @@ fn main() {
             "/favicon.ico",
             get(Favicon(include_bytes!("assets/favicon.ico").as_slice())),
         )
-        .serve(Default::default())
+        .serve(ServeOptions::default())
 }

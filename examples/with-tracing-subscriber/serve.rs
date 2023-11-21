@@ -15,5 +15,5 @@ fn main() {
             )),
         )
         .layer(TraceLayer::new_for_http())
-        .serve(Default::default())
+        .serve(ServeOptions::default())
 }

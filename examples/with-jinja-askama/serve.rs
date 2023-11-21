@@ -13,5 +13,5 @@ fn main() {
             "/",
             get(Html(HelloTemplate { name: "world" }.render().unwrap())),
         )
-        .serve(Default::default())
+        .serve(ServeOptions::default())
 }

@@ -46,7 +46,7 @@ fn main() {
             }),
         )
         .wrap_non_htmx(page)
-        .serve(Default::default())
+        .serve(ServeOptions::default())
 }
 
 fn get_todos() -> Vec<(String, Todo)> {

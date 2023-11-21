@@ -30,7 +30,7 @@ fn main() {
                 }),
         )
         .wrap_non_htmx(page)
-        .serve(Default::default())
+        .serve(ServeOptions::default())
 }
 
 fn new_uuid() -> String {

@@ -22,7 +22,7 @@ fn main() {
         .route("/read", get(read))
         .route("/flip", get(flip))
         .wrap_non_htmx(full_html)
-        .serve(Default::default())
+        .serve(ServeOptions::default())
 }
 
 async fn home() -> Markup {

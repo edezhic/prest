@@ -76,7 +76,7 @@ fn main() {
                 }),
         )
         .wrap_non_htmx(page)
-        .serve(Default::default())
+        .serve(ServeOptions::default())
 }
 
 impl Render for Todo {

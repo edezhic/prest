@@ -12,7 +12,7 @@ fn main() -> Result<()> {
     std::thread::spawn(|| {
         Router::new()
             .route("/", get(html!((Head::example()) h1{"Hello world!"})))
-            .serve(Default::default())
+            .serve(ServeOptions::default())
     });
 
     let event_loop = EventLoop::new();

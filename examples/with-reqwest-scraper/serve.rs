@@ -22,7 +22,7 @@ fn main() {
 
     Router::new()
         .route("/", get(homepage))
-        .serve(Default::default())
+        .serve(ServeOptions::default())
 }
 
 async fn homepage() -> Markup {

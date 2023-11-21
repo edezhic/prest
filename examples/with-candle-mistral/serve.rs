@@ -31,7 +31,7 @@ fn main() {
             });
             Redirect::to("/")
         }))
-        .serve(Default::default())
+        .serve(ServeOptions::default())
 }
 
 async fn page() -> Markup {
