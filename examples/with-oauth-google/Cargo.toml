@@ -8,7 +8,7 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../", features = ["host"] }
+prest = { path = "../../" }
 
 # --- fork to switch axum to the latest(unstable) main like in prest
 axum-login = { git = "https://github.com/edezhic/axum-login" }

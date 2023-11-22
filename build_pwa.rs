@@ -1,46 +1,14 @@
-use crate::{out_path, find_target_dir};
+use crate::{find_target_dir, out_path};
 use std::{
-    format as f,
+    env, format as f,
     fs::{read_to_string, rename, write},
     process::Command,
     time::Instant,
 };
-use wasm_bindgen_cli_support::Bindgen;
 use webmanifest::{DisplayMode, Icon, Manifest};
 
-#[cfg(debug_assertions)]
-const PROFILE: &str = "debug";
-#[cfg(not(debug_assertions))]
-const PROFILE: &str = "release";
-
-const SW_TARGET: &str = "wasm32-sw";
-
-static LOGO: &[u8] = include_bytes!("logo.png");
-
-static LISTENER_TEMPLATE: &str = "self.addEventListener('NAME', event => LISTENER);\n";
-
 pub struct PWAOptions<'a> {
-    pub build_features: &'a str,
-    pub types_path: Option<&'a str>,
     pub listeners: Vec<(&'a str, &'a str)>,
-    pub manifest: ManifestOptions<'a>,
-}
-impl Default for PWAOptions<'_> {
-    fn default() -> Self {
-        Self {
-            build_features: "sw",
-            types_path: None,
-            listeners: vec![
-                ("install", "event.waitUntil(Promise.all([__wbg_init('/sw.wasm'), self.skipWaiting()]))"),
-                ("activate", "event.waitUntil(self.clients.claim())"),
-                ("fetch", "handle_fetch(self, event)")
-            ],
-            manifest: ManifestOptions::default(),
-        }
-    }
-}
-
-pub struct ManifestOptions<'a> {
     pub name: String,
     pub desc: String,
     pub background: String,
@@ -49,9 +17,17 @@ pub struct ManifestOptions<'a> {
     pub display: DisplayMode,
     pub icons: Vec<Icon<'a>>,
 }
-impl Default for ManifestOptions<'_> {
+impl Default for PWAOptions<'_> {
     fn default() -> Self {
         Self {
+            listeners: vec![
+                (
+                    "install",
+                    "event.waitUntil(Promise.all([__wbg_init('/sw.wasm'), self.skipWaiting()]))",
+                ),
+                ("activate", "event.waitUntil(self.clients.claim())"),
+                ("fetch", "handle_fetch(self, event)"),
+            ],
             name: std::env::var("CARGO_PKG_NAME").unwrap(),
             desc: if let Ok(desc) = std::env::var("CARGO_PKG_DESCRIPTION") {
                 desc
@@ -67,7 +43,21 @@ impl Default for ManifestOptions<'_> {
     }
 }
 
+#[cfg(debug_assertions)]
+const PROFILE: &str = "debug";
+#[cfg(not(debug_assertions))]
+const PROFILE: &str = "release";
+
+const SW_TARGET: &str = "wasm32-sw";
+
+static LOGO: &[u8] = include_bytes!("logo.png");
+
+static LISTENER_TEMPLATE: &str = "self.addEventListener('NAME', event => LISTENER);\n";
+
 pub fn build_pwa(opts: PWAOptions) {
+    if let Ok(_) = env::var("SELF_PWA_BUILD") {
+        return;
+    }
     let start = Instant::now();
     let lib_name = &read_lib_name();
     let target_dir = sw_target_dir();
@@ -76,24 +66,24 @@ pub fn build_pwa(opts: PWAOptions) {
 
     // build in a separate target dir to avoid build deadlock with the host
     let mut cmd = Command::new("cargo");
-    cmd.arg("rustc")
+    cmd.env("SELF_PWA_BUILD", "true")
+        .arg("rustc")
         .arg("--lib")
         .args(["--crate-type", "cdylib"])
-        .arg("--no-default-features")
-        .args(["--features", &opts.build_features])
         .args(["--target", "wasm32-unknown-unknown"])
         .args(["--target-dir", &target_dir]);
+    //.arg("--")
+    //.args(["--cfg", r#"'self_sw_build=true'"#]);
     if !cfg!(debug_assertions) {
         cmd.arg("--release");
     }
     assert!(cmd.status().expect("finished SW wasm build").success());
 
     // generate bindings for the wasm binary
-    Bindgen::new()
+    wasm_bindgen_cli_support::Bindgen::new()
         .input_path(f!("{lib_path}.wasm"))
         .web(true)
         .unwrap()
-        .typescript(opts.types_path.is_some())
         .remove_name_section(true)
         .remove_producers_section(true)
         .omit_default_module_path(true)
@@ -105,7 +95,7 @@ pub fn build_pwa(opts: PWAOptions) {
 
     // append event listeners and save js bindings
     let mut js = read_to_string(&f!("{lib_path}.js")).unwrap();
-    for listener in opts.listeners {
+    for listener in opts.listeners.iter() {
         js += LISTENER_TEMPLATE
             .replace("NAME", listener.0)
             .replace("LISTENER", listener.1)
@@ -114,7 +104,7 @@ pub fn build_pwa(opts: PWAOptions) {
     write(out_path("sw.js"), &js).unwrap();
 
     // compose .webmanifest with app metadata
-    write(out_path(".webmanifest"), gen_manifest(opts.manifest)).unwrap();
+    write(out_path(".webmanifest"), gen_manifest(opts)).unwrap();
 
     // at least one logo is required for PWA installability
     write(out_path("logo.png"), LOGO).unwrap();
@@ -125,8 +115,8 @@ pub fn build_pwa(opts: PWAOptions) {
     );
 }
 
-fn gen_manifest(opts: ManifestOptions) -> String {
-    let mut manifest = Manifest::builder(&opts.name)
+fn gen_manifest(opts: PWAOptions) -> String {
+    let mut manifest = webmanifest::Manifest::builder(&opts.name)
         .description(&opts.desc)
         .bg_color(&opts.background)
         .theme_color(&opts.theme)
@@ -155,7 +145,6 @@ fn read_lib_name() -> String {
     };
     lib_name.replace("-", "_")
 }
-
 
 fn sw_target_dir() -> String {
     if let Some(dir) = find_target_dir() {

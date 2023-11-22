@@ -8,7 +8,7 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../", features = ["host"] }
+prest = { path = "../../" }
 serde = { version = "*", features = ["derive"] }
 sea-orm = { version = "^0.12.0", features = [ "sqlx-postgres", "runtime-tokio-rustls", "macros", "with-uuid"] }
 sea-orm-migration = "^0.12.0"

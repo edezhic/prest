@@ -11,21 +11,22 @@ pub use anyhow::{self, Error, Result, bail, anyhow as anyway};
 pub use axum::{
     self,
     body::{Body, HttpBody},
-    extract::{Extension, Form, FromRequest, FromRequestParts, Host, MatchedPath, NestedPath, OriginalUri, Path, Query, Request, State},
+    extract::{self, Extension, Form, FromRequest, FromRequestParts, Host, MatchedPath, NestedPath, OriginalUri, Path, Query, Request, State},
     response::*,
     routing::{any, delete, get, patch, post, put},
     Router,
-    middleware::{from_fn, from_fn_with_state, from_extractor, from_extractor_with_state}
+    middleware::{Next, from_fn, from_fn_with_state, from_extractor, from_extractor_with_state},
+    http::{self, Uri, header, HeaderMap, HeaderValue, StatusCode}
 };
 pub use embed::*;
 pub use embed_macro::Embed;
 pub use embed_utils::*;
 pub use html::*;
 pub use html_macro::html;
-pub use http ::{self, Uri, header, HeaderMap, HeaderValue, StatusCode};
 pub use futures::{executor::block_on, stream::{StreamExt, TryStreamExt}};
 pub use tower::{self, Layer, Service};
 pub use once_cell::sync::Lazy;
+pub use std::{sync::Arc, env};
 
 /// Default doctype for HTML
 pub const DOCTYPE: PreEscaped<&'static str> = PreEscaped("<!DOCTYPE html>");
@@ -62,34 +63,30 @@ impl Default for ServeOptions {
     }
 }
 
+/// Util trait to add serve function to the Router
 pub trait Serving {
     fn serve(self, opts: ServeOptions);
 }
 
 /// Start tokio+hyper based server
-#[cfg(feature = "host")]
+#[cfg(not(target_arch = "wasm32"))]
 impl Serving for Router {
     fn serve(self, opts: ServeOptions) {
-        use tokio::runtime::Builder;
+        use tokio::runtime::Runtime;
         let svc = self.into_make_service();
         let server = hyper_server::bind(opts.addr).serve(svc);
-        Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(server)
-            .unwrap();
+        Runtime::new().unwrap().block_on(server).unwrap();
     }
 }
 
-#[cfg(feature = "sw")]
+#[cfg(target_arch = "wasm32")]
 mod sw;
-#[cfg(feature = "sw")]
+#[cfg(target_arch = "wasm32")]
 pub use sw::*;
 
 /// A CSS response.
 ///
-/// Will automatically get `Content-Type: text/css`.
+/// Will automatically set `Content-Type: text/css`.
 #[derive(Clone, Copy, Debug)]
 #[must_use]
 pub struct Css<T>(pub T);
@@ -116,7 +113,7 @@ impl<T> From<T> for Css<T> {
 
 /// A favicon response.
 ///
-/// Will automatically get `Content-Type: image/x-icon`.
+/// Will automatically set `Content-Type: image/x-icon`.
 #[derive(Clone, Copy, Debug)]
 #[must_use]
 pub struct Favicon<T>(pub T);

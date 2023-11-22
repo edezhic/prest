@@ -36,12 +36,14 @@ impl<'a> Head<'a> {
         self.webmanifest = Some(path);
         self
     }
-    #[allow(unused_mut)]
-    pub fn release_pwa(mut self) -> Self {
+    pub fn pwa(self) -> Self {
+        self.webmanifest("/.webmanifest")
+    }
+    pub fn release_pwa(self) -> Self {
         if cfg!(debug_assertions) {
             self
         } else {
-            self.webmanifest("/.webmanifest")
+            self.pwa()
         }
     }
     /// Builds a [`Head`] with configs used across examples

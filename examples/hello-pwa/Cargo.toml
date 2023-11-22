@@ -11,14 +11,10 @@ path = "./shared.rs"
 name = "serve"
 path = "./serve.rs"
 
-[features]
-default = ["prest/host"]
-sw = ["prest/sw", "wasm-bindgen", "wasm-bindgen-futures"]
-
 [dependencies]
 prest = { path = "../../" }
-wasm-bindgen = { version = "0.2.87", optional = true }
-wasm-bindgen-futures = { version = "0.4.37", optional = true }
+wasm-bindgen = "*"
+wasm-bindgen-futures = "*"
 
 [build-dependencies]
 prest = { path = "../../", features = ["build-pwa"] }

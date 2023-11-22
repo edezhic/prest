@@ -1,15 +1,16 @@
 use prest::*;
 
-#[cfg(feature = "sw")]
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub async fn handle_fetch(sw: ServiceWorkerGlobalScope, fe: FetchEvent) {
     serve(routes(), sw, fe).await
 }
 
 pub fn routes() -> Router {
-    embed_as!(Examples from "../" only "*.md");
     let mut router = Router::new().route("/", get(md_to_html(include_bytes!("../../README.md"))));
     let mut links = vec![];
+    
+    embed_as!(Examples from "../" only "*.md");
     for path in Examples::iter() {
         let url = if path.starts_with("blog") {
             "/about".to_owned()
@@ -21,6 +22,7 @@ pub fn routes() -> Router {
         let label = url.replace("/", "").replace("-", " ");
         links.push((url, label));
     }
+    
     router.wrap_non_htmx(move |content| page(content, &links))
 }
 

@@ -8,7 +8,7 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../", features = ["host"] }
+prest = { path = "../../" }
 serde = "*"
 uuid = { version = "*", features = ["v4"] }
 gluesql = { git = "https://github.com/gluesql/gluesql", default-features = false, features = ["sled-storage"]}

@@ -1,4 +1,4 @@
 fn main() {
-    #[cfg(all(feature = "default", not(debug_assertions)))]
+    #[cfg(not(debug_assertions))]
     prest::build_pwa(prest::PWAOptions::default());
 }
