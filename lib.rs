@@ -33,6 +33,8 @@ pub const DOCTYPE: PreEscaped<&'static str> = PreEscaped("<!DOCTYPE html>");
 /// Default javascript code that registers a service worker from `/sw.js`
 pub const REGISTER_SW_SNIPPET: &str = 
     "if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {type: 'module'});";
+/// TODO
+pub const RELEASE: bool = cfg!(not(debug_assertions));
 
 /// Utility for composition of paths to build artifacts
 pub fn out_path(filename: &str) -> String {
@@ -45,98 +47,72 @@ mod build_pwa;
 #[cfg(feature = "build-pwa")]
 pub use build_pwa::*;
 
-use std::net::SocketAddr;
-/// Configuration for the server
-pub struct ServeOptions {
-    pub addr: SocketAddr,
-}
-impl Default for ServeOptions {
-    fn default() -> Self {
-        let port = if let Ok(v) = std::env::var("PORT") {
-            v.parse::<u16>().unwrap_or(80)
-        } else {
-            80
-        };
-        Self {
-            addr: SocketAddr::from(([0, 0, 0, 0], port))
+#[cfg(not(target_arch = "wasm32"))]
+mod host {
+    use super::*;
+    use std::net::SocketAddr;
+    use tower::ServiceBuilder;
+    use tracing_subscriber::{layer::SubscriberExt, filter::LevelFilter, util::SubscriberInitExt};
+    use tokio::{runtime::Runtime, net::TcpListener};
+    use tower_http::{catch_panic::CatchPanicLayer, limit::RequestBodyLimitLayer, trace::TraceLayer, compression::CompressionLayer};
+    
+    /// Configuration for the server
+    pub struct ServeOptions {
+        pub addr: SocketAddr,
+        pub request_body_limit: usize,
+        pub log_filter: LevelFilter
+    
+    }
+    impl Default for ServeOptions {
+        fn default() -> Self {
+            let port = if let Ok(v) = std::env::var("PORT") {
+                v.parse::<u16>().unwrap_or(80)
+            } else {
+                80
+            };
+            Self {
+                addr: SocketAddr::from(([0, 0, 0, 0], port)),
+                request_body_limit: 1000000,
+                log_filter: LevelFilter::DEBUG
+            }
+        }
+    }
+    
+    /// Util trait to add serve function to the Router
+    pub trait Serving {
+        fn serve(self, opts: ServeOptions);
+    }
+    
+    /// Start tokio+hyper based server
+    impl Serving for Router {
+        fn serve(mut self, opts: ServeOptions) {
+            tracing_subscriber::registry()
+                .with(opts.log_filter)
+                .with(tracing_subscriber::fmt::layer())
+                .init();
+
+            let host_services = ServiceBuilder::new()
+                .layer(CatchPanicLayer::new())
+                .layer(RequestBodyLimitLayer::new(opts.request_body_limit))
+                .layer(CompressionLayer::new())
+                .layer(TraceLayer::new_for_http());
+            
+            self = self.layer(host_services);
+                
+            Runtime::new().unwrap().block_on(async move {
+                let listener = TcpListener::bind(opts.addr).await.unwrap();
+                axum::serve(listener, self).await
+            }).unwrap();
         }
     }
 }
-
-/// Util trait to add serve function to the Router
-pub trait Serving {
-    fn serve(self, opts: ServeOptions);
-}
-
-/// Start tokio+hyper based server
 #[cfg(not(target_arch = "wasm32"))]
-impl Serving for Router {
-    fn serve(self, opts: ServeOptions) {
-        use tokio::runtime::Runtime;
-        let svc = self.into_make_service();
-        let server = hyper_server::bind(opts.addr).serve(svc);
-        Runtime::new().unwrap().block_on(server).unwrap();
-    }
-}
+pub use host::*;
 
 #[cfg(target_arch = "wasm32")]
 mod sw;
 #[cfg(target_arch = "wasm32")]
 pub use sw::*;
-
-/// A CSS response.
-///
-/// Will automatically set `Content-Type: text/css`.
-#[derive(Clone, Copy, Debug)]
-#[must_use]
-pub struct Css<T>(pub T);
-impl<T> IntoResponse for Css<T>
-where
-    T: Into<Body>,
-{
-    fn into_response(self) -> Response {
-        (
-            [(
-                header::CONTENT_TYPE,
-                HeaderValue::from_static("text/css"),
-            )],
-            self.0.into(),
-        )
-            .into_response()
-    }
-}
-impl<T> From<T> for Css<T> {
-    fn from(inner: T) -> Self {
-        Self(inner)
-    }
-}
-
-/// A favicon response.
-///
-/// Will automatically set `Content-Type: image/x-icon`.
-#[derive(Clone, Copy, Debug)]
-#[must_use]
-pub struct Favicon<T>(pub T);
-impl<T> IntoResponse for Favicon<T>
-where
-    T: Into<Body>,
-{
-    fn into_response(self) -> Response {
-        (
-            [(
-                header::CONTENT_TYPE,
-                HeaderValue::from_static("image/x-icon"),
-            )],
-            self.0.into(),
-        )
-            .into_response()
-    }
-}
-impl<T> From<T> for Favicon<T> {
-    fn from(inner: T) -> Self {
-        Self(inner)
-    }
-}
 
 /// Utility that attempts to find the path of the current build's target path
 pub fn find_target_dir() -> Option<String> {

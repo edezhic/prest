@@ -10,7 +10,7 @@ Yes. Initial motivation comes from [Rust](https://www.rust-lang.org/) itself - a
 
 Docs below assume that you're familiar with Rust. If you aren't yet check out [The Rust Book](https://doc.rust-lang.org/book/) - definitely the best guide with interactive examples which is also available in dozens of languages. Also, I strongly recommend checking out the first three chapters of the [async book](https://rust-lang.github.io/async-book/) to understand how async/await work in rust. Then you can proceed with these basic examples:
 
-1. [Host](https://prest.blog/hello-host) - starting with a concurrent server
+1. [Host](https://prest.blog/hello-host) - setting up the server
 2. [HTML](https://prest.blog/hello-html) - adding an interface to it
 3. [PWA](https://prest.blog/hhelo-pwa) - making UI [installable](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable)
 
@@ -40,8 +40,10 @@ I also want to hightlight [hyperscript](https://hyperscript.org/) here because i
 
 Also, there are plenty of [Web APIs](https://fugu-tracker.web.app/) available in rust thanks to [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) on the client side, like the ones that enable Progressive features of prest. There is also the [WASI](https://github.com/bytecodealliance/wasmtime/blob/main/docs/WASI-intro.md) ecosystem to simplify devops and fascilitate serverless, [WebGPU](https://developer.chrome.com/blog/webgpu-io2023/) for cross-platform AI, complex UIs and games, and many other web-related tech being developed for all kinds of use cases.
 
-### publishing
-
-Prest is not published on [crates.io](https://crates.io/crates/prest) yet because public APIs are extremely unstable and it depends on the latest unreleased axum changes. The current goal is to experiment as much as possible right now and publish the first (still somewhat unstable) version after axum.
-
-Currently blog is deployed to replit by compiling into the `musl` target and including binary into the repo due to [this issue](https://ask.replit.com/t/deployment-time-outs/73694). To deploy rebuild the binary with `cargo build -p blog --target x86_64-unknown-linux-musl --release` and move `target/release/serve` into the `_temp_deployment` folder.
+### roadmap
+This is a hobby project and plans change frequently, but there are things I'd likely work on next:
++ better docs
++ basic auth/session-management integration
++ [https://github.com/vidhanio/htmx-types](htmx types)
++ benchmarks: composing routes, starting server, templates, ...
++ first release 🎉

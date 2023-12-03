@@ -41,7 +41,7 @@ async fn page() -> Markup {
         false
     };
     html!( html data-theme="dark" {
-        (Head::example().title("LLM Chat"))
+        (Head::example("With Mistral LLM"))
         body."container" { 
             @if ready {
                 article {(history(false).await)}

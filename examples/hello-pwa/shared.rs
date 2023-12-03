@@ -4,10 +4,10 @@ pub fn routes() -> Router {
     Router::new().route(
         "/",
         get(html!(
-                (Head::example().pwa())
+                (Head::example("Hello PWA"))
                 body { 
                     h1{"Hello from PWA!"} 
-                    (Scripts::default().with_sw())
+                    (Scripts::default())
                 }
         )),
     )

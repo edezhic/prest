@@ -108,9 +108,10 @@ pub async fn axum_response_to_websys(response: http::Response<Body>) -> Result<J
         .status(response.status().as_u16());
 
     // collect axum::Body into a buffer
-    let mut body = response.into_body();
+    let body = response.into_body();
     let mut buf = Vec::with_capacity(body.size_hint().lower() as usize);
-    while let Some(chunk) = body.data().await {
+    let mut body_stream = body.into_data_stream();
+    while let Some(chunk) = body_stream.next().await {
         bytes::BufMut::put(&mut buf, chunk.unwrap());
     }
     let body = Some(buf.as_mut_slice());

@@ -1,7 +1,9 @@
 use prest::*;
 
-embed_build_output_as!(Dist);
+embed_build_output_as!(BuiltAssets);
 
 fn main() {
-    shared::routes().embed(Dist).serve(ServeOptions::default())
+    shared::routes()
+        .embed(BuiltAssets)
+        .serve(ServeOptions::default())
 }

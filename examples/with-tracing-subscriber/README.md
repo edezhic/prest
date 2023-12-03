@@ -1,1 +1,0 @@
-prints host traces into the terminal

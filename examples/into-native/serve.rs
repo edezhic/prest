@@ -11,7 +11,7 @@ use wry::{
 fn main() -> Result<()> {
     std::thread::spawn(|| {
         Router::new()
-            .route("/", get(html!((Head::example()) h1{"Hello world!"})))
+            .route("/", get(html!((Head::example("Native")) h1{"Hello world!"})))
             .serve(ServeOptions::default())
     });
 

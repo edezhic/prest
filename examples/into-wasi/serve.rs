@@ -5,7 +5,7 @@ fn main() {
     use tokio::{net::TcpListener, runtime::Builder, task};
 
     let router: Router<()> =
-        Router::new().route("/", get(html!((Head::example()) h1{"Hello world!"})));
+        Router::new().route("/", get(html!((Head::example("WASI")) h1{"Hello world!"})));
 
     let rt = Builder::new_current_thread().enable_all().build().unwrap();
 

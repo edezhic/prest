@@ -11,7 +11,7 @@ path = "./serve.rs"
 prest = { path = "../../" }
 
 # --- fork to switch axum to the latest(unstable) main like in prest
-axum-login = { git = "https://github.com/edezhic/axum-login" }
+axum-login = "0.10.0"
 
 rand = { version = "0.8.5", features = ["min_const_gen"] }
 openidconnect = "*"

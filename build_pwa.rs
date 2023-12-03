@@ -1,4 +1,4 @@
-use crate::{find_target_dir, out_path};
+use crate::{find_target_dir, out_path, RELEASE};
 use std::{
     env, format as f,
     fs::{read_to_string, rename, write},
@@ -8,6 +8,7 @@ use std::{
 use webmanifest::{DisplayMode, Icon, Manifest};
 
 pub struct PWAOptions<'a> {
+    pub release_only: bool,
     pub listeners: Vec<(&'a str, &'a str)>,
     pub name: String,
     pub desc: String,
@@ -20,6 +21,7 @@ pub struct PWAOptions<'a> {
 impl Default for PWAOptions<'_> {
     fn default() -> Self {
         Self {
+            release_only: true,
             listeners: vec![
                 (
                     "install",
@@ -43,26 +45,25 @@ impl Default for PWAOptions<'_> {
     }
 }
 
-#[cfg(debug_assertions)]
-const PROFILE: &str = "debug";
-#[cfg(not(debug_assertions))]
-const PROFILE: &str = "release";
-
-const SW_TARGET: &str = "wasm32-sw";
+const SW_TARGET: &str = "service-worker";
 
 static LOGO: &[u8] = include_bytes!("logo.png");
 
 static LISTENER_TEMPLATE: &str = "self.addEventListener('NAME', event => LISTENER);\n";
 
 pub fn build_pwa(opts: PWAOptions) {
-    if let Ok(_) = env::var("SELF_PWA_BUILD") {
+    if env::var("SELF_PWA_BUILD").is_ok() || (opts.release_only && !RELEASE) {
         return;
     }
     let start = Instant::now();
     let lib_name = &read_lib_name();
     let target_dir = sw_target_dir();
-    let profile_dir = &f!("{target_dir}/wasm32-unknown-unknown/{PROFILE}");
-    let lib_path = &f!("{profile_dir}/{lib_name}");
+    let profile_dir = match RELEASE {
+        true => "release",
+        false => "debug",
+    };
+    let profile_path = &f!("{target_dir}/wasm32-unknown-unknown/{profile_dir}");
+    let lib_path = &f!("{profile_path}/{lib_name}");
 
     // build in a separate target dir to avoid build deadlock with the host
     let mut cmd = Command::new("cargo");
@@ -87,7 +88,7 @@ pub fn build_pwa(opts: PWAOptions) {
         .remove_name_section(true)
         .remove_producers_section(true)
         .omit_default_module_path(true)
-        .generate(profile_dir)
+        .generate(profile_path)
         .unwrap();
 
     // move the processed wasm binary into final dist

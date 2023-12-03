@@ -87,9 +87,9 @@ impl Render for Todo {
     }
 }
 
-pub fn page(content: Markup) -> Markup {
+async fn page(content: Markup) -> Markup {
     html! { html data-theme="dark" {
-        (Head::example().title("Todo"))
+        (Head::example("With Mongo"))
         body."container" hx-target="article" style="margin-top: 16px;" {
             form hx-put="/" _="on htmx:afterRequest reset() me" {
                 label for="task" {"Task description:"}

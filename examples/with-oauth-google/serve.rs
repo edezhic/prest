@@ -1,4 +1,5 @@
 mod oauth;
+use axum_login::AuthUser;
 use oauth::*;
 
 use prest::*;
@@ -22,35 +23,34 @@ pub struct User {
     pub pw_hash: String,
 }
 
-impl AuthUser<u64> for User {
-    fn get_id(&self) -> u64 {
+impl AuthUser for User {
+    type Id = u64;
+    fn id(&self) -> u64 {
         self.id
     }
-    fn get_password_hash(&self) -> SecretVec<u8> {
-        SecretVec::new(self.pw_hash.clone().into())
+    fn session_auth_hash(&self) -> &[u8] {
+        self.pw_hash.as_bytes()
     }
 }
 
-pub type AuthCtx = AuthContext<u64, User, AuthMemoryStore<u64, User>>;
-pub type RequireAuthzLayer = RequireAuthorizationLayer<u64, User>;
-
 fn main() {
     dotenv::dotenv().unwrap();
-    let (auth_svc, session, authn) = init_auth::<u64, User>();
+    //let (auth_svc, session, authn) = init_auth::<u64, User>();
+    todo!("Upgrade to latest axum-login: https://docs.rs/axum-login/latest/axum_login/");
     Router::new()
         .route("/protected", get(html!(h1{"Authorized!"})))
-        .route_layer(RequireAuthzLayer::login()) // routes above this layer require logged-in state
+        //.route_layer(RequireAuthzLayer::login()) // routes above this layer require logged-in state
         .route("/", get(homepage))
-        .merge(auth_svc)
-        .layer(authn)
-        .layer(session)
+        //.merge(auth_svc)
+        //.layer(authn)
+        //.layer(session)
         .serve(ServeOptions::default())
 }
 
 async fn homepage() -> Markup {
     html!(
         html {
-            (Head::example().title("With OAuth"))
+            (Head::example("With Google OAuth"))
             body {
                 h1{"With OAuth"}
                 a href="/oauth/google" {"Click me to initiate Google OAuth flow"}
@@ -60,8 +60,8 @@ async fn homepage() -> Markup {
         }
     )
 }
-
-pub fn init_auth<Id: Hash + Eq + Clone + Send + Sync + 'static, User: AuthUser<Id>>() -> (
+/*
+pub fn init_auth<Id: Hash + Eq + Clone + Send + Sync + 'static, User: AuthUser>() -> (
     Router,
     SessionLayer<SessionMemoryStore>,
     AuthLayer<AuthMemoryStore<Id, User>, Id, User>,
@@ -128,3 +128,4 @@ async fn logout(mut auth: AuthCtx) -> impl IntoResponse {
     }
     Redirect::to("/")
 }
+ */

@@ -11,8 +11,15 @@ use std::borrow::Cow;
 
 /// Derived trait for structs that embed files
 pub trait Embed {
-    fn get(file_path: &str) -> Option<EmbeddedFile>;
     fn iter() -> __Filenames;
+    fn get(file_path: &str) -> Option<EmbeddedFile>;
+    fn get_content(file_path: &str) -> Option<String> {
+        if let Some(file) = Self::get(file_path) {
+            Some(std::str::from_utf8(&file.data).unwrap().to_owned())
+        } else {
+            None
+        }
+    }
 }
 
 /// Convenience trait that generates routes for the embedded files

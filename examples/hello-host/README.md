@@ -1,21 +1,19 @@
-The core server functionality is powered by:
-* `tokio` - general-purpose asynchronous runtime
-* `hyper` - efficient and safe HTTP processor
-* `axum` - flexible middleware and routing
+The core RESTful functionality is powered by [axum](https://github.com/tokio-rs/axum)'s [Router](https://docs.rs/axum/latest/axum/struct.Router.html) - simple and extremely flexible framework to compose routes and middleware that supports static and closure handlers, wildcard paths, nesting, and many other things. Prest adds a couple of utils to it to simplify common host needs: server startup, embedding files, global state. Everything is either exposed, re-exported or used under the hood so that you only need to add a single dependency:
 
-Together they compose a reliable, concurrent and multi-threaded host that can easily handle thousands of requests per second. In prest tokio and hyper usage is hidden inside the `serve` function that is added by prest to the axum's [`Router`](https://docs.rs/axum/latest/axum/struct.Router.html) so that you can focus on your app's logic instead of dealing with the server setup. However, if you want to get low-level control to use a different runtime or apply specific optimizations to a high-load service you can do that without breaking compatability with the rest of prest.
+`/Cargo.toml`
 
-Router is the core RESTful abstraction here and most prest's utils like `serve` are extending it. ...
+{Cargo.toml}
 
-* paths
-* handlers 
-* middleware
-* nesting & merging
-* ?
+While axum has built-in helpers for the state management, they can introduce type-related issues when you're merging and nesting routers as we will do later with shared router for both host and client. So, I recommend using good old rust lazy statics for state variables like DB connections and others, which also have a nice property of having the initializaiton logic right in the declaration. This example showcases the overall structure of a host:
 
-### State 
-Many ways to handle it. My preferrence - global statics
+`/serve.rs`
 
-* axum state - particularly type-safe way but it also adds complexity when working with multiple router
-* axum extractors - less type-safe and less problems
+{serve.rs}
 
+In some cases you might want to have lower-level control - for example to configure proxy or customize the runtime settings. In these cases you can easily import underlying crates directly and use only those prest utils which fit your needs. 
+
+Once you run this host it will compose the router, check out the `PORT` env variable or default to `80` if no value found, connect to the socket and start processing requests. You can check out the root path (with browser default GET method) which returns extracted host and state info, as well as the header added by the middleware. Also, you can check out the `/Cargo.toml` and `/serve.rs` paths for the embedded files.
+
+With these tools you can already embed a bunch of html, css and js assets and get your website started. However, it won't be particularly convenient for development or the users, so let's move on to the next example where we'll explore a way to work with hypermedia without leaving the comfort of rust.
+
+[Next: hello-html](https://prest.blog/hello-html)

@@ -1,45 +1,68 @@
+use markdown::{to_html_with_options, Options};
 use prest::*;
 
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen]
-pub async fn handle_fetch(sw: ServiceWorkerGlobalScope, fe: FetchEvent) {
-    serve(routes(), sw, fe).await
-}
-
-pub fn routes() -> Router {
-    let mut router = Router::new().route("/", get(md_to_html(include_bytes!("../../README.md"))));
-    let mut links = vec![];
-    
-    embed_as!(Examples from "../" only "*.md");
-    for path in Examples::iter() {
+embed_as!(ExamplesCode from "../" only "*.rs", "*.toml");
+embed_as!(ExamplesDocs from "../" only "*.md");
+static READMES: Lazy<Vec<(String, String, String)>> = Lazy::new(|| {
+    let mut examples = vec![];
+    for path in ExamplesDocs::iter() {
+        let path = path.to_string();
         let url = if path.starts_with("blog") {
             "/about".to_owned()
         } else {
-            format!("/{}", &path.trim_end_matches("/README.md"))
+            format!("/{}", path.trim_end_matches("/README.md"))
         };
-        router = router.route(&url, get(md_to_html(&(Examples::get(&path).unwrap().data))));
-
         let label = url.replace("/", "").replace("-", " ");
-        links.push((url, label));
+        examples.push((path, url, label));
     }
-    
-    router.wrap_non_htmx(move |content| page(content, &links))
+    examples
+});
+
+pub fn routes() -> Router {
+    let home_doc = md_to_html(include_str!("../../README.md"));
+    let mut router = Router::new().route("/", get(home_doc));
+    for (path, url, _) in READMES.iter() {
+        router = router.route(&url, get(Html(gen_doc(path))));
+    }
+    router.wrap_non_htmx(page)
 }
 
-fn md_to_html(data: &[u8]) -> String {
-    use markdown::{to_html_with_options, Options};
-    let md = std::str::from_utf8(data).unwrap().to_owned();
+fn gen_doc(doc_path: &str) -> String {
+    let readme = ExamplesDocs::get_content(&doc_path).unwrap();
+    let mut processed = String::new();
+    for line in readme.lines() {
+        // lines like {path} are converted into the contents of path
+        if line.starts_with("{") && line.ends_with("}") {
+            let inline_file = line.replace(['{', '}'], "");
+            let inline_path = format!("{}/{inline_file}", doc_path.trim_end_matches("/README.md"));
+            let code = ExamplesCode::get_content(&inline_path).unwrap();
+            processed += &format!("\n```rust\n{code}\n```\n");
+        } else {
+            processed += line;
+            processed += "\n";
+        }
+    }
+    md_to_html(&processed)
+}
+
+fn md_to_html(str: &str) -> String {
     #[cfg(debug_assertions)]
-    let md = md.replace("https://prest.blog", "http://localhost");
-    to_html_with_options(&md, &Options::gfm()).unwrap()
+    let str = str.replace("https://prest.blog", "http://localhost");
+    to_html_with_options(&str, &Options::gfm()).unwrap()
 }
 
-fn page(content: Markup, links: &Vec<(String, String)>) -> Markup {
-    let hello = links.iter().filter(|(_, label)| label.starts_with("hello"));
-    let into = links.iter().filter(|(_, label)| label.starts_with("into"));
-    let with = links.iter().filter(|(_, label)| label.starts_with("with"));
+async fn page(content: Markup) -> Markup {
+    let hello = READMES
+        .iter()
+        .filter(|(_, _, label)| label.starts_with("hello"));
+    let into = READMES
+        .iter()
+        .filter(|(_, _, label)| label.starts_with("into"));
+    let with = READMES
+        .iter()
+        .filter(|(_, _, label)| label.starts_with("with"));
     html!((DOCTYPE) html data-theme="dark" {
-        (Head::example().title("Prest Blog").css("/styles.css").release_pwa())
+        (Head::example("Prest Blog").css("/styles.css").css("https://unpkg.com/prismjs@1.29.0/themes/prism-tomorrow.min.css"))
         body hx-boost="true" hx-swap="innerHTML transition:true show:window:top" hx-target="main" _="on click remove .visible from #examples-menu" {
             header."top container" {
                 nav style="position:relative; padding:0 16px"{
@@ -52,17 +75,17 @@ fn page(content: Markup, links: &Vec<(String, String)>) -> Markup {
                         }
                         aside #"examples-menu" { ul {
                             li { h6{"step by step"} }
-                            @for (url, label) in hello {
+                            @for (_, url, label) in hello {
                                 li { a href={(url)} {small{(label.trim_start_matches("hello "))}}}
                             }
                             hr{}
                             li { h6{"into"} }
-                            @for (url, label) in into {
+                            @for (_, url, label) in into {
                                 li { a href={(url)} {small{(label.trim_start_matches("into "))}}}
                             }
                             hr{}
                             li { h6{"with"} }
-                            @for (url, label) in with {
+                            @for (_, url, label) in with {
                                 li { a href={(url)} {small{(label.trim_start_matches("with "))}}}
                             }
                             hr{}
@@ -79,7 +102,17 @@ fn page(content: Markup, links: &Vec<(String, String)>) -> Markup {
                     a href="mailto:edezhic@gmail.com" target="_blank" {(PreEscaped(include_str!("assets/email.svg")))}
                 }}
             }
-            (Scripts::default_pwa())
+            (Scripts::default()
+                .include("https://unpkg.com/prismjs@1.29.0/components/prism-core.min.js")
+                .include("https://unpkg.com/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js")
+                .inline("document.addEventListener('htmx:afterSwap', () => Prism.highlightAll())")    
+            )
         }
     })
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub async fn handle_fetch(sw: ServiceWorkerGlobalScope, fe: FetchEvent) {
+    serve(routes(), sw, fe).await
 }
