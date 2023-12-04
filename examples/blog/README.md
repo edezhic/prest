@@ -1,6 +1,6 @@
 Structured like [Hello PWA](https://prest.blog/hello-pwa), served at [prest.blog](https://prest.blog). 
 
-The whole blog (excluding styles which mostly come from `picocss` and `prismjs`) is less than 150 lines of code. Here is the full source code:
+This whole blog source code (excluding css) is less than 150 lines. Here is all of it:
 
 {shared.rs}
 

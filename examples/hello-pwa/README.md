@@ -13,3 +13,5 @@ This examples extends previous ones with [Progressive Web App](https://web.dev/w
 6. Now that everything is compiled cargo simply runs the final binary and you can access it at `http://localhost`. The host will serve a page with the default `Head::pwa()` which includes a lil js snippet to register the service worker and browser will download and activate it automatically. After that it will be able to serve this page offline and will prompt the visitor to install it to create a shortcut and run it in a separate window.
 
 This process may seem a bit convoluted and complex, but I've tried to make it as simple as possible while remaining compatible with usual rust tooling without requiring special CLIs or anything like that. Simplification of this process is a major concern to me so I hope to cut it down even further in the future.
+
+For a bit more complex example check out the source of the blog - it's based on this example's structure and pretty small so should be relatively simple to follow.

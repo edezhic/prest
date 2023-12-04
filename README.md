@@ -42,8 +42,8 @@ Also, there are plenty of [Web APIs](https://fugu-tracker.web.app/) available in
 
 ### roadmap
 This is a hobby project and plans change frequently, but there are things I'd likely work on next:
-+ better docs
++ better docs starting with html and pwa tutorials
 + basic auth/session-management integration
-+ [https://github.com/vidhanio/htmx-types](htmx types)
++ [htmx types](https://github.com/vidhanio/htmx-types)
 + benchmarks: composing routes, starting server, templates, ...
-+ first release 🎉
++ first release
