@@ -1,6 +1,6 @@
 use prest::*;
 
-// Lazily initialized dummy global variable
+// Lazily initialized immutable global variable
 // showcasing how to run async initialization
 static STATE: Lazy<String> = Lazy::new(|| block_on(async { "value".to_owned() }));
 
@@ -20,7 +20,7 @@ fn main() {
         .serve(ServeOptions::default())
 }
 
-// async function that accepts any axum Extractors
+// can accept any axum Extractors as arguments
 async fn handler(Host(host): Host) -> impl IntoResponse {
     format!("host: {host}, state: {}", *STATE)
 }
