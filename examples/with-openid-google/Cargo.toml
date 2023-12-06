@@ -1,0 +1,17 @@
+[package]
+name = "with-openid-google"
+version = "0.0.1"
+edition = "2021"
+
+[[bin]]
+name = "serve"
+path = "./serve.rs"
+
+[dependencies]
+prest = { path = "../../" }
+axum-login = "0.10.2"
+tower-sessions = "0.7.0"
+openidconnect = "3.4.0"
+dotenv = "*"
+serde = "*"
+async-trait = "*"

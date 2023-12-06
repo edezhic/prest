@@ -19,7 +19,7 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 There is also a whole bunch of examples that show how you can use other things with prest:
 
 * all kinds of databases - postgres through [seaorm](https://prest.blog/with-seaorm-postgres) or [diesel](https://prest.blog/with-diesel-postgres), sqlite through [sqlx](https://prest.blog/with-sqlx-sqlite) or [turbosql](https://prest.blog/with-turbosql-sqlite), [mongo](https://prest.blog/with-mongo-driver), [redis](https://prest.blog/with-redis-driver) and even a full rust combo [gluesql + sled](https://prest.blog/with-gluesql-sled)
-* authentication, authorization, user and session management with [OpenID/OAuth](https://prest.blog/with-oauth-google)
+* authentication, authorization, user and session management with [OpenID/OAuth](https://prest.blog/with-openid-google)
 * other templating engines like [Askama](https://prest.blog/with-jinja-askama) which provides Jinja-like syntax
 * compilation and bundling of [SASS/SCSS](https://prest.blog/with-grass-scss), [TypeScript](https://prest.blog/with-swc-typescript) and other sources in the build pipeline
 * extensive and customizable [logging](https://prest.blog/with-tracing-subscriber), efficient concurrent [scraping](https://prest.blog/with-reqwest-scraper), built-in [HTTPS](https://prest.blog/with-rustls-https) encryption
@@ -39,7 +39,6 @@ Also, there are plenty of [Web APIs](https://fugu-tracker.web.app/) available in
 ### roadmap
 This is a hobby project and plans change frequently, but there are things I'd likely work on next:
 + better docs starting with html and pwa tutorials
-+ add view transitions css to default router and Head
-+ basic auth/session-management integration
++ move build utils into a separate crate
 + [htmx types](https://github.com/vidhanio/htmx-types)
 + first release

@@ -44,7 +44,7 @@ wasm-bindgen-cli-support = { version = "0.2.87", optional = true }
 # host deps
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 axum = { version = "0.7.1", default-features = false, features = ["query", "form", "matched-path", "original-uri", "tokio", "http2", "tracing"] }
-tokio = { version = "1.25.0", features = ["rt", "rt-multi-thread", "net"] }
+tokio = { version = "1.25.0", features = ["rt", "rt-multi-thread", "net", "sync"] }
 tower-http = { version = "0.5.0", features = ["trace", "catch-panic", "compression-br", "limit"] }
 tracing-subscriber = { version = "0.3.18", features = ["fmt"] } 
 

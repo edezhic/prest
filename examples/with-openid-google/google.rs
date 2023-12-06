@@ -1,4 +1,4 @@
-use openidconnect::{core::*, *};
+use openidconnect::{reqwest::async_http_client, core::*, *};
 
 pub struct GoogleClient(GoogleOAuthClient);
 
@@ -9,7 +9,7 @@ impl GoogleClient {
         let client_secret = ClientSecret::new(client_secret);
         let issuer_url = IssuerUrl::new("https://accounts.google.com".to_string()).unwrap();
         let provider_metadata =
-            CoreProviderMetadata::discover_async(issuer_url, super::oauth_http_client)
+            CoreProviderMetadata::discover_async(issuer_url, async_http_client)
                 .await
                 .unwrap();
 
@@ -42,7 +42,7 @@ impl GoogleClient {
         let token = self
             .0
             .exchange_code(AuthorizationCode::new(code))
-            .request_async(super::oauth_http_client)
+            .request_async(async_http_client)
             .await
             .expect("valid token response");
 
