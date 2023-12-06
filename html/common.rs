@@ -46,7 +46,7 @@ impl<'a> Default for Head<'a> {
             title: "Prest app",
             viewport: Some("width=device-width, initial-scale=1.0"),
             webmanifest,
-            styles: None,
+            styles: Some(vec!["/default-view-transition.css"]),
             favicon: None,
             theme_color: None,
             other: None,

@@ -1,4 +1,5 @@
 use prest::*;
+
 fn main() {
     Router::new()
         .route("/", get(home))
@@ -8,7 +9,7 @@ fn main() {
 }
 
 async fn home() -> Markup {
-    html!(h1{"Hello world!"})
+    html!(h1{"Homepage content"})
 }
 
 async fn submit(Form(x): Form<String>) {
@@ -19,7 +20,7 @@ async fn wrapper(content: Markup) -> Markup {
     html!(
         (Head::example("Hello HTML"))
         body {
-            main {(content)}
+            main ."view-transition" {(content)}
             footer {"Powered by prest"}
             (Scripts::default())
         }

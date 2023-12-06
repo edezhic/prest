@@ -56,11 +56,14 @@ mod host {
     use tokio::{runtime::Runtime, net::TcpListener};
     use tower_http::{catch_panic::CatchPanicLayer, limit::RequestBodyLimitLayer, trace::TraceLayer, compression::CompressionLayer};
     
+    embed_as!(Assets from "assets" only "*.css");
+
     /// Configuration for the server
     pub struct ServeOptions {
         pub addr: SocketAddr,
         pub request_body_limit: usize,
-        pub log_filter: LevelFilter
+        pub log_filter: LevelFilter,
+        pub embed_default_assets: bool,
     
     }
     impl Default for ServeOptions {
@@ -73,7 +76,8 @@ mod host {
             Self {
                 addr: SocketAddr::from(([0, 0, 0, 0], port)),
                 request_body_limit: 1000000,
-                log_filter: LevelFilter::DEBUG
+                log_filter: LevelFilter::DEBUG,
+                embed_default_assets: true,
             }
         }
     }
@@ -96,6 +100,10 @@ mod host {
                 .layer(RequestBodyLimitLayer::new(opts.request_body_limit))
                 .layer(CompressionLayer::new())
                 .layer(TraceLayer::new_for_http());
+            
+            if opts.embed_default_assets {
+                self = self.embed(Assets)
+            }
             
             self = self.layer(host_services);
                 

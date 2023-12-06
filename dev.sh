@@ -1,0 +1,1 @@
+cargo watch -x 'run -p blog' --clear
