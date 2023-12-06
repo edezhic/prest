@@ -1,4 +1,3 @@
-use crate::{find_target_dir, out_path, RELEASE};
 use std::{
     env, format as f,
     fs::{read_to_string, rename, write},
@@ -47,20 +46,20 @@ impl Default for PWAOptions<'_> {
 
 const SW_TARGET: &str = "service-worker";
 
-static LOGO: &[u8] = include_bytes!("assets/logo.png");
+static LOGO: &[u8] = include_bytes!("../assets/logo.png");
 
 static LISTENER_TEMPLATE: &str = "self.addEventListener('NAME', event => LISTENER);\n";
 
 pub fn build_pwa(opts: PWAOptions) {
-    if env::var("SELF_PWA_BUILD").is_ok() || (opts.release_only && !RELEASE) {
+    if env::var("SELF_PWA_BUILD").is_ok() || (opts.release_only && cfg!(debug_assertions)) {
         return;
     }
     let start = Instant::now();
     let lib_name = &read_lib_name();
     let target_dir = sw_target_dir();
-    let profile_dir = match RELEASE {
-        true => "release",
-        false => "debug",
+    let profile_dir = match cfg!(debug_assertions) {
+        true => "debug",
+        false => "release",
     };
     let profile_path = &f!("{target_dir}/wasm32-unknown-unknown/{profile_dir}");
     let lib_path = &f!("{profile_path}/{lib_name}");
@@ -117,7 +116,7 @@ pub fn build_pwa(opts: PWAOptions) {
 }
 
 fn gen_manifest(opts: PWAOptions) -> String {
-    let mut manifest = webmanifest::Manifest::builder(&opts.name)
+    let mut manifest = Manifest::builder(&opts.name)
         .description(&opts.desc)
         .bg_color(&opts.background)
         .theme_color(&opts.theme)
@@ -153,4 +152,48 @@ fn sw_target_dir() -> String {
     } else {
         "target/".to_owned() + SW_TARGET
     }
+}
+
+/// Utility that attempts to find the path of the current build's target path
+pub fn find_target_dir() -> Option<String> {
+    use std::{path::PathBuf, ffi::OsStr};
+    if let Some(target_dir) = std::env::var_os("CARGO_TARGET_DIR") {
+        let target_dir = PathBuf::from(target_dir);
+        if target_dir.is_absolute() {
+            if let Some(str) = target_dir.to_str() {
+                return Some(str.to_owned());
+            } else {
+                return None;
+            }
+        } else {
+            return None;
+        };
+    }
+
+    let mut dir = PathBuf::from(out_path(""));
+    loop {
+        if dir.join(".rustc_info.json").exists()
+            || dir.join("CACHEDIR.TAG").exists()
+            || dir.file_name() == Some(OsStr::new("target"))
+                && dir
+                    .parent()
+                    .map_or(false, |parent| parent.join("Cargo.toml").exists())
+        {
+            if let Some(str) = dir.to_str() {
+                return Some(str.to_owned());
+            } else {
+                return None;
+            }
+        }
+        if dir.pop() {
+            continue;
+        }
+        return None;
+    }
+}
+
+/// Utility for composition of paths to build artifacts
+pub fn out_path(filename: &str) -> String {
+    let dir = std::env::var("OUT_DIR").unwrap();
+    format!("{dir}/{filename}")
 }

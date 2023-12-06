@@ -11,7 +11,7 @@ Yes. Initial motivation comes from [Rust](https://www.rust-lang.org/) itself - a
 Docs below assume that you're familiar with Rust. If you aren't yet check out [The Rust Book](https://doc.rust-lang.org/book/) - definitely the best guide with interactive examples which is also available in dozens of languages. Also, I strongly recommend checking out the first three chapters of the [async book](https://rust-lang.github.io/async-book/) to understand how async/await work in rust. Then you can proceed with these basic examples:
 
 1. [Host](https://prest.blog/hello-host) - setting up the server
-2. [HTML](https://prest.blog/hello-html) - adding an interface to it
+2. [HTML](https://prest.blog/hello-html) - adding an interface
 3. [PWA](https://prest.blog/hhelo-pwa) - making UI [installable](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable)
 
 To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/). Most examples are supported on [replit](https://replit.com/) so you can [fork it there](https://replit.com/@eDezhic/prest) and run in the cloud. It includes [rust-analyzer](https://rust-analyzer.github.io/) and I recommend it for local development as well. Some examples require additional setup which is described in their readmes. To build & start them use `cargo run -p EXAMPLE-NAME`

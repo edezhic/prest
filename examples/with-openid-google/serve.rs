@@ -1,23 +1,21 @@
 mod google;
 use google::GoogleClient;
 
-use axum_login::{AuthUser, AuthnBackend, UserId, AuthManagerLayerBuilder, login_required};
+use axum_login::{login_required, AuthManagerLayerBuilder, AuthUser, AuthnBackend, UserId};
+use openidconnect::{CsrfToken, Nonce};
 use prest::*;
 use std::{collections::HashMap, env};
 use tower_sessions::{MemoryStore, Session, SessionManagerLayer};
-use openidconnect::{CsrfToken, Nonce};
 
 static GCLIENT: OnceCell<GoogleClient> = OnceCell::const_new();
 async fn gclient() -> &'static GoogleClient {
-    GCLIENT.get_or_init(|| async {
-        let client_id = env::var("GOOGLE_CLIENT_ID").unwrap();
-        let client_secret = env::var("GOOGLE_CLIENT_SECRET").unwrap();
-        GoogleClient::init(
-            "http://localhost",
-            client_id,
-            client_secret,
-        ).await
-    }).await
+    GCLIENT
+        .get_or_init(|| async {
+            let client_id = env::var("GOOGLE_CLIENT_ID").unwrap();
+            let client_secret = env::var("GOOGLE_CLIENT_SECRET").unwrap();
+            GoogleClient::init("http://localhost", client_id, client_secret).await
+        })
+        .await
 }
 
 type Email = String;
@@ -60,10 +58,7 @@ impl AuthnBackend for Backend {
         Ok(self.users.get(&email).cloned())
     }
 
-    async fn get_user(
-        &self,
-        user_id: &UserId<Self>,
-    ) -> Result<Option<Self::User>, Self::Error> {
+    async fn get_user(&self, user_id: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
         Ok(self.users.get(user_id).cloned())
     }
 }
@@ -71,19 +66,22 @@ impl AuthnBackend for Backend {
 fn main() {
     dotenv::dotenv().unwrap();
 
-    let admin_email = env::var("ADMIN_EMAIL").expect("Add an ADMIN_EMAIL env variable for a default user");
+    let admin_email =
+        env::var("ADMIN_EMAIL").expect("Add an ADMIN_EMAIL env variable for a default user");
     let mut backend = Backend::default();
-    backend.users.insert(admin_email.clone(), User { email: admin_email });
+    backend
+        .users
+        .insert(admin_email.clone(), User { email: admin_email });
 
     let session_store = MemoryStore::default();
     let session_manager_layer = SessionManagerLayer::new(session_store);
-    
+
     let auth_service = ServiceBuilder::new()
         .layer(HandleErrorLayer::new(|_: BoxError| async {
             StatusCode::BAD_REQUEST
         }))
         .layer(AuthManagerLayerBuilder::new(backend, session_manager_layer).build());
- 
+
     Router::new()
         .route("/protected", get(html!(h1{"Authorized!"})))
         .route_layer(login_required!(Backend, login_url = "/oauth/google"))
@@ -144,7 +142,7 @@ async fn callback(
     let Ok(Some(user)) = auth.authenticate((query.code, nonce)).await else {
         panic!("no user!")
     };
-    
+
     auth.login(&user).await.unwrap();
 
     Redirect::to("/protected").into_response()
@@ -156,4 +154,3 @@ async fn logout(mut auth: AuthSession) -> impl IntoResponse {
     }
     Redirect::to("/")
 }
-

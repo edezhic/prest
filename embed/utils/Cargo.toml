@@ -1,5 +1,5 @@
 [package]
-name = "embed-utils"
+name = "prest-embed-utils"
 version = "8.0.0"
 edition = "2021"
 

@@ -1,3 +1,4 @@
+#![allow(warnings)]
 use prest::*;
 use hyper_server::tls_rustls::RustlsConfig;
 use std::net::SocketAddr;

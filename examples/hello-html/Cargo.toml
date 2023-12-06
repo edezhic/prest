@@ -9,3 +9,4 @@ path = "./serve.rs"
 
 [dependencies]
 prest = { path = "../../" }
+serde = { version = "*", features=["derive"] }

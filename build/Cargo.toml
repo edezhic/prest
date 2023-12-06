@@ -1,0 +1,19 @@
+[package]
+name = "prest-build"
+description = "Progressive RESTful framework build utils"
+version = "0.1.0"
+edition = "2021"
+resolver = "2" 
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/edezhic/prest"
+repository = "https://github.com/edezhic/prest"
+keywords = ["fullstack", "progressive", "RESTful", "PWA"]
+categories = ["development-tools", "wasm", "web-programming"]
+
+[lib]
+path = "./lib.rs"
+
+[dependencies]
+toml = "0.8.1"
+webmanifest = "1.1.1"
+wasm-bindgen-cli-support = "0.2.87"

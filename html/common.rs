@@ -38,9 +38,9 @@ impl<'a> Head<'a> {
 
 impl<'a> Default for Head<'a> {
     fn default() -> Self {
-        let webmanifest = match RELEASE {
-            true => Some("/.webmanifest"),
-            false => None,
+        let webmanifest = match cfg!(debug_assertions) {
+            true => None,
+            false => Some("/.webmanifest"),
         };
         Self {
             title: "Prest app",
@@ -112,7 +112,7 @@ impl<'a> Default for Scripts<'a> {
             "https://unpkg.com/hyperscript.org@0.9.11",
         ]);
         Self {
-            register_sw: RELEASE,
+            register_sw: cfg!(debug_assertions),
             others,
             inlines: None,
         }

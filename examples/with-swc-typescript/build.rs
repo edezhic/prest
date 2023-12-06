@@ -1,4 +1,5 @@
-use prest::{out_path, Error};
+use prest_build::out_path;
+use anyhow::Error;
 use std::{collections::HashMap, sync::Arc};
 
 fn main() {

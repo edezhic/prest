@@ -1,3 +1,4 @@
+use prest_build::*;
 fn main() {
-    prest::build_pwa(prest::PWAOptions::default());
+    build_pwa(PWAOptions::default());
 }

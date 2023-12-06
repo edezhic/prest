@@ -11,6 +11,6 @@ path = "./serve.rs"
 prest = { path = "../../" }
 
 [build-dependencies]
-prest = { path = "../../" }
+prest-build = { path = "../../build/" }
 grass = { version = "0.13.1", default-features = false }
 

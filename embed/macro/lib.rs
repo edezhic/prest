@@ -17,8 +17,8 @@ fn embedded(
     includes: &[String],
     excludes: &[String],
 ) -> syn::Result<TokenStream2> {
-    extern crate embed_utils;
-    use embed_utils::*;
+    extern crate prest_embed_utils;
+    use prest_embed_utils::*;
 
     let mut match_values = BTreeMap::new();
     let mut list_values = Vec::<String>::new();
@@ -235,7 +235,7 @@ fn embed_file(
     _rel_path: &str,
     full_canonical_path: &str,
 ) -> syn::Result<TokenStream2> {
-    let file = embed_utils::read_file_from_fs(Path::new(full_canonical_path))
+    let file = prest_embed_utils::read_file_from_fs(Path::new(full_canonical_path))
         .expect("File should be readable");
     let hash = file.metadata.sha256_hash();
     let last_modified = match file.metadata.last_modified() {

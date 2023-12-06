@@ -94,7 +94,7 @@ async fn page(content: Markup) -> Markup {
                     }
                 }
             }
-            main."container slide-transition" style="padding:16px" {(content)}
+            main."container view-transition" style="padding:16px" {(content)}
             footer."container" style="padding:24px" {
                 small{i{"Made by Egor Dezhic"
                     a href="https://twitter.com/eDezhic" target="_blank" {(PreEscaped(include_str!("assets/twitter.svg")))}

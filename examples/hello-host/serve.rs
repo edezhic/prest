@@ -1,14 +1,13 @@
 use prest::*;
 
-// Lazily initialized immutable global variable
-// showcasing how to run async initialization
-static STATE: Lazy<String> = Lazy::new(|| block_on(async { "value".to_owned() }));
+// dommy lazily initialized global variable
+static STATE: Lazy<String> = Lazy::new(|| "value".to_owned());
 
-// Utility macro that embeds files from path into a struct
+// utility macro that embeds files from path into a struct
 embed_as!(ExampleFiles from ".");
 
 fn main() {
-    // Initializing a new router
+    // initializing a new router
     Router::new()
         // assigning a handler to the GET method of a route
         .route("/", get(handler))
@@ -26,7 +25,7 @@ async fn handler(Host(host): Host) -> impl IntoResponse {
 }
 
 // itermediate processing of requests/responses
-async fn middleware(req: Request, next: Next) -> Response {
+async fn middleware(req: Request, next: Next) -> impl IntoResponse {
     let req_uri = req.uri().to_string();
     let mut response = next.run(req).await;
     response

@@ -15,16 +15,15 @@ name = "prest"
 path = "./lib.rs"
 
 [workspace]
-members = ["examples/*", "html/macro", "embed/macro", "embed/utils"]
+members = ["build", "html/macro", "embed/macro", "embed/utils", "examples/*"]
 
 [features]
-build-pwa = ["toml", "wasm-bindgen-cli-support", "webmanifest"]
-lazy-embed = ["embed-macro/lazy-embed", "embed-utils/lazy-embed"]
+lazy-embed = ["prest-embed-macro/lazy-embed", "prest-embed-utils/lazy-embed"]
 
 [dependencies]
-html-macro = { path = "html/macro" }
-embed-macro = { path = "embed/macro"}
-embed-utils = { path = "embed/utils"}
+prest-html-macro = { path = "html/macro" }
+prest-embed-macro = { path = "embed/macro"}
+prest-embed-utils = { path = "embed/utils"}
 anyhow = "1.0.75"
 async-trait = "0.1.67"
 itoa = "1.0.5"
@@ -35,11 +34,6 @@ tower = "0.4.13"
 futures = "0.3"
 once_cell = "1.18"
 walkdir = "2.3.2"
-
-# build deps:
-toml = { version = "0.8.1", optional = true }
-webmanifest = { version = "1.1.1", optional = true }
-wasm-bindgen-cli-support = { version = "0.2.87", optional = true }
 
 # host deps
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

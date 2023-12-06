@@ -5,6 +5,7 @@
 mod html;
 mod embed;
 
+// for macro-generated code
 pub(crate) use crate as prest;
 
 pub use anyhow::{self, Error, Result, bail, anyhow as anyway};
@@ -20,10 +21,10 @@ pub use axum::{
     http::{self, Uri, header, HeaderMap, HeaderValue, StatusCode}
 };
 pub use embed::*;
-pub use embed_macro::Embed;
-pub use embed_utils::*;
+pub use prest_embed_macro::Embed;
+pub use prest_embed_utils::*;
 pub use html::*;
-pub use html_macro::html;
+pub use prest_html_macro::html;
 pub use futures::{executor::block_on, stream::{StreamExt, TryStreamExt}};
 pub use tower::{self, Layer, Service, ServiceBuilder, BoxError};
 pub use once_cell::sync::Lazy;
@@ -34,20 +35,9 @@ pub const DOCTYPE: PreEscaped<&'static str> = PreEscaped("<!DOCTYPE html>");
 /// Default javascript code that registers a service worker from `/sw.js`
 pub const REGISTER_SW_SNIPPET: &str = 
     "if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {type: 'module'});";
-/// TODO
-pub const RELEASE: bool = cfg!(not(debug_assertions));
 
-/// Utility for composition of paths to build artifacts
-pub fn out_path(filename: &str) -> String {
-    let dir = std::env::var("OUT_DIR").unwrap();
-    format!("{dir}/{filename}")
-}
 
-#[cfg(feature = "build-pwa")]
-mod build_pwa;
-#[cfg(feature = "build-pwa")]
-pub use build_pwa::*;
-
+/// Utils for the host
 #[cfg(not(target_arch = "wasm32"))]
 mod host {
     pub use tokio::sync::OnceCell;
@@ -119,45 +109,132 @@ mod host {
 #[cfg(not(target_arch = "wasm32"))]
 pub use host::*;
 
+/// Utils for the service worker
 #[cfg(target_arch = "wasm32")]
-mod sw;
-#[cfg(target_arch = "wasm32")]
-pub use sw::*;
+mod service_worker {
+    use super::*;
+    pub use console_error_panic_hook::set_once as set_panic_hook;
+    use js_sys::{Array, Reflect, Set, Uint8Array, Promise};
+    pub use web_sys::{FetchEvent, ServiceWorkerGlobalScope, console};
+    use wasm_bindgen::{JsCast, JsValue};
 
-/// Utility that attempts to find the path of the current build's target path
-pub fn find_target_dir() -> Option<String> {
-    use std::{path::PathBuf, ffi::OsStr};
-    if let Some(target_dir) = std::env::var_os("CARGO_TARGET_DIR") {
-        let target_dir = PathBuf::from(target_dir);
-        if target_dir.is_absolute() {
-            if let Some(str) = target_dir.to_str() {
-                return Some(str.to_owned());
-            } else {
-                return None;
+    pub use wasm_bindgen::prelude::wasm_bindgen;
+
+    /// Process request to the same host using the router and respond if status < 400
+    pub async fn serve(mut router: Router, sw: ServiceWorkerGlobalScope, event: FetchEvent) {
+        set_panic_hook();
+        
+        let host = &sw.location().host();
+        
+        let request = fetch_into_axum_request(&event).await;
+        // process only requests to our host
+        if request.uri().host() != Some(host) {
+            return;
+        }
+
+        // pass the request to the router
+        let response = match router.call(request).await {
+            Ok(res) => res,
+            Err(e) => {
+                #[cfg(debug_assertions)]
+                console::log_3(&"SW error while processing ".into(), &event.request(), &format!(" : {:?}", e).into());
+                return 
             }
-        } else {
-            return None;
         };
+        
+        if response.status().as_u16() >= 400 {    
+            return
+        }
+        
+        let response = axum_response_to_websys(response);
+        let promise = wasm_bindgen_futures::future_to_promise(response);
+        event.respond_with(&promise).unwrap();
     }
 
-    let mut dir = PathBuf::from(out_path(""));
-    loop {
-        if dir.join(".rustc_info.json").exists()
-            || dir.join("CACHEDIR.TAG").exists()
-            || dir.file_name() == Some(OsStr::new("target"))
-                && dir
-                    .parent()
-                    .map_or(false, |parent| parent.join("Cargo.toml").exists())
-        {
-            if let Some(str) = dir.to_str() {
-                return Some(str.to_owned());
-            } else {
-                return None;
+    pub async fn fetch_into_axum_request(fetch_event: &web_sys::FetchEvent) -> http::Request<Body> {
+        let fetch_request = fetch_event.request();
+
+        // initialize a new request builder with method and url
+        let mut request = http::request::Builder::new()
+            .method(fetch_request.method().as_str())
+            .uri(fetch_request.url());
+
+        // collect web_sys::Headers items into the request
+        let headers = Set::new(&fetch_request.headers()).entries();
+        while let Ok(item) = headers.next() {
+            if Reflect::get(&item, &JsValue::from("done"))
+                .unwrap()
+                .is_truthy()
+            {
+                break;
+            }
+            let pair = Reflect::get(&item, &JsValue::from("value"))
+                .unwrap()
+                .unchecked_into::<Array>()
+                .at(0)
+                .unchecked_into::<Array>();
+            let (key, value) = (
+                pair.at(0).as_string().unwrap(),
+                pair.at(1).as_string().unwrap(),
+            );
+            request = request.header(key, value);
+        }
+
+        let Some(stream) = fetch_request.body() else {
+            return request.body(Body::empty()).unwrap()
+        };
+        let stream = stream
+            .get_reader()
+            .unchecked_into::<web_sys::ReadableStreamDefaultReader>();
+        let mut buf = vec![];
+        // collect js body stream into a buffer
+        while let Ok(item) = wasm_bindgen_futures::JsFuture::from(stream.read()).await {
+            let done = Reflect::get(&item, &JsValue::from("done"))
+                .unwrap()
+                .is_truthy();
+            let mut data = Reflect::get(&item, &JsValue::from("value"))
+                .unwrap()
+                .unchecked_into::<Uint8Array>()
+                .to_vec();
+            buf.append(&mut data);
+            if done {
+                break;
             }
         }
-        if dir.pop() {
-            continue;
+        request.body(Body::from(buf)).unwrap()
+    }
+
+    pub async fn axum_response_to_websys(response: http::Response<Body>) -> Result<JsValue, JsValue> {
+        // init web_sys::Headers
+        let websys_response_headers = web_sys::Headers::new()?;
+        // collect http::HeaderMap into web_sys::Headers
+        for (name, value) in response.headers() {
+            let Ok(value) = std::str::from_utf8(value.as_bytes()) else { continue };
+            websys_response_headers
+                .append(name.as_str(), value)
+                .unwrap();
         }
-        return None;
+        // init web_sys::ResponseInit (~= http::response::Parts)
+        let mut parts = web_sys::ResponseInit::new();
+        parts
+            .headers(&websys_response_headers)
+            .status(response.status().as_u16());
+
+        // collect axum::Body into a buffer
+        let body = response.into_body();
+        let mut buf = Vec::with_capacity(body.size_hint().lower() as usize);
+        let mut body_stream = body.into_data_stream();
+        while let Some(chunk) = body_stream.next().await {
+            bytes::BufMut::put(&mut buf, chunk.unwrap());
+        }
+        let body = Some(buf.as_mut_slice());
+
+        // initialize web_sys::Response with body and parts
+        let websys_response = web_sys::Response::new_with_opt_u8_array_and_init(body, &parts)?;
+
+        // convert into JsValue
+        Ok(websys_response.into())
     }
 }
+#[cfg(target_arch = "wasm32")]
+pub use service_worker::*;

@@ -17,4 +17,4 @@ wasm-bindgen = "*"
 wasm-bindgen-futures = "*"
 
 [build-dependencies]
-prest = { path = "../../", features = ["build-pwa"] }
+prest-build = { path = "../../build/" }

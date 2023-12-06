@@ -1,5 +1,5 @@
 [package]
-name = "embed-macro"
+name = "prest-embed-macro"
 version = "8.0.0"
 edition = "2021"
 
@@ -8,7 +8,7 @@ path = "lib.rs"
 proc-macro = true
 
 [dependencies]
-embed-utils = { path = "../utils" }
+prest-embed-utils = { path = "../utils" }
 syn = { version = "2", default-features = false, features = ["derive", "parsing", "proc-macro", "printing"] }
 quote = "1"
 proc-macro2 = "1"
