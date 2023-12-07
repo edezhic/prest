@@ -1,3 +1,5 @@
 builds into a [WASI](https://github.com/bytecodealliance/wasmtime/blob/main/docs/WASI-intro.md)-powered host
 
-WASI is an interesting idea, but if you can compile into it most likely you can compile into musl and devops benefits would diminish while performance will degrade. 
+WASI is an interesting yet controversial idea. If you can compile into it most likely you can compile into musl and devops benefits would diminish while performance will degrade. For example, [AssemblyScript objects](https://www.assemblyscript.org/standards-objections.html) to the inclusion of the WASI (and the underlying Component Model) standards into the WebAssembly spec with pretty solid argumentation.
+
+How it will play out in the future? I don't know. As of now I don't see much benefits of choosing WASI over musl. WASI modules still require permission management somewhat like containers. While musl is only for linux and WASI is cross-platform, https://github.com/jart/cosmopolitan can solve this problem(https://twitter.com/JustineTunney/status/1719991825711120803?t=pUn2m7srGPzrj4NTW6J-0w&s=19) in a much more efficient way. In some sense WASI is trying to reinvent too many wheels and building compatability with the new ones instead of improving the old ones seems like a questionable idea.

@@ -4,6 +4,7 @@ use crate::*;
 pub struct Head<'a> {
     title: &'a str,
     styles: Option<Vec<&'a str>>,
+    stylesheets: Option<Vec<&'a str>>,
     favicon: Option<&'a str>,
     webmanifest: Option<&'a str>,
     viewport: Option<&'a str>,
@@ -21,10 +22,18 @@ impl<'a> Head<'a> {
         self
     }
     pub fn css(mut self, path: &'a str) -> Self {
-        if let Some(styles) = &mut self.styles {
-            styles.push(path)
+        if let Some(stylesheets) = &mut self.stylesheets {
+            stylesheets.push(path)
         } else {
-            self.styles = Some(vec![path]);
+            self.stylesheets = Some(vec![path]);
+        }
+        self
+    }
+    pub fn style(mut self, style: &'a str) -> Self {
+        if let Some(styles) = &mut self.styles {
+            styles.push(style)
+        } else {
+            self.styles = Some(vec![style]);
         }
         self
     }
@@ -46,7 +55,8 @@ impl<'a> Default for Head<'a> {
             title: "Prest app",
             viewport: Some("width=device-width, initial-scale=1.0"),
             webmanifest,
-            styles: Some(vec!["/default-view-transition.css"]),
+            styles: None,
+            stylesheets: Some(vec!["/default-view-transition.css"]),
             favicon: None,
             theme_color: None,
             other: None,
@@ -63,8 +73,11 @@ impl<'a> Render for Head<'a> {
                 @if let Some(href) = self.webmanifest { link rel="manifest" href=(href) {} }
                 @if let Some(viewport) = self.viewport { meta name="viewport" content=(viewport); }
                 @if let Some(color) = self.theme_color { meta name="theme-color" content=(color); }
-                @if let Some(stylesheets) = self.styles.clone() { @for stylesheet in stylesheets {
+                @if let Some(stylesheets) = self.stylesheets.clone() { @for stylesheet in stylesheets {
                     link href={(stylesheet.clone())} rel="stylesheet" {}
+                }}
+                @if let Some(styles) = self.styles.clone() { @for style in styles {
+                    style {(style)}
                 }}
                 @if let Some(markup) = self.other.clone() {(markup)}
             }

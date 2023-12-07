@@ -24,7 +24,7 @@ async fn handler(Host(host): Host) -> impl IntoResponse {
     format!("host: {host}, state: {}", *STATE)
 }
 
-// itermediate processing of requests/responses
+// intermediate processing of requests/responses
 async fn middleware(req: Request, next: Next) -> impl IntoResponse {
     let req_uri = req.uri().to_string();
     let mut response = next.run(req).await;
