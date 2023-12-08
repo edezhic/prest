@@ -40,5 +40,4 @@ While rust allows working with native bindings on any platform, prest is mostly 
 ### what's next
 This is a hobby project and plans change frequently, but there are things I'd likely work on or consider next:
 + fill in examples' readmes
-+ check out [htmx types](https://github.com/vidhanio/htmx-types) and maybe re-export/fork
 + cut the first release and switch examples to use it
