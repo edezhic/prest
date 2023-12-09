@@ -8,5 +8,5 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../" }
-askama = "*"
+prest = "0.1"
+askama = "0.12.1"

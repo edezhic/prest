@@ -1,7 +1,7 @@
 use markdown::{to_html_with_options, Options};
 use prest::*;
 
-embed_as!(ExamplesCode from "../" only "*.rs", "*.toml");
+embed_as!(ExamplesCode from "../" only "*.rs", "*.toml", "*.scss", "*.ts", "*.html", "*.sql");
 embed_as!(ExamplesDocs from "../" only "*.md");
 static READMES: Lazy<Vec<(String, String, String)>> = Lazy::new(|| {
     let mut examples = vec![];
@@ -36,7 +36,17 @@ fn gen_doc(doc_path: &str) -> String {
             let inline_file = line.replace(['{', '}'], "");
             let inline_path = format!("{}/{inline_file}", doc_path.trim_end_matches("/README.md"));
             let code = ExamplesCode::get_content(&inline_path).unwrap();
-            processed += &format!("\n```rust\n{code}\n```\n");
+            let code_type = match &inline_file {
+                f if f.ends_with(".rs") => "rust",
+                f if f.ends_with(".toml") => "toml",
+                f if f.ends_with(".scss") => "scss",
+                f if f.ends_with(".html") => "html",
+                f if f.ends_with(".sql") => "sql",
+                f if f.ends_with(".ts") => "typescript",
+                _ => ""
+            };
+            processed += &format!("`/{inline_file}`\n");
+            processed += &format!("\n```{code_type}\n{code}\n```\n");
         } else {
             processed += line;
             processed += "\n";

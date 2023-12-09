@@ -7,7 +7,7 @@ use prest::*;
 
 const DB_URL: &str = "mongodb://localhost:27017";
 
-static COLLECTION: Lazy<Collection<Todo>> = Lazy::new(|| {
+static TODOS: Lazy<Collection<Todo>> = Lazy::new(|| {
     let opts = block_on(ClientOptions::parse(DB_URL)).unwrap();
     let client = Client::with_options(opts).unwrap();
     let db = client.database("todosdb");
@@ -29,8 +29,13 @@ fn main() {
         .route(
             "/",
             get(|| async {
-                let cursor = COLLECTION.find(None, None).await.unwrap();
-                let todos: Vec<Todo> = cursor.try_collect().await.unwrap();
+                let todos: Vec<Todo> = TODOS
+                    .find(None, None)
+                    .await
+                    .unwrap()
+                    .try_collect()
+                    .await
+                    .unwrap();
                 html!(@for todo in todos {(todo)})
             })
             .put(|Form(Todo { task, .. }): Form<Todo>| async move {
@@ -39,18 +44,18 @@ fn main() {
                     task,
                     done: false,
                 };
-                COLLECTION.insert_one(new_todo, None).await.unwrap();
+                TODOS.insert_one(new_todo, None).await.unwrap();
                 Redirect::to("/")
             })
             .patch(|Form(Todo { uuid, done, .. }): Form<Todo>| async move {
-                COLLECTION
+                TODOS
                     .update_one(doc! {"uuid": uuid}, doc! {"$set": {"done": !done}}, None)
                     .await
                     .unwrap();
                 Redirect::to("/")
             })
             .delete(|Form(Todo { uuid, .. }): Form<Todo>| async move {
-                COLLECTION
+                TODOS
                     .delete_one(doc! {"uuid": uuid}, None)
                     .await
                     .unwrap();

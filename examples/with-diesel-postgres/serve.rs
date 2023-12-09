@@ -1,65 +1,74 @@
 pub mod models;
 pub mod schema;
 
-use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use diesel_async::{
+    pooled_connection::{deadpool::Pool, AsyncDieselConnectionManager},
+    AsyncPgConnection, RunQueryDsl,
+};
 use dotenvy::dotenv;
+use models::Todo;
 use prest::*;
 use schema::todos::dsl::*;
-use models::Todo;
 use std::env;
 
-fn establish_connection() -> PgConnection {
-    dotenv().ok();
+static DB_POOL: Lazy<Pool<AsyncPgConnection>> = Lazy::new(|| {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
-}
+    let config = AsyncDieselConnectionManager::<AsyncPgConnection>::new(database_url);
+    Pool::builder(config).build().unwrap()
+});
 
 fn main() {
+    dotenv().ok();
     Router::new()
         .route(
             "/",
-            get(|| async {html!(@for todo in get_todos() {(todo)})})
-                .patch(|Form(todo): Form<Todo>| async move { toggle_todo(todo).render() })
-                .put(|Form(todo): Form<Todo>| async move { add_todo(todo).render() })
-                .delete(|Form(todo): Form<Todo>| async move { delete_todo(todo); }),
+            get(|| async { html!(@for todo in get_todos().await {(todo)}) })
+                .patch(toggle_todo)
+                .put(add_todo)
+                .delete(delete_todo),
         )
         .wrap_non_htmx(page)
         .serve(ServeOptions::default())
 }
 
-fn get_todos() -> Vec<Todo> {
-    let con = &mut establish_connection();
+async fn get_todos() -> Vec<Todo> {
+    let mut con = DB_POOL.get().await.unwrap();
     todos
         .select(Todo::as_select())
-        .load(con)
-        .expect("Error loading todos")
+        .load(&mut con)
+        .await
+        .expect("successful select query")
 }
 
-fn toggle_todo(todo: Todo) -> Todo {
-    let con = &mut establish_connection();
+async fn toggle_todo(Form(todo): Form<Todo>) -> Markup {
+    let mut con = DB_POOL.get().await.unwrap();
     diesel::update(todos.find(todo.uuid))
         .set(done.eq(!todo.done))
         .returning(Todo::as_returning())
-        .get_result(con)
-        .unwrap()
+        .get_result(&mut con)
+        .await
+        .expect("successful update query")
+        .render()
 }
 
-fn add_todo(todo: Todo) -> Todo {
-    let con = &mut establish_connection();
+async fn add_todo(Form(todo): Form<Todo>) -> Markup {
+    let mut con = DB_POOL.get().await.unwrap();
     diesel::insert_into(todos)
         .values(&todo)
         .returning(Todo::as_returning())
-        .get_result(con)
-        .expect("Error adding new todo")
+        .get_result(&mut con)
+        .await
+        .expect("successful insert query")
+        .render()
 }
 
-fn delete_todo(todo: Todo) {
-    let con = &mut establish_connection();
+async fn delete_todo(Form(todo): Form<Todo>) {
+    let mut con = DB_POOL.get().await.unwrap();
     diesel::delete(todos.filter(uuid.eq(todo.uuid)))
-        .execute(con)
-        .expect("Error deleting posts");
+        .execute(&mut con)
+        .await
+        .expect("successful delete query");
 }
 
 impl Render for Todo {

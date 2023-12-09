@@ -7,3 +7,4 @@ target_sw
 sled_db
 .DS_Store
 migrations.toml
+commands.sh

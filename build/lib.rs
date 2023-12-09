@@ -46,7 +46,7 @@ impl Default for PWAOptions<'_> {
 
 const SW_TARGET: &str = "service-worker";
 
-static LOGO: &[u8] = include_bytes!("../assets/logo.png");
+static LOGO: &[u8] = include_bytes!("default-logo.png");
 
 static LISTENER_TEMPLATE: &str = "self.addEventListener('NAME', event => LISTENER);\n";
 

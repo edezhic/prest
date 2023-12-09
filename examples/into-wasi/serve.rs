@@ -27,5 +27,5 @@ fn main() {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
-    print!("This example expects wasm32-wasi compilation target!");
+    panic!("This example expects wasm32-wasi compilation target!");
 }

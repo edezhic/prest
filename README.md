@@ -18,7 +18,7 @@ Here are the onboarding examples to the core features of prest:
 
 1. [Hello Host](https://prest.blog/hello-host) - setting up the server
 2. [Hello HTML](https://prest.blog/hello-html) - adding an interface
-3. [Hello PWA](https://prest.blog/hhelo-pwa) - making UI [installable](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable)
+3. [Hello PWA](https://prest.blog/hello-pwa) - making UI [installable](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable)
 
 There is also a whole bunch of examples of how you can use prest with other things:
 
@@ -39,5 +39,7 @@ While rust allows working with native bindings on any platform, prest is mostly 
 
 ### what's next
 This is a hobby project and plans change frequently, but there are things I'd likely work on or consider next:
-+ fill in examples' readmes
-+ cut the first release and switch examples to use it
++ session management integration
++ better blockchain examples
++ cut down swc example
++ fix rustls example

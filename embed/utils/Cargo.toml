@@ -1,7 +1,9 @@
 [package]
 name = "prest-embed-utils"
-version = "8.0.0"
+version = "0.1.0"
 edition = "2021"
+description = "fork of embed utils from rust-embed"
+license = "MIT OR Apache-2.0"
 
 [lib]
 path = "lib.rs"

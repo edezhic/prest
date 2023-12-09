@@ -1,5 +1,5 @@
 use prest::*;
-use candle::{Tensor, Device, DType};
+use candle_core::{Tensor, Device, DType};
 use candle_transformers::{
     generation::LogitsProcessor, 
     models::quantized_mistral::{Config as QMistralCfg, Model as QMistral},

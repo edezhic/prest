@@ -44,13 +44,16 @@ async fn get_todos() -> Vec<Todo> {
 }
 
 fn main() {
-    let _migration = exec(
+    // migration
+    exec(
         table(TODOS)
             .create_table_if_not_exists()
             .add_column("uuid UUID PRIMARY KEY")
             .add_column("task TEXT NOT NULL")
             .add_column("done BOOLEAN NOT NULL"),
-    );
+    )
+    .unwrap();
+
     Router::new()
         .route(
             "/",

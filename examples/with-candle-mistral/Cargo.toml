@@ -8,12 +8,10 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../" }
-serde = "*"
-tokio = { version = "*", features = ["sync"] }
+prest = "0.1"
+serde = { version = "1", features = ["derive"] }
 
-hf-hub = "0.3.0"
-tokenizers = { version = "0.13.4", default-features = false }
-candle = { git = "https://github.com/huggingface/candle", package = "candle-core" }
-candle-datasets = { git = "https://github.com/huggingface/candle" }
-candle-transformers = { git = "https://github.com/huggingface/candle" }
+hf-hub = "0.3"
+tokenizers = "0.15"
+candle-core = "0.3"
+candle-transformers = "0.3"

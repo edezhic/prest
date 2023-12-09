@@ -1,6 +1,6 @@
 [package]
 name = "blog"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2021"
 
 [lib]
@@ -12,12 +12,12 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../" }
-markdown = "1.0.0-alpha.14"
+prest = "0.1"
+markdown = "1.0.0-alpha.16"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = "*"
-wasm-bindgen-futures = "*"
+wasm-bindgen = "0.2.89"
+wasm-bindgen-futures = "0.4.39"
 
 [build-dependencies]
-prest-build = { path = "../../build/" }
+prest-build = "0.1"

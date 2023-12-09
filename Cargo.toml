@@ -21,9 +21,9 @@ members = ["build", "html/macro", "embed/macro", "embed/utils", "examples/*"]
 lazy-embed = ["prest-embed-macro/lazy-embed", "prest-embed-utils/lazy-embed"]
 
 [dependencies]
-prest-html-macro = { path = "html/macro" }
-prest-embed-macro = { path = "embed/macro"}
-prest-embed-utils = { path = "embed/utils"}
+prest-html-macro = { path = "html/macro", version = "0.1.0" }
+prest-embed-macro = { path = "embed/macro", version = "0.1.0" }
+prest-embed-utils = { path = "embed/utils", version = "0.1.0" }
 
 anyhow = "1.0.75"
 async-trait = "0.1.67"

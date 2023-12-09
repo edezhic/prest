@@ -1,6 +1,5 @@
 use prest::*;
 use std::{process::Command, sync::Arc};
-use tokio::sync::Mutex;
 
 static NODE: Lazy<Arc<Mutex<std::process::Child>>> = Lazy::new(|| {
     println!("Starting the node...");

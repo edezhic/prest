@@ -8,9 +8,9 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../" }
+prest = "0.1"
 
 [build-dependencies]
-prest-build = { path = "../../build/" }
+prest-build = "0.1"
 grass = { version = "0.13.1", default-features = false }
 

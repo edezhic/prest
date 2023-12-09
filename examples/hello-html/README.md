@@ -2,12 +2,10 @@ Prest respects [HATEOAS](https://htmx.org/essays/hateoas/) constraint of the RES
 
 Cargo manifest is almost the same except we add a new dependency - [serde](https://serde.rs/), go-to serialization and deserialization library in the rust ecosystem. It's not re-exported from prest because app-level code is mostly using it's macros which are painful to re-export without forking, but almost every rust app has it among dependencies so I'd suggest getting used to having it in every project: 
 
-`/Cargo.toml`
 {Cargo.toml}
 
 In this example we'll use the `html!` macro for templating forked from [maud](https://github.com/lambda-fairy/maud) to improve compatability, as well as [htmx](https://htmx.org/) for reactivity and [hyperscript](https://hyperscript.org/) to sprinkle a bit more interactivity. It's a pretty simple service that showcases how you can set up client<->server communication with shared layout, partial rendering, decent styles and some animations:
 
-`/serve.rs`
 {serve.rs}
 
 Router has only one route but two handlers for GET and POST request methods: on get it simply returns static markup, while on post it deserializes the form data according to the `FormInputs` structure and returns a message that depends on the received value. Also, router includes `wrap_non_htmx` middleware which takes a function that it will use to modify response content based on special http header that htmx adds to it's requests.

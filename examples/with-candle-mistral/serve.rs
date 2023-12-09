@@ -1,6 +1,6 @@
-mod llm;
 use prest::*;
-use tokio::sync::Mutex;
+
+mod llm;
 
 static LLM: Lazy<Arc<Mutex<llm::Mistral>>> = Lazy::new(|| { 
     println!("Initiating a model...");

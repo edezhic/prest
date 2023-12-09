@@ -2,6 +2,8 @@ Structured like [Hello PWA](https://prest.blog/hello-pwa), served at [prest.blog
 
 This whole blog source code (excluding css) is less than 150 lines. Here is all of it:
 
+{Cargo.toml}
+
 {shared.rs}
 
 {serve.rs}

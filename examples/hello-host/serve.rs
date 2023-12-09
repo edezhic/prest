@@ -1,6 +1,6 @@
 use prest::*;
 
-// dommy lazily initialized global variable
+// dummy lazily initialized global variable
 static STATE: Lazy<String> = Lazy::new(|| "value".to_owned());
 
 // utility macro that embeds files from path into a struct

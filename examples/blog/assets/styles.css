@@ -5,6 +5,19 @@ code {
   padding: 0.15rem 0.5rem !important;
   font-size: 16px !important;
 }
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+p:has(+ pre) {
+  margin-top: 16px;
+  margin-bottom: 0px;
+  padding-left: 20px;
+  background: none;
+
+  code {
+    background: none;
+  }
+}
 svg {
   color: #bbb;
   margin: 0 0.5rem 1px;

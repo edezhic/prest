@@ -40,7 +40,7 @@ pub const REGISTER_SW_SNIPPET: &str =
 /// Utils for the host
 #[cfg(not(target_arch = "wasm32"))]
 mod host {
-    pub use tokio::sync::OnceCell;
+    pub use tokio::sync::{OnceCell, Mutex, RwLock};
     use super::*;
     use std::net::SocketAddr;
     use tower::ServiceBuilder;
