@@ -8,5 +8,6 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../" }
-wry = "*"
+prest = "0.1"
+wry = "0.35"
+tao = { version = "0.24", default-features = false, features = [ "rwh_05" ] }

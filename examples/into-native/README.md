@@ -1,6 +1,6 @@
 In general rust supports plenty of compilation targets including desktops, servers, mobile and wasm. So, the future of cross-compilation to build the same codebase for all the major consumer platforms is pretty bright. However, in prest this is not a priority and left as a last resort for cases where web capabilities cannot cover or even emulate some native apis - sometimes early product seems simple enough and you might not see a need for direct access to android or ios apis, but later on there might be some shiny new features on platforms or in your app that you'll want to use. So, it's pretty good to have such an option and prest should at least remain compatible with such integrations.
 
-In such cases you can build a client-side app based on platforms' built-in webviews as native packages for desktops and [mobile](https://github.com/tauri-apps/wry/blob/dev/MOBILE.md) using [WRY](https://github.com/tauri-apps/wry):
+In such cases you can build a client-side app based on platforms' built-in webviews as native packages for desktops and [mobile](https://github.com/tauri-apps/wry/blob/dev/MOBILE.md) using [WRY](https://github.com/tauri-apps/wry) and [TAO](https://github.com/tauri-apps/tao):
 
 {Cargo.toml}
 

@@ -1,12 +1,10 @@
 use prest::*;
-use wry::{
-    application::{
-        event::{Event, WindowEvent},
-        event_loop::{ControlFlow, EventLoop},
-        window::WindowBuilder,
-    },
-    webview::WebViewBuilder,
+use tao::{
+    event::{Event, WindowEvent},
+    event_loop::{ControlFlow, EventLoop},
+    window::WindowBuilder,
 };
+use wry::WebViewBuilder;
 
 fn main() -> Result<()> {
     std::thread::spawn(|| {
@@ -19,7 +17,7 @@ fn main() -> Result<()> {
     let window = WindowBuilder::new()
         .with_title("Hello world!")
         .build(&event_loop)?;
-    let _webview = WebViewBuilder::new(window)?
+    let _webview = WebViewBuilder::new(&window)
         .with_url("http://localhost")?
         .build()?;
 

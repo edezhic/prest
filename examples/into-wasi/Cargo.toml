@@ -8,7 +8,7 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../" }
+prest = "0.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 tokio_wasi = { version = "1", features = ["rt", "macros", "net", "time", "io-util"] }

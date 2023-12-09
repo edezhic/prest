@@ -8,5 +8,5 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../" }
-serde = { version = "*", features=["derive"] }
+prest = "0.1"
+serde = { version = "1", features=["derive"] }

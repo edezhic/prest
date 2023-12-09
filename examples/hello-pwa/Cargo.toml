@@ -12,9 +12,9 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../" }
-wasm-bindgen = "*"
-wasm-bindgen-futures = "*"
+prest = "0.1"
+wasm-bindgen = "0.2.89"
+wasm-bindgen-futures = "0.4.39"
 
 [build-dependencies]
-prest-build = { path = "../../build/" }
+prest-build = "0.1"

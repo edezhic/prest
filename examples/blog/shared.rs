@@ -2,6 +2,7 @@ use markdown::{to_html_with_options, Options};
 use prest::*;
 
 embed_as!(ExamplesCode from "../" only "*.rs", "*.toml", "*.scss", "*.ts", "*.html", "*.sql");
+
 embed_as!(ExamplesDocs from "../" only "*.md");
 static READMES: Lazy<Vec<(String, String, String)>> = Lazy::new(|| {
     let mut examples = vec![];

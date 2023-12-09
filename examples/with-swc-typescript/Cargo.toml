@@ -12,7 +12,7 @@ prest = "0.1"
 
 [build-dependencies]
 prest-build = "0.1"
-anyhow = "*"
+anyhow = "1"
 swc = "0.266.32"
 swc_atoms = "0.5.9"
 swc_bundler = { version = "0.220.25", features = ["concurrent"] }

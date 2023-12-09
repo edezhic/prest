@@ -64,7 +64,7 @@ impl AuthnBackend for Backend {
 }
 
 fn main() {
-    dotenv::dotenv().unwrap();
+    dotenvy::dotenv().unwrap();
 
     let admin_email =
         env::var("ADMIN_EMAIL").expect("Add an ADMIN_EMAIL env variable for a default user");

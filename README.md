@@ -39,7 +39,9 @@ While rust allows working with native bindings on any platform, prest is mostly 
 
 ### what's next
 This is a hobby project and plans change frequently, but there are things I'd likely work on or consider next:
++ improve in-code docs
 + session management integration
 + better blockchain examples
 + cut down swc example
 + fix rustls example
++ fix replit compatability
