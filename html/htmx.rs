@@ -90,7 +90,8 @@ where
                     bytes::BufMut::put(&mut buf, chunk);
                 }
                 let content = std::string::String::from_utf8(buf).unwrap();
-                let content = wrapper(PreEscaped(content)).await;
+                let content_future = wrapper(PreEscaped(content));
+                let content = content_future.await;
                 let body = Body::from(content.0);
                 let response = Response::from_parts(parts, body);
                 Ok(response)
@@ -103,50 +104,3 @@ where
         })
     }
 }
-/*
-impl<S, F, MF> Service<Request<Body>> for HtmxMiddleware<S, F>
-where
-    S: Service<Request<Body>, Response = Response> + Send + 'static,
-    S::Future: Send + 'static,
-    F: Fn(Markup) -> MF,
-    MF: Future<Output = Markup> + Send + Clone + 'static
-{
-    type Response = S::Response;
-    type Error = S::Error;
-    type Future = futures::future::BoxFuture<'static, Result<Self::Response, Self::Error>>;
-
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.inner.poll_ready(cx)
-    }
-
-    fn call(&mut self, request: Request<Body>) -> Self::Future {
-        let not_htmx_request = request.headers().get("HX-Request").is_none();
-        let future = self.inner.call(request);
-        let wrapper = self.wrapper.clone();
-        Box::pin(async move {
-            let (mut parts, mut body) = future.await?.into_parts();
-            parts
-                .headers
-                .insert(header::CONTENT_TYPE, HeaderValue::from_static("text/html"));
-            
-            if not_htmx_request {
-                parts.headers.remove(header::CONTENT_LENGTH);
-                let mut buf = Vec::with_capacity(body.size_hint().lower() as usize);
-                while let Some(chunk) = body.data().await {
-                    bytes::BufMut::put(&mut buf, chunk.unwrap());
-                }
-                let content = std::string::String::from_utf8(buf).unwrap();
-                let content = wrapper(PreEscaped(content));
-                let body = Body::from(content.0);
-                let response = Response::from_parts(parts, body);
-                Ok(response)
-            } else {
-                parts
-                    .headers
-                    .insert(header::CACHE_CONTROL, HeaderValue::from_static("max-age=0, no-cache, must-revalidate, proxy-revalidate"));
-                Ok(Response::from_parts(parts, body))
-            }
-        })
-    }
-}
- */
