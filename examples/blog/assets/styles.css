@@ -8,7 +8,7 @@ code {
 blockquote p:last-child {
   margin-bottom: 0;
 }
-p:has(+ pre) {
+p:has(> code):has(+ pre) {
   margin-top: 16px;
   margin-bottom: 0px;
   padding-left: 20px;

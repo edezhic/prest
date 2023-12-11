@@ -4,7 +4,7 @@ The core RESTful functionality is powered by [axum](https://github.com/tokio-rs/
 
 While axum has built-in helpers for the state management, they can introduce type-related issues when you're merging and nesting routers as we will do later with shared router for both host and client. So, I recommend using good old rust statics for state variables like DB connections and others, which also have a nice property of having the initializaiton logic right in the declaration. This example showcases the basic structure of the prest host:
 
-{serve.rs}
+{src/main.rs}
 
 Once started it will compose the router, attempt to get the `PORT` env variable or default to `80`, set up common middleware for tracing, compression and limiting request bodies, connect to the socket and start processing requests. You can check out the root path (`/`) which returns the extracted host and state info, as well as the header added by the middleware. Also, you can check out the `/Cargo.toml` and `/serve.rs` paths of the running app to see the contents of the embedded files.
 

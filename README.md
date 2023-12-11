@@ -1,4 +1,11 @@
-**P**rogressive **REST**ful framework that simplifies app development. Its still in early active development and recommended only for personal projects, experimentation and rust/web dev learning. The docs are in the [blog](https://prest.blog/) which is also [made with prest](https://prest.blog/about).
+**P**rogressive **REST**ful framework that simplifies app development. Its still in early active development and recommended only for personal projects, experimentation and rust/web dev learning. The docs are in the [blog](https://prest.blog/) which is also [made with prest](https://prest.blog/about). Quick peek into prest's hello world:
+
+```rust
+use prest::*;
+fn main() {
+    Router::new().route("/", get("Hello world")).serve(Default::default())
+}
+```
 
 ### yet another framework?
 
@@ -12,15 +19,15 @@ However, rust requires some understanding of low-level details which are *somewh
 
 Prest docs assume that you're familiar with rust. If you aren't yet check out [The Rust Book](https://doc.rust-lang.org/book/) - definitely the best guide with interactive examples (available in dozens of languages!). Also, I strongly recommend skimming through the first three chapters of the [async book](https://rust-lang.github.io/async-book/) to get an overall understanding how concurrency works in rust. 
 
-To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/). Most examples are supported on [replit](https://replit.com/) so you can [fork it there](https://replit.com/@eDezhic/prest) and run in the cloud. It can run [rust-analyzer](https://rust-analyzer.github.io/) and I recommend it for local development as well. To build & start any example use `cargo run -p EXAMPLE-NAME` on the forked prest repo or just copy the selected example's code and `cargo run`. Some examples require additional setup which is described in their readmes.
-
 Here are the onboarding examples to the core features of prest:
 
 1. [Hello Host](https://prest.blog/hello-host) - setting up the server
 2. [Hello HTML](https://prest.blog/hello-html) - adding an interface
 3. [Hello PWA](https://prest.blog/hello-pwa) - making UI [installable](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable)
 
-There is also a whole bunch of examples of how you can use prest with other things:
+To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/). Many examples are also supported on [replit](https://replit.com/) so you can [fork it there](https://replit.com/@eDezhic/prest-app) and run in the cloud without any setup. It runs [rust-analyzer](https://rust-analyzer.github.io/) and I recommend it for local development as well. To build & start any example from the forked prest repo use `cargo run -p EXAMPLE-NAME`, or just copy the selected example's code from the blog and `cargo run` it. Some examples require additional setup which is described in their docs.
+
+Some of the examples that showcase how to use prest with other things:
 
 * different databases - postgres through [seaorm](https://prest.blog/with-seaorm-postgres) or [diesel](https://prest.blog/with-diesel-postgres), sqlite through [sqlx](https://prest.blog/with-sqlx-sqlite) or [turbosql](https://prest.blog/with-turbosql-sqlite), [mongo](https://prest.blog/with-mongo-driver), [redis](https://prest.blog/with-redis-driver) and even a full rust combo [gluesql + sled](https://prest.blog/with-gluesql-sled)
 * authentication, user and session management with [Google OpenID/OAuth](https://prest.blog/with-openid-google)
@@ -28,7 +35,7 @@ There is also a whole bunch of examples of how you can use prest with other thin
 * other templating engines like [Askama](https://prest.blog/with-jinja-askama) which provides Jinja-like syntax
 * even [Large Language Models](https://prest.blog/with-candle-mistral) and [blockchain Smart Contracts](https://prest.blog/with-substrate-contract)!
 
-You can compile a prest app [into a native binary](https://prest.blog/into-native), for example if you need access to system APIs or want to distribute as a binary, and you can compile the host [into WebAssembly with a system interface](https://prest.blog/into-wasi). You can even combine the best of both worlds and [create portable wasi binaries](https://github.com/dylibso/hermit). The range of possibilities is so wide that only C and C++ can exceed it, but rust provides much better development and maintenance experience in most cases. To be fair the rust ecosystem is relatively young, but it's growing fast and already has a suprisingly large and diverse set of stable libraries.
+You can also compile prest apps [into native binaries](https://prest.blog/into-native) if you need access to system APIs or want to distribute as a file, and you can compile the host [into WebAssembly with a system interface](https://prest.blog/into-wasi). You can even combine the best of both worlds and [create portable wasi binaries](https://github.com/dylibso/hermit). The range of possibilities is so wide that only C and C++ can exceed it, but rust provides much better development and maintenance experience in most cases. To be fair the rust ecosystem is relatively young, but it's growing fast and already has a suprisingly large and diverse set of stable libraries.
 
 ### under the hood
 Prest itself is a relatively thin wrapper around a whole bunch of rust libs, and it is intended to stay that way for the foreseeable future to enable frequent major changes. The initial goal is to come up with a simple interface over an extendable foundation with reasonable defaults. So, its existance is only possible thanks to a number of brilliant projects which you can find among the [prest's dependencies](https://github.com/edezhic/prest/blob/main/Cargo.toml) and mentions in the docs.
@@ -39,9 +46,8 @@ While rust allows working with native bindings on any platform, prest is mostly 
 
 ### what's next
 This is a hobby project and plans change frequently, but there are things I'd likely work on or consider next:
-+ improve in-code docs
 + session management integration
-+ better blockchain examples
++ better blockchain example
 + cut down swc example
 + fix rustls example
-+ fix replit compatability
++ set up auto deploy and publish

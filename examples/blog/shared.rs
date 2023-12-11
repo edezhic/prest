@@ -2,7 +2,6 @@ use markdown::{to_html_with_options, Options};
 use prest::*;
 
 embed_as!(ExamplesCode from "../" only "*.rs", "*.toml", "*.scss", "*.ts", "*.html", "*.sql");
-
 embed_as!(ExamplesDocs from "../" only "*.md");
 static READMES: Lazy<Vec<(String, String, String)>> = Lazy::new(|| {
     let mut examples = vec![];
@@ -22,16 +21,18 @@ static READMES: Lazy<Vec<(String, String, String)>> = Lazy::new(|| {
 pub fn routes() -> Router {
     let home_doc = md_to_html(include_str!("../../README.md"));
     let mut router = Router::new().route("/", get(home_doc));
-    for (path, url, _) in READMES.iter() {
-        router = router.route(&url, get(Html(gen_doc(path))));
+    for (doc_path, url, _) in READMES.iter() {
+        let raw_doc = ExamplesDocs::get_content(&doc_path).unwrap();
+        let processed = preprocess_md(raw_doc, &doc_path);
+        let doc_html =  md_to_html(&processed);
+        router = router.route(&url, get(Html(doc_html)));
     }
     router.wrap_non_htmx(page)
 }
 
-fn gen_doc(doc_path: &str) -> String {
-    let readme = ExamplesDocs::get_content(&doc_path).unwrap();
+fn preprocess_md(raw_doc: String, doc_path: &str) -> String {
     let mut processed = String::new();
-    for line in readme.lines() {
+    for line in raw_doc.lines() {
         // lines like {path} are converted into the contents of path
         if line.starts_with("{") && line.ends_with("}") {
             let inline_file = line.replace(['{', '}'], "");
@@ -53,7 +54,7 @@ fn gen_doc(doc_path: &str) -> String {
             processed += "\n";
         }
     }
-    md_to_html(&processed)
+    processed
 }
 
 fn md_to_html(str: &str) -> String {
