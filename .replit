@@ -4,24 +4,12 @@ hidden = ["target"]
 [packager]
 language = "rust"
 
-[packager.features]
-packageSearch = true
-
 [nix]
 channel = "unstable"
 
 [gitHubImport]
 requiredFiles = [".replit", "replit.nix"]
 
-[languages]
-
-[languages.rust]
-pattern = "**/*.rs"
-
-#[languages.rust.languageServer]
-#start = "rust-analyzer"
-
 [deployment]
 run = ["sh", "-c", "chmod +x ./_temp_deployment/serve && ./_temp_deployment/serve"]
-#build = ["sh", "-c", "cargo build -p blog"]
 deploymentTarget = "cloudrun"
