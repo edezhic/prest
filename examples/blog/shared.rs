@@ -1,7 +1,7 @@
 use markdown::{to_html_with_options, Options};
 use prest::*;
 
-embed_as!(ExamplesCode from "../" only "*.rs", "*.toml", "*.scss", "*.ts", "*.html", "*.sql");
+embed_as!(ExamplesCode from "../" only "*.rs", "*.toml", "*.css", "*.scss", "*.ts", "*.html", "*.sql");
 embed_as!(ExamplesDocs from "../" only "*.md");
 static READMES: Lazy<Vec<(String, String, String)>> = Lazy::new(|| {
     let mut examples = vec![];
@@ -41,6 +41,7 @@ fn preprocess_md(raw_doc: String, doc_path: &str) -> String {
             let code_type = match &inline_file {
                 f if f.ends_with(".rs") => "rust",
                 f if f.ends_with(".toml") => "toml",
+                f if f.ends_with(".css") => "css",
                 f if f.ends_with(".scss") => "scss",
                 f if f.ends_with(".html") => "html",
                 f if f.ends_with(".sql") => "sql",
@@ -106,7 +107,7 @@ async fn page(content: Markup) -> Markup {
                     }
                 }
             }
-            main."container view-transition" style="padding:16px" {(content)}
+            main."container view-transition" hx-history-elt style="padding:16px" {(content)}
             footer."container" style="padding:24px" {
                 small{i{"Made by Egor Dezhic"
                     a href="https://twitter.com/eDezhic" target="_blank" {(PreEscaped(include_str!("assets/twitter.svg")))}

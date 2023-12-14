@@ -25,7 +25,7 @@ Common navigation header, head tag and other surrounding things remain in place 
 
 Another big thing common in FE development is state management. You can generally split every solution in 2 pieces: state storage and change signals. HATEOAS principle - *Hypermedia As The Engine Of Application State* suggests to use html itself as the current state of the app. You already have it and it's easy to observe, debug etc. Also, html has a built-in mechanism to signal that something happened - [DOM events](https://en.wikipedia.org/wiki/DOM_event), and both htmx and hyperscript have exceptional tools to work with built-in ones and to create your own.
 
-For styles in this and other examples I rely on [picocss](https://picocss.com/) (which is included by the `Head::example()`) because it's extremely simple and minimalistic. But you are free to use any css frameworks/libraries like [Tailwind](https://tailwindcss.com/) or it's no-build [Twind](https://twind.dev/) version, [Material UI](https://www.muicss.com/), SCSS or anything else.
+For styles in this and other examples I rely on [picocss](https://picocss.com/) (which is included by the `Head::example()`) because it's extremely simple and minimalistic. But you are free to use any css frameworks/libraries like [Tailwind](https://tailwindcss.com/) or it's no-build [Twind](https://twind.dev/) version, [Material UI](https://www.muicss.com/), [SCSS](https://prest.blog/with-grass-scss) or anything else.
 
 Now we have a powerful server and a pretty smooth UI, while most of our code is html templates. With a database and a few other details that will be good enough for a lot of projects. But let's make a step further and make our interface installable so it feels like a native app.
 

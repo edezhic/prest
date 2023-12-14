@@ -47,7 +47,8 @@ mod host {
     use tracing_subscriber::{layer::SubscriberExt, filter::LevelFilter, util::SubscriberInitExt};
     use tokio::{runtime::Runtime, net::TcpListener};
     use tower_http::{catch_panic::CatchPanicLayer, limit::RequestBodyLimitLayer, trace::TraceLayer, compression::CompressionLayer};
-    
+    use tower_livereload::LiveReloadLayer;
+
     embed_as!(Assets from "assets" only "*.css");
 
     /// Configuration for the server
@@ -89,9 +90,12 @@ mod host {
 
             let host_services = ServiceBuilder::new()
                 .layer(CatchPanicLayer::new())
-                .layer(RequestBodyLimitLayer::new(opts.request_body_limit))
                 .layer(CompressionLayer::new())
+                .layer(RequestBodyLimitLayer::new(opts.request_body_limit))
                 .layer(TraceLayer::new_for_http());
+
+            #[cfg(debug_assertions)]
+            let host_services = host_services.layer(LiveReloadLayer::new());
             
             if opts.embed_default_assets {
                 self = self.embed(Assets)

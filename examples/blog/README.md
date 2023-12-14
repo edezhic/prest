@@ -1,6 +1,6 @@
 Structured like [Hello PWA](https://prest.blog/hello-pwa), served at [prest.blog](https://prest.blog). 
 
-This whole blog source code (excluding css) is less than 150 lines. Here is all of it:
+This whole blog source code is around 150 lines of rust + 60 lines of css. Here is all of it:
 
 {Cargo.toml}
 
@@ -9,3 +9,5 @@ This whole blog source code (excluding css) is less than 150 lines. Here is all 
 {serve.rs}
 
 {build.rs}
+
+{assets/styles.css}
