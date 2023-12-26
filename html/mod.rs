@@ -4,16 +4,15 @@
 //! - added utils for common HTML elements: head, scripts
 //! - native axum support and removed support for other frameworks
 
-mod escape;
 mod common;
+mod escape;
 pub use common::*;
 mod htmx;
 pub use htmx::*;
 
 use crate::*;
-use std::{borrow::Cow, boxed::Box, string::String, sync::Arc};
 use core::fmt::{self, Arguments, Display, Write};
-
+use std::{borrow::Cow, boxed::Box, string::String, sync::Arc};
 
 /// Wrapper of a buffer that escapes HTML chars when it is written using [`fmt::Write`]
 pub struct Escaper<'a>(&'a mut String);
@@ -109,7 +108,7 @@ macro_rules! impl_render_with_display {
             impl Render for $ty {
                 fn render_to(&self, w: &mut String) {
                     // TODO: remove the explicit arg when Rust 1.58 is released
-                    format_args!("{self}", self = self).render_to(w);
+                    format_args!("{self}").render_to(w);
                 }
             }
         )*

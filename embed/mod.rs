@@ -1,9 +1,9 @@
 //! Fork of [rust-embed](https://github.com/pyrossh/rust-embed) adjusted to be used in prest. Thanks to Peter John <pyros2097@gmail.com> and other contributors!
-//! Changes in the API: 
+//! Changes in the API:
 //! - Implemented `.embed` function for the axum Router that adds routes to the embedded files
-//! - Added shorthand macros for embedding: `embed_as` and `embed_build_output_as` 
+//! - Added shorthand macros for embedding: `embed_as` and `embed_build_output_as`
 //! - `interpolate-folder-path` and `include-exclude` are enabled without additional features
-//! - `compression` feature is removed because RAM and cold starts are more important than disk space for most prest use cases 
+//! - `compression` feature is removed because RAM and cold starts are more important than disk space for most prest use cases
 //! - Derive macro is renamed RustEmbed -> Embed
 
 use crate::*;
@@ -32,7 +32,7 @@ impl EmbedRoutes for Router {
         for path in T::iter() {
             self = self.route(
                 &format!("/{path}"),
-                get(|headers: HeaderMap| async move { file_handler::<T>(&path, headers) })
+                get(|headers: HeaderMap| async move { file_handler::<T>(&path, headers) }),
             )
         }
         self
@@ -53,12 +53,16 @@ fn file_handler<T: Embed + ?Sized>(path: &str, headers: HeaderMap) -> Response {
     Response::builder()
         .header(header::ETAG, asset_etag)
         .header(header::CONTENT_TYPE, asset.metadata.mimetype())
+        .header(
+            header::CACHE_CONTROL,
+            "max-age=3600, stale-while-revalidate=86400, stale-if-error=604800",
+        )
         .body(Body::from(asset.data))
         .unwrap()
 }
 
 /// Shorthand to embed build artifacts like PWA assets and others
-/// 
+///
 /// Usage: `embed_build_output_as!(StructName);`
 #[macro_export]
 macro_rules! embed_build_output_as {

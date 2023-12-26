@@ -125,7 +125,7 @@ impl<'a> Default for Scripts<'a> {
             "https://unpkg.com/hyperscript.org@0.9.11",
         ]);
         Self {
-            register_sw: cfg!(debug_assertions),
+            register_sw: !cfg!(debug_assertions),
             others,
             inlines: None,
         }
