@@ -304,9 +304,9 @@ fn impl_rust_embed(ast: &syn::DeriveInput) -> syn::Result<TokenStream2> {
     let mut folder_paths = find_attribute_values(ast, "folder");
     if folder_paths.len() != 1 {
         return Err(syn::Error::new_spanned(
-      ast,
-      "Embed must contain one attribute like this #[folder = \"examples/public/\"]",
-    ));
+            ast,
+            "Embed must contain one attribute like this #[folder = \"examples/public/\"]",
+        ));
     }
     let folder_path = folder_paths.remove(0);
 

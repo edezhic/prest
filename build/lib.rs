@@ -156,7 +156,7 @@ fn sw_target_dir() -> String {
 
 /// Utility that attempts to find the path of the current build's target path
 pub fn find_target_dir() -> Option<String> {
-    use std::{path::PathBuf, ffi::OsStr};
+    use std::{ffi::OsStr, path::PathBuf};
     if let Some(target_dir) = std::env::var_os("CARGO_TARGET_DIR") {
         let target_dir = PathBuf::from(target_dir);
         if target_dir.is_absolute() {

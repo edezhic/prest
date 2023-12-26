@@ -15,7 +15,7 @@ use proc_macro_error::proc_macro_error;
 use quote::quote;
 
 /// Compose HTML templates right inside of Rust code with ease.
-/// 
+///
 /// As of now it is identical to the original so check out the [maud book](https://maud.lambda.xyz/) for details
 #[proc_macro]
 #[proc_macro_error]
