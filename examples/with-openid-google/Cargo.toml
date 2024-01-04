@@ -1,6 +1,5 @@
 [package]
 name = "with-openid-google"
-version = "0.0.1"
 edition = "2021"
 
 [[bin]]
@@ -8,10 +7,9 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = "0.1"
+prest = { path = "../../" }
 axum-login = "0.10.2"
 tower-sessions = "0.7.0"
 openidconnect = "3.4.0"
-dotenvy = "0.15.7"
 serde = { version = "1", features = ["derive"] }
 async-trait = "0.1.74"

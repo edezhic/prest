@@ -13,14 +13,17 @@ pub struct Head<'a> {
 }
 
 impl<'a> Head<'a> {
+    /// Add custom markup to the [`Head`]
     pub fn with(mut self, other: Markup) -> Self {
         self.other = Some(other);
         self
     }
+    /// Set title in the [`Head`]
     pub fn title(mut self, title: &'a str) -> Self {
         self.title = title;
         self
     }
+    /// Add stylesheet link to the [`Head`] 
     pub fn css(mut self, path: &'a str) -> Self {
         if let Some(stylesheets) = &mut self.stylesheets {
             stylesheets.push(path)
@@ -29,6 +32,7 @@ impl<'a> Head<'a> {
         }
         self
     }
+    /// Add inline css to the [`Head`]
     pub fn style(mut self, style: &'a str) -> Self {
         if let Some(styles) = &mut self.styles {
             styles.push(style)
@@ -41,7 +45,8 @@ impl<'a> Head<'a> {
     pub fn example(title: &'a str) -> Self {
         Self::default()
             .title(title)
-            .css("https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css")
+            //.css("https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css")
+            .css("https://cdn.jsdelivr.net/npm/daisyui@4.5.0/dist/full.min.css")
     }
 }
 
@@ -79,6 +84,7 @@ impl<'a> Render for Head<'a> {
                 @if let Some(styles) = self.styles.clone() { @for style in styles {
                     style {(style)}
                 }}
+                script src="https://cdn.tailwindcss.com?plugins=typography" defer {}
                 @if let Some(markup) = self.other.clone() {(markup)}
             }
         )
@@ -121,8 +127,8 @@ impl<'a> Scripts<'a> {
 impl<'a> Default for Scripts<'a> {
     fn default() -> Self {
         let others = Some(vec![
-            "https://unpkg.com/htmx.org@1.9.0",
-            "https://unpkg.com/hyperscript.org@0.9.11",
+            "https://unpkg.com/htmx.org@1.9.10",
+            //"https://unpkg.com/hyperscript.org@0.9.11",
         ]);
         Self {
             register_sw: !cfg!(debug_assertions),

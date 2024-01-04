@@ -2,4 +2,4 @@ Showcasing probably the easiest library that allows using local sqlite instance 
 
 {Cargo.toml}
 
-{serve.rs}
+{src/main.rs}

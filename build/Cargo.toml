@@ -16,4 +16,4 @@ path = "./lib.rs"
 [dependencies]
 toml = "0.8.1"
 webmanifest = "1.1.1"
-wasm-bindgen-cli-support = "0.2.87"
+wasm-bindgen-cli-support = "0.2.89"

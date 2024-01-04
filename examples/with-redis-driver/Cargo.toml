@@ -1,14 +1,9 @@
 [package]
 name = "with-redis-driver"
-version = "0.0.1"
 edition = "2021"
 
-[[bin]]
-name = "serve"
-path = "./serve.rs"
-
 [dependencies]
-prest = "0.1"
+prest = { path = "../../" }
 redis = "0.23.3"
 uuid = { version = "1.6", features = ["v4"] }
 serde = { version = "1", features = ["derive"] }

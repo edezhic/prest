@@ -1,10 +1,9 @@
 use prest::*;
 
 fn main() {
-    Router::new()
-        .route("/", get(home).post(submit))
+    route("/", get(home).post(submit))
         .wrap_non_htmx(page)
-        .serve(ServeOptions::default())
+        .run()
 }
 
 async fn page(content: Markup) -> Markup {
@@ -22,8 +21,8 @@ async fn page(content: Markup) -> Markup {
 async fn home() -> Markup {
     html!(
         h3{"Say hello to ..."}
-        form hx-post="/" { 
-            input name="message" type="text"; 
+        form hx-post="/" {
+            input name="message" type="text";
             button type="submit" {"Salute!"}
         }
         p style="text-align: center" {"Or..."}
@@ -47,7 +46,7 @@ async fn home() -> Markup {
 
 #[derive(serde::Deserialize)]
 struct FormInputs {
-    message: String
+    message: String,
 }
 
 async fn submit(Form(FormInputs { message }): Form<FormInputs>) -> Markup {
@@ -57,5 +56,3 @@ async fn submit(Form(FormInputs { message }): Form<FormInputs>) -> Markup {
         a href="/" {"Go back and try again"}
     )
 }
-
-

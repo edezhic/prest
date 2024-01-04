@@ -1,0 +1,15 @@
+[package]
+name = "prest-db-macro"
+version = "0.1.0"
+edition = "2021"
+description = "macro that derives Table trait to work with gluesql db"
+license = "MIT OR Apache-2.0"
+
+[lib]
+path = "lib.rs"
+proc-macro = true
+
+[dependencies]
+syn = { version = "2", default-features = false, features = ["derive", "parsing", "proc-macro", "printing"] }
+quote = "1"
+proc-macro2 = "1"

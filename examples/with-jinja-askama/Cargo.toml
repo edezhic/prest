@@ -1,6 +1,5 @@
 [package]
 name = "with-jinja-askama"
-version = "0.0.1"
 edition = "2021"
 
 [[bin]]
@@ -8,5 +7,5 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = "0.1"
+prest = { path = "../../" }
 askama = "0.12.1"

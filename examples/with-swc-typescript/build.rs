@@ -1,5 +1,5 @@
-use prest_build::out_path;
 use anyhow::Error;
+use prest_build::out_path;
 use std::{collections::HashMap, sync::Arc};
 
 fn main() {
@@ -156,7 +156,7 @@ impl Hook for ImportMetaProps {
         &self,
         _span: Span,
         _module_record: &ModuleRecord,
-    ) -> Result<Vec<KeyValueProp>, Error> {
+    ) -> Result<Vec<swc_ecma_ast::KeyValueProp>, anyhow::Error> {
         Ok(vec![])
     }
 }

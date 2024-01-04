@@ -6,7 +6,7 @@ Builds into a [WASI](https://github.com/bytecodealliance/wasmtime/blob/main/docs
 
 {Cargo.toml}
 
-{serve.rs}
+{src/main.rs}
 
 Overall WASI is an interesting yet controversial idea. It's utility right now is... questionable at best. If your stack supports compilation into wasi, most likely it supports compilation into musl and can be packed into a scratch docker container. In this case pretty much all of the theoretical wasi benefits vanish in practice and it makes very little sense: musl binary will be faster, docker container will be more secure, and compatability with the surrounding infrastructure would be much better.
 

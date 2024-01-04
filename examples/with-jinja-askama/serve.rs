@@ -8,10 +8,9 @@ struct HelloTemplate<'a> {
 }
 
 fn main() {
-    Router::new()
-        .route(
-            "/",
-            get(Html(HelloTemplate { name: "world" }.render().unwrap())),
-        )
-        .serve(ServeOptions::default())
+    route(
+        "/",
+        get(Html(HelloTemplate { name: "world" }.render().unwrap())),
+    )
+    .run()
 }

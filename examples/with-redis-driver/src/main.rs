@@ -2,7 +2,7 @@ use prest::*;
 use redis::{Client, Commands};
 use std::collections::HashMap;
 
-static CLIENT: Lazy<Client> = Lazy::new(|| Client::open("redis://127.0.0.1").unwrap());
+state!(CLIENT: Client = { Client::open("redis://127.0.0.1")? });
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Todo {
@@ -23,30 +23,29 @@ pub struct TodoForm {
 }
 
 fn main() {
-    Router::new()
-        .route(
-            "/",
-            get(|| async {
-                let todos = get_todos();
-                html!(@for todo in todos {(render_item(todo.0, todo.1))})
-            })
-            .put(|Form(TodoForm { task, .. }): Form<TodoForm>| async move {
-                add_todo(task);
+    route(
+        "/",
+        get(|| async {
+            let todos = get_todos();
+            html!(@for todo in todos {(render_item(todo.0, todo.1))})
+        })
+        .put(|Form(TodoForm { task, .. }): Form<TodoForm>| async move {
+            add_todo(task);
+            Redirect::to("/")
+        })
+        .patch(
+            |Form(TodoForm { uuid, done, .. }): Form<TodoForm>| async move {
+                toggle_todo(uuid, done);
                 Redirect::to("/")
-            })
-            .patch(
-                |Form(TodoForm { uuid, done, .. }): Form<TodoForm>| async move {
-                    toggle_todo(uuid, done);
-                    Redirect::to("/")
-                },
-            )
-            .delete(|Form(TodoForm { uuid, .. }): Form<TodoForm>| async move {
-                delete_todo(uuid);
-                Redirect::to("/")
-            }),
+            },
         )
-        .wrap_non_htmx(page)
-        .serve(ServeOptions::default())
+        .delete(|Form(TodoForm { uuid, .. }): Form<TodoForm>| async move {
+            delete_todo(uuid);
+            Redirect::to("/")
+        }),
+    )
+    .wrap_non_htmx(page)
+    .run()
 }
 
 fn get_todos() -> Vec<(String, Todo)> {

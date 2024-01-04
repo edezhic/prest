@@ -2,4 +2,4 @@ Simple [scraper](https://github.com/causal-agent/scraper-based)-based parser tha
 
 {Cargo.toml}
 
-{serve.rs}
+{src/main.rs}

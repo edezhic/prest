@@ -7,5 +7,5 @@ fn main() {
     shared::routes()
         .embed(BuiltAssets)
         .embed(StaticAssets)
-        .serve(ServeOptions::default())
+        .run()
 }

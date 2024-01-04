@@ -22,12 +22,7 @@ impl MigrationTrait for MigrationCreateTodos {
             .create_table(
                 Table::create()
                     .table(Todos::Table)
-                    .col(
-                        ColumnDef::new(Todos::Uuid)
-                            .uuid()
-                            .not_null()
-                            .primary_key(),
-                    )
+                    .col(ColumnDef::new(Todos::Uuid).uuid().not_null().primary_key())
                     .col(ColumnDef::new(Todos::Task).string().not_null())
                     .col(ColumnDef::new(Todos::Done).boolean().not_null())
                     .to_owned(),

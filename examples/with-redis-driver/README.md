@@ -4,4 +4,4 @@ To get it started locally you can use the official redis docker image: `docker r
 
 {Cargo.toml}
 
-{serve.rs}
+{src/main.rs}

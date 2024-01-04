@@ -1,8 +1,7 @@
 [package]
 name = "hello-html"
-version = "0.0.1"
 edition = "2021"
 
 [dependencies]
-prest = "0.1"
-serde = { version = "1", features=["derive"] }
+prest = { path = "../../" }
+serde = { version = "1", features = ["derive"] }

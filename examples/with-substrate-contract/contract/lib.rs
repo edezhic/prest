@@ -48,7 +48,7 @@ mod contract {
     #[cfg(test)]
     mod tests {
         /// Imports all the definitions from the outer scope so we can use them here.
-        use super::*;
+        use crate::*;
 
         /// We test if the default constructor does its job.
         #[ink::test]
@@ -76,7 +76,7 @@ mod contract {
     #[cfg(all(test, feature = "e2e-tests"))]
     mod e2e_tests {
         /// Imports all the definitions from the outer scope so we can use them here.
-        use super::*;
+        use crate::*;
 
         /// A helper function used for calling contract messages.
         use ink_e2e::build_message;

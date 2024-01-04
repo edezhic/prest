@@ -4,6 +4,8 @@
 //! - added utils for common HTML elements: head, scripts
 //! - native axum support and removed support for other frameworks
 
+pub use prest_html_macro::html;
+
 mod common;
 mod escape;
 pub use common::*;

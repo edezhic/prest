@@ -20,9 +20,7 @@ fn main() {
         })
     });
 
-    Router::new()
-        .route("/", get(homepage))
-        .serve(ServeOptions::default())
+    route("/", get(homepage)).run()
 }
 
 async fn homepage() -> Markup {

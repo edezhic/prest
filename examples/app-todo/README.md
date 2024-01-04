@@ -20,4 +20,4 @@ Enough with the introduction, let's get to the code. Here's our manifest:
 
 And here goes the todo app:
 
-{serve.rs}
+{src/main.rs}

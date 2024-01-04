@@ -1,6 +1,5 @@
 [package]
 name = "with-candle-mistral"
-version = "0.0.1"
 edition = "2021"
 
 [[bin]]
@@ -8,7 +7,7 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = "0.1"
+prest = { path = "../../" }
 serde = { version = "1", features = ["derive"] }
 
 hf-hub = "0.3"

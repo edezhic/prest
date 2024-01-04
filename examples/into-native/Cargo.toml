@@ -1,13 +1,8 @@
 [package]
 name = "into-native"
-version = "0.0.1"
 edition = "2021"
 
-[[bin]]
-name = "serve"
-path = "./serve.rs"
-
 [dependencies]
-prest = "0.1"
+prest = { path = "../../" }
 wry = "0.35"
 tao = { version = "0.24", default-features = false, features = [ "rwh_05" ] }

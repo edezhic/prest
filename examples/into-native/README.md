@@ -4,7 +4,7 @@ In such cases you can build a client-side app based on platforms' built-in webvi
 
 {Cargo.toml}
 
-{serve.rs}
+{src/main.rs}
 
 You won't need to split or rewrite your existing prest app to do that. For example, you can make your native binary's webview connect to the existing remote host while additionally providing some localhost endpoints in the WRY-wrapped binary for native APIs. This solution is relatively simple and RESTful, but still somewhat weird and hasn't been tried in practice so proceed with caution.
 

@@ -7,16 +7,11 @@ use prest::*;
 use std::{collections::HashMap, env};
 use tower_sessions::{MemoryStore, Session, SessionManagerLayer};
 
-static GCLIENT: OnceCell<GoogleClient> = OnceCell::const_new();
-async fn gclient() -> &'static GoogleClient {
-    GCLIENT
-        .get_or_init(|| async {
-            let client_id = env::var("GOOGLE_CLIENT_ID").unwrap();
-            let client_secret = env::var("GOOGLE_CLIENT_SECRET").unwrap();
-            GoogleClient::init("http://localhost", client_id, client_secret).await
-        })
-        .await
-}
+state!(GCLIENT: GoogleClient = async {
+    let client_id = env::var("GOOGLE_CLIENT_ID")?;
+    let client_secret = env::var("GOOGLE_CLIENT_SECRET")?;
+    GoogleClient::init("http://localhost", client_id, client_secret).await
+});
 
 type Email = String;
 
@@ -53,7 +48,7 @@ impl AuthnBackend for Backend {
         &self,
         (code, nonce): Self::Credentials,
     ) -> Result<Option<Self::User>, Self::Error> {
-        let (_token, claims) = gclient().await.get_token_and_claims(code, nonce).await;
+        let (_token, claims) = GCLIENT.get_token_and_claims(code, nonce).await;
         let email = claims.email().unwrap().to_string();
         Ok(self.users.get(&email).cloned())
     }
@@ -64,8 +59,6 @@ impl AuthnBackend for Backend {
 }
 
 fn main() {
-    dotenvy::dotenv().unwrap();
-
     let admin_email =
         env::var("ADMIN_EMAIL").expect("Add an ADMIN_EMAIL env variable for a default user");
     let mut backend = Backend::default();
@@ -82,15 +75,14 @@ fn main() {
         }))
         .layer(AuthManagerLayerBuilder::new(backend, session_manager_layer).build());
 
-    Router::new()
-        .route("/protected", get(html!(h1{"Authorized!"})))
+    route("/protected", get(html!(h1{"Authorized!"})))
         .route_layer(login_required!(Backend, login_url = "/oauth/google"))
         .route("/", get(homepage))
         .route("/oauth/google", get(init_oauth))
         .route("/oauth/google/callback", get(callback))
         .route("/logout", get(logout))
         .layer(auth_service)
-        .serve(ServeOptions::default());
+        .run();
 }
 
 async fn homepage() -> Markup {
@@ -108,7 +100,7 @@ async fn homepage() -> Markup {
 }
 
 async fn init_oauth(session: Session) -> impl IntoResponse {
-    let (authz_url, csrf_token, nonce) = gclient().await.authz_request(&["email"]);
+    let (authz_url, csrf_token, nonce) = GCLIENT.authz_request(&["email"]);
     session.insert("nonce", nonce).unwrap();
     session.insert("csrf", csrf_token).unwrap();
     Redirect::to(authz_url.as_ref())

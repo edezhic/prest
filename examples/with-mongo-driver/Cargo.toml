@@ -1,13 +1,8 @@
 [package]
 name = "with-mongo-driver"
-version = "0.0.1"
 edition = "2021"
 
-[[bin]]
-name = "serve"
-path = "./serve.rs"
-
 [dependencies]
-prest = "0.1"
-mongodb = { version = "2.7.0", features = ["bson-uuid-1"] }
+prest = { path = "../../" }
 serde = { version = "1", features = ["derive"] }
+mongodb = { version = "2.7.0", features = ["bson-uuid-1"] }

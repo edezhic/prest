@@ -1,6 +1,5 @@
 [package]
 name = "with-seaorm-postgres"
-version = "0.0.1"
 edition = "2021"
 
 [[bin]]
@@ -8,8 +7,7 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = "0.1"
+prest = { path = "../../" }
 serde = { version = "1", features = ["derive"] }
 sea-orm = { version = "0.12", features = [ "sqlx-postgres", "runtime-tokio-rustls", "macros", "with-uuid"] }
 sea-orm-migration = "0.12"
-uuid = { version = "1.6", features = ["v4"] }

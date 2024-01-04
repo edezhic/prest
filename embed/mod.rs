@@ -6,6 +6,10 @@
 //! - `compression` feature is removed because RAM and cold starts are more important than disk space for most prest use cases
 //! - Derive macro is renamed RustEmbed -> Embed
 
+use axum::http::response;
+pub use prest_embed_macro::Embed;
+pub use prest_embed_utils::*;
+
 use crate::*;
 use std::borrow::Cow;
 
@@ -50,13 +54,21 @@ fn file_handler<T: Embed + ?Sized>(path: &str, headers: HeaderMap) -> Response {
             return StatusCode::NOT_MODIFIED.into_response();
         }
     }
-    Response::builder()
-        .header(header::ETAG, asset_etag)
-        .header(header::CONTENT_TYPE, asset.metadata.mimetype())
-        .header(
+
+    #[allow(unused_mut)]
+    let mut response = Response::builder();
+
+    #[cfg(not(debug_assertions))]
+    if path == "sw.js" || path == "sw.wasm" {
+        response = response.header(
             header::CACHE_CONTROL,
             "max-age=3600, stale-while-revalidate=86400, stale-if-error=604800",
-        )
+        );
+    }
+
+    response
+        .header(header::ETAG, asset_etag)
+        .header(header::CONTENT_TYPE, asset.metadata.mimetype())
         .body(Body::from(asset.data))
         .unwrap()
 }

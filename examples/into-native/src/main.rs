@@ -8,9 +8,11 @@ use wry::WebViewBuilder;
 
 fn main() -> Result<()> {
     std::thread::spawn(|| {
-        Router::new()
-            .route("/", get(html!((Head::example("Native")) h1{"Hello world!"})))
-            .serve(ServeOptions::default())
+        route(
+            "/",
+            get(html!((Head::example("Native")) h1{"Hello world!"})),
+        )
+        .run()
     });
 
     let event_loop = EventLoop::new();

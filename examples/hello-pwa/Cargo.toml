@@ -1,20 +1,10 @@
 [package]
 name = "hello-pwa"
-version = "0.0.1"
 edition = "2021"
 
-[lib]
-name = "shared"
-path = "./shared.rs"
-
-[[bin]]
-name = "serve"
-path = "./serve.rs"
-
 [dependencies]
-prest = "0.1"
-wasm-bindgen = "0.2.89"
-wasm-bindgen-futures = "0.4.39"
+prest = { path = "../../" }
+wasm-bindgen = "0.2"
 
 [build-dependencies]
-prest-build = "0.1"
+prest-build = { path = "../../build" }

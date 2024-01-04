@@ -1,3 +1,5 @@
+> Broken atm!
+
 Simple example that runs [Mistral](https://mistral.ai/news/announcing-mistral-7b/) model using [candle](https://github.com/huggingface/candle) framework. Adopted from [candle's mistral example](https://github.com/huggingface/candle/tree/main/candle-examples/examples/mistral), but without platform-dependent optimizations and with UI for the easiest start.
 
 Candle is a framework developed by [Hugging Face](https://huggingface.co/) - leading AI platform in the world. They started to build it because Python, common choice for AI development, introduces significant performance and devops overhead, while rust solves these problems, enchances reliability and provides direct access to WASM and WebGPU ecosystems to easily run models on the client side. As of now it's not as easy to use as PyTorch and missing some important features, but the future is bright and it already supports a lot of modern models like the one used in this example.

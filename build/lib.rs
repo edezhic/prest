@@ -72,11 +72,11 @@ pub fn build_pwa(opts: PWAOptions) {
         .args(["--crate-type", "cdylib"])
         .args(["--target", "wasm32-unknown-unknown"])
         .args(["--target-dir", &target_dir]);
-    //.arg("--")
-    //.args(["--cfg", r#"'self_sw_build=true'"#]);
+    
     if !cfg!(debug_assertions) {
         cmd.arg("--release");
     }
+    
     assert!(cmd.status().expect("finished SW wasm build").success());
 
     // generate bindings for the wasm binary
@@ -134,7 +134,10 @@ fn read_lib_name() -> String {
     let manifest_path = &format!("{manifest_dir}/Cargo.toml");
     let manifest = read_to_string(manifest_path).unwrap();
     let parsed = manifest.parse::<Table>().unwrap();
-    let lib_name = if let Value::Table(lib_table) = &parsed["lib"] {
+    let lib_name = if parsed.contains_key("lib") {
+        let Value::Table(lib_table) = &parsed["lib"] else {
+            panic!("should be unreachable");
+        };
         if lib_table.contains_key("name") {
             lib_table["name"].as_str().unwrap().to_owned()
         } else {

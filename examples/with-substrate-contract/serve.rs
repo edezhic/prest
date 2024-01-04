@@ -1,27 +1,29 @@
 use prest::*;
-use std::{process::Command, sync::Arc};
+use std::{
+    process::{Child, Command},
+    thread::sleep,
+    time,
+};
 
-static NODE: Lazy<Arc<Mutex<std::process::Child>>> = Lazy::new(|| {
-    println!("Starting the node...");
-    let node = Arc::new(Mutex::new(
+state!(NODE: Mutex<Child> = {
+    let node = Mutex::new(
         Command::new("substrate-contracts-node").spawn().unwrap(),
-    ));
-    std::thread::sleep(std::time::Duration::from_secs(1)); // wait for node to init
+    );
+    sleep(time::Duration::from_secs(1)); // wait for the node to fully init
     node
 });
 
-static CONTRACT_ADDR: Lazy<Arc<Mutex<Option<String>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
+state!(CONTRACT_ADDR: Mutex<Option<String>> = { Mutex::new(None) });
 
 fn main() {
-    Router::new()
-        .route("/", get(home))
+    route("/", get(home))
         .route("/build", get(build))
         .route("/test", get(test))
         .route("/deploy", get(deploy))
         .route("/read", get(read))
         .route("/flip", get(flip))
         .wrap_non_htmx(full_html)
-        .serve(ServeOptions::default())
+        .run()
 }
 
 async fn home() -> Markup {

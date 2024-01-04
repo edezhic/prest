@@ -1,6 +1,6 @@
 Prest respects [HATEOAS](https://htmx.org/essays/hateoas/) constraint of the REST and focused on HTML to build cross-platform UIs. It's not universally the best approach for the frontend development though - you should consider [when to use hypermedia](https://htmx.org/essays/when-to-use-hypermedia/) before taking this architectural decision, but it's good enough for a lot of cases. I think even more than the linked essay suggests.
 
-Cargo manifest is almost the same except we add a new dependency - [serde](https://serde.rs/), go-to serialization and deserialization library in the rust ecosystem. It's not re-exported from prest because app-level code is mostly using it's macros which are painful to re-export without forking, but almost every rust app has it among dependencies so I'd suggest getting used to having it in every project: 
+Cargo manifest is almost the same except we add a new dependency - [serde](https://serde.rs/), go-to serialization and deserialization library in the rust ecosystem. It's not re-exported from prest because app-level code is mostly using it's macros which are painful to re-export without forking and breaking compatability with other crates, but almost every rust app has it among dependencies so I'd suggest getting used to having it in every project: 
 
 {Cargo.toml}
 

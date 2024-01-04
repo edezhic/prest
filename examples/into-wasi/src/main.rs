@@ -1,11 +1,11 @@
 #[cfg(target_arch = "wasm32")]
 fn main() {
-    use prest::*;
     use hyper::server::conn::Http;
+    use prest::*;
     use tokio::{net::TcpListener, runtime::Builder, task};
 
     let router: Router<()> =
-        Router::new().route("/", get(html!((Head::example("WASI")) h1{"Hello world!"})));
+        route("/", get(html!((Head::example("WASI")) h1{"Hello world!"})));
 
     let rt = Builder::new_current_thread().enable_all().build().unwrap();
 

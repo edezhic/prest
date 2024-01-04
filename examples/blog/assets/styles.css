@@ -1,65 +1,16 @@
-* {
-  transition: all 0.2s ease-out;
-}
 code {
-  padding: 0.15rem 0.5rem !important;
-  font-size: 16px !important;
+  font-size: 12px !important;
 }
-blockquote p:last-child {
-  margin-bottom: 0;
+@media screen and (min-width: 1024px) {
+  code {
+    font-size: 15px !important;
+  }
+}
+code .table {
+  display: inherit;
+  font-size: inherit;
 }
 p:has(> code):has(+ pre) {
   margin-top: 16px;
-  margin-bottom: 0px;
-  padding-left: 20px;
-  background: none;
-
-  code {
-    background: none;
-  }
-}
-svg {
-  color: #bbb;
-  margin: 0 0.5rem 1px;
-}
-a:has(svg):hover svg {
-  color: #fff;
-}
-header.top {
-  user-select: none;
-  padding: 0.5rem;  
-}
-#examples-btn:hover {
-  color: #fff;
-}
-#examples-btn:hover svg {
-  color: #fff !important;
-} 
-#examples-menu {
-  position: absolute;
-  z-index: 2;
-  right: 0;
-  top: 75px;
-  padding: 0 16px;
-  border-radius: 8px;
-  background: #141e26;
-  opacity: 0;
-  visibility: hidden;
-}
-#examples-menu.visible {
-  opacity: 1;
-  visibility: visible;
-}
-#examples-menu h6 {
-  margin: 8px 32px 0;
-  text-align: center;
-}
-.logo {
-  margin-bottom: 0; 
-}
-.logo a {
-  color: rgb(26, 179, 230);
-}
-.logo a:hover {
-  color: rgb(63 193 237);
+  padding-left: 24px;
 }
