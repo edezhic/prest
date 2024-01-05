@@ -82,13 +82,13 @@ impl Render for Todo {
 
 async fn page(content: Markup) -> Markup {
     html! { html data-theme="dark" {
-        (Head::example("With Diesel Postgres"))
+        (Head::with_title("With Diesel Postgres"))
         body."max-w-screen-sm mx-auto mt-12" {
-            form."flex gap-4 justify-center" hx-put="/" hx-target="article" hx-swap="beforeend" hx-on--after-request="this.reset()" {
+            form."flex gap-4 justify-center" hx-put="/" hx-target="div" hx-swap="beforeend" hx-on--after-request="this.reset()" {
                 input."input input-bordered input-primary" type="text" name="task" {}
                 button."btn btn-outline btn-primary" type="submit" {"Add"}
             }
-            article {(content)}
+            ."w-full" {(content)}
             (Scripts::default())
         }
     }}

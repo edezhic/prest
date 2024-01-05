@@ -56,12 +56,12 @@ async fn page() -> Markup {
         false
     };
     html!( html data-theme="dark" {
-        (Head::example("With Mistral LLM"))
+        (Head::with_title("With Mistral LLM"))
         body."max-w-screen-sm mx-auto mt-8" {
             @if ready {
-                article {(history(false).await)}
+                div {(history(false).await)}
             } @else {
-                article hx-get="/" hx-target="body" hx-trigger="load delay:1s"{}
+                div hx-get="/" hx-target="body" hx-trigger="load delay:1s"{}
                 span."loading loading-dots loading-lg"{}
             }
             (Scripts::default())
@@ -79,13 +79,13 @@ async fn history(in_progress: bool) -> Markup {
     html!(
         (PreEscaped(content))
         @if in_progress {
-            ins hx-get="/more" hx-target="article" hx-trigger="load"{}
+            ins hx-get="/more" hx-target="div" hx-trigger="load"{}
             span."loading loading-dots loading-sm"{}
             br{}
             button."btn btn-ghost" hx-get="/" hx-target="body" {"Pause"}
         }
         @else {
-            form hx-post="/prompt" hx-target="article"  {
+            form hx-post="/prompt" hx-target="div"  {
                 input."input" type="text" name="content" placeholder="Prompt" required {}
                 button."btn btn-outline btn-primary" type="submit" {(btn)}
             }

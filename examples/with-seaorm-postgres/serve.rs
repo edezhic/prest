@@ -86,13 +86,13 @@ impl Render for todos::Model {
 
 async fn page(content: Markup) -> Markup {
     html! { html data-theme="dark" {
-        (Head::example("With SeaORM Postgres"))
-        body."max-w-screen-sm mx-auto mt-12" hx-target="article" {
+        (Head::with_title("With SeaORM Postgres"))
+        body."max-w-screen-sm mx-auto mt-12" hx-target="div" {
             form."flex gap-4 justify-center" hx-put="/" hx-on--after-request="this.reset()" {
                 input."input input-bordered input-primary" type="text" name="task" {}
                 button."btn btn-outline btn-primary" type="submit" {"Add"}
             }
-            article {(content)}
+            ."w-full" {(content)}
             (Scripts::default())
         }
     }}

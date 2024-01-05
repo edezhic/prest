@@ -1,86 +1,53 @@
 use crate::*;
+
+mod state;
+
 pub use console_error_panic_hook::set_once as set_panic_hook;
 use js_sys::{Array, Promise, Reflect, Set, Uint8Array};
 use std::sync::Mutex;
-use tracing_subscriber::fmt::{format::{Pretty, FmtSpan}, time::UtcTime};
+use tracing_subscriber::fmt::{
+    format::{FmtSpan, Pretty},
+    time::UtcTime,
+};
 use tracing_subscriber::prelude::*;
 use tracing_web::{performance_layer, MakeWebConsoleWriter};
+pub use wasm_bindgen::prelude::wasm_bindgen;
 use wasm_bindgen::{JsCast, JsValue};
 pub use web_sys::{console, FetchEvent, ServiceWorkerGlobalScope};
-
-pub use wasm_bindgen::prelude::wasm_bindgen;
 
 // TODO: figure out how to use gluesql::idb_storage::IdbStorage as PersistentStorage for SW
 pub(crate) type PersistentStorage = gluesql::shared_memory_storage::SharedMemoryStorage;
 
-#[macro_export]
-macro_rules! state {
-    ($struct_name:ident: $type:ty = $init:block) => {
-        pub static $struct_name: prest::Lazy<$type> = prest::Lazy::new(|| {
-            fn init() -> Result<$type, Box<dyn std::error::Error>> {
-                let v = { $init };
-                Ok(v)
-            }
-            init().unwrap()
-        });
-    };
-    ($struct_name:ident: $type:ty = async $init:block) => {
-        pub static $struct_name: prest::Lazy<$type> = prest::Lazy::new(|| {
-            async fn init() -> Result<$type, Box<dyn std::error::Error>> {
-                let v = { $init };
-                Ok(v)
-            }
-            prest::block_on(init()).unwrap()
-        });
-    };
-}
-
-pub struct ServeOptions {
-    //pub log_filter: LevelFilter,
-    pub embed_default_assets: bool,
-}
-impl Default for ServeOptions {
-    fn default() -> Self {
-        Self {
-            //log_filter: LevelFilter::DEBUG,
-            embed_default_assets: true,
-        }
-    }
-}
-
-/// Util trait to add serve function to the Router
-pub trait Serving {
-    fn serve(self);
-    fn serve_with_opts(self, opts: ServeOptions);
+/// Util trait to add handle_fetch_events function to the Router
+pub trait ServiceWorkerUtils {
+    fn handle_fetch_events(self);
+    fn init_tracing(self) -> Self;
 }
 
 static mut ROUTER: Option<Router> = None;
 
-impl Serving for Router {
-    fn serve(self) {
-        self.serve_with_opts(Default::default())
+impl ServiceWorkerUtils for Router {
+    fn handle_fetch_events(mut self) {
+        self = self.init_tracing().route("/sw/health", get(StatusCode::OK));
+        unsafe { ROUTER = Some(self) }
     }
-    fn serve_with_opts(mut self, opts: ServeOptions) {
+    fn init_tracing(self) -> Self {
         let fmt_layer = tracing_subscriber::fmt::layer()
             .with_ansi(false) // Only partially supported across browsers
             .with_timer(UtcTime::rfc_3339())
-            .with_writer(tracing_web::MakeWebConsoleWriter::new().with_pretty_level()) 
+            .with_writer(tracing_web::MakeWebConsoleWriter::new().with_pretty_level())
             .with_level(false)
-            .with_span_events(FmtSpan::ACTIVE); 
-        let perf_layer = performance_layer()
-            .with_details_from_fields(Pretty::default());
+            .with_span_events(FmtSpan::ACTIVE);
+        let perf_layer = performance_layer().with_details_from_fields(Pretty::default());
 
         tracing_subscriber::registry()
             .with(fmt_layer)
             .with(perf_layer)
             .init(); // Install these as subscribers to tracing events
-
-        self = self.route("/sw/health", get(StatusCode::OK));
-
         // self = self.layer(tower_http::trace::TraceLayer::new_for_http());
         // panicked at library/std/src/sys/wasm/../unsupported/time.rs:13:9:
         // "time not implemented on this platform"
-        unsafe { ROUTER = Some(self) }
+        self
     }
 }
 
@@ -165,14 +132,14 @@ pub async fn fetch_into_axum_request(fetch_event: &web_sys::FetchEvent) -> http:
         let done = Reflect::get(&item, &JsValue::from("done"))
             .unwrap()
             .is_truthy();
+        if done {
+            break;
+        }
         let mut data = Reflect::get(&item, &JsValue::from("value"))
             .unwrap()
             .unchecked_into::<Uint8Array>()
             .to_vec();
         buf.append(&mut data);
-        if done {
-            break;
-        }
     }
     request.body(Body::from(buf)).unwrap()
 }

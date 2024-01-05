@@ -87,6 +87,11 @@ where
         let wrapper = self.wrapper.clone();
         Box::pin(async move {
             let (mut parts, body) = future.await?.into_parts();
+
+            if parts.status.as_u16() != 200 {
+                return Ok(Response::from_parts(parts, body))
+            }
+
             parts
                 .headers
                 .insert(header::CONTENT_TYPE, HeaderValue::from_static("text/html"));

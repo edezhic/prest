@@ -1,8 +1,0 @@
-[package]
-name = "into-native"
-edition = "2021"
-
-[dependencies]
-prest = { path = "../../" }
-wry = "0.35"
-tao = { version = "0.24", default-features = false, features = [ "rwh_05" ] }

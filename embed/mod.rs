@@ -6,11 +6,11 @@
 //! - `compression` feature is removed because RAM and cold starts are more important than disk space for most prest use cases
 //! - Derive macro is renamed RustEmbed -> Embed
 
-use axum::http::response;
+use crate::*;
+
 pub use prest_embed_macro::Embed;
 pub use prest_embed_utils::*;
 
-use crate::*;
 use std::borrow::Cow;
 
 /// Derived trait for structs that embed files
@@ -81,7 +81,7 @@ macro_rules! embed_build_output_as {
     ($struct_name:ident) => {
         #[derive(Embed)]
         #[folder = "$OUT_DIR"]
-        struct $struct_name;
+        pub struct $struct_name;
     };
 }
 /// One-liner for structs with derived Embed
@@ -94,7 +94,7 @@ macro_rules! embed_as {
         #[folder = $path]
         $( $( #[include = $inc] )+ )?
         $( $( #[exclude = $exc] )+ )?
-        struct $struct_name;
+        pub struct $struct_name;
     };
 }
 

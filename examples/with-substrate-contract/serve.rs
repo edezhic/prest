@@ -162,7 +162,7 @@ async fn flip() -> Markup {
 async fn full_html(content: Markup) -> Markup {
     html!(
         html data-theme="dark" {
-            (Head::example("With Substrate Contract"))
+            (Head::with_title("With Substrate Contract"))
             body {
                 main."container" hx-target="main" hx-swap="beforeend" {(content)}
                 (Scripts::default())

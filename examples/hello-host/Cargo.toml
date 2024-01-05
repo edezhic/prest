@@ -1,7 +1,0 @@
-[package]
-name = "hello-host"
-edition = "2021"
-
-[dependencies]
-prest = { path = "../../" }
-serde = { version = "1", features = ["derive"] }

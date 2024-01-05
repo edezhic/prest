@@ -11,5 +11,5 @@ channel = "unstable"
 requiredFiles = [".replit", "replit.nix"]
 
 [deployment]
-run = ["sh", "-c", "chmod +x ./_temp_deployment/serve && ./_temp_deployment/serve"]
+run = ["sh", "-c", "chmod +x ./blog && ./blog"]
 deploymentTarget = "cloudrun"

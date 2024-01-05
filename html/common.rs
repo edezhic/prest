@@ -23,7 +23,7 @@ impl<'a> Head<'a> {
         self.title = title;
         self
     }
-    /// Add stylesheet link to the [`Head`] 
+    /// Add stylesheet link to the [`Head`]
     pub fn css(mut self, path: &'a str) -> Self {
         if let Some(stylesheets) = &mut self.stylesheets {
             stylesheets.push(path)
@@ -41,20 +41,18 @@ impl<'a> Head<'a> {
         }
         self
     }
-    /// Builds a [`Head`] with configs used across examples
-    pub fn example(title: &'a str) -> Self {
+    /// Builds a default [`Head`] with provided title
+    pub fn with_title(title: &'a str) -> Self {
         Self::default()
             .title(title)
-            //.css("https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css")
-            .css("https://cdn.jsdelivr.net/npm/daisyui@4.5.0/dist/full.min.css")
     }
 }
 
 impl<'a> Default for Head<'a> {
     fn default() -> Self {
-        let webmanifest = match cfg!(debug_assertions) {
-            true => None,
-            false => Some("/.webmanifest"),
+        let webmanifest = match is_pwa() {
+            true => Some("/.webmanifest"),
+            false => None,
         };
         Self {
             title: "Prest app",
@@ -78,14 +76,11 @@ impl<'a> Render for Head<'a> {
                 @if let Some(href) = self.webmanifest { link rel="manifest" href=(href) {} }
                 @if let Some(viewport) = self.viewport { meta name="viewport" content=(viewport); }
                 @if let Some(color) = self.theme_color { meta name="theme-color" content=(color); }
-                @if let Some(stylesheets) = self.stylesheets.clone() { @for stylesheet in stylesheets {
-                    link href={(stylesheet.clone())} rel="stylesheet" {}
-                }}
-                @if let Some(styles) = self.styles.clone() { @for style in styles {
-                    style {(style)}
-                }}
-                script src="https://cdn.tailwindcss.com?plugins=typography" defer {}
-                @if let Some(markup) = self.other.clone() {(markup)}
+                @if let Some(stylesheets) = &self.stylesheets { @for stylesheet in stylesheets {link href={(stylesheet)} rel="stylesheet"{}}}
+                @if let Some(styles) = &self.styles { @for style in styles { style {(style)}}}
+                script src="https://cdn.tailwindcss.com?plugins=typography" {}
+                link href="https://cdn.jsdelivr.net/npm/daisyui@4.5.0/dist/full.min.css" rel="stylesheet"{}
+                @if let Some(markup) = &self.other {(markup)}
             }
         )
     }
@@ -93,19 +88,20 @@ impl<'a> Render for Head<'a> {
 
 /// Renders into a bunch of `<script>` tags with builder-like interface
 pub struct Scripts<'a> {
-    pub register_sw: bool,
     pub others: Option<Vec<&'a str>>,
     pub inlines: Option<Vec<&'a str>>,
 }
 
-impl<'a> Scripts<'a> {
-    pub fn empty() -> Self {
+impl<'a> Default for Scripts<'a> {
+    fn default() -> Self {
         Self {
-            register_sw: false,
             others: None,
             inlines: None,
         }
     }
+}
+
+impl<'a> Scripts<'a> {
     pub fn include(mut self, path: &'a str) -> Self {
         if let Some(srcs) = &mut self.others {
             srcs.push(path)
@@ -124,27 +120,15 @@ impl<'a> Scripts<'a> {
     }
 }
 
-impl<'a> Default for Scripts<'a> {
-    fn default() -> Self {
-        let others = Some(vec![
-            "https://unpkg.com/htmx.org@1.9.10",
-            //"https://unpkg.com/hyperscript.org@0.9.11",
-        ]);
-        Self {
-            register_sw: !cfg!(debug_assertions),
-            others,
-            inlines: None,
-        }
-    }
-}
 impl<'a> Render for Scripts<'a> {
     fn render(&self) -> Markup {
         html!(
-            @if self.register_sw { script {(REGISTER_SW_SNIPPET)} }
-            @if let Some(srcs) = self.others.clone() { @for src in srcs {
+            @if is_pwa() { script {(REGISTER_SW_SNIPPET)} }
+            script src="https://unpkg.com/htmx.org@1.9.10" defer crossorigin {}
+            @if let Some(srcs) = &self.others { @for src in srcs {
                 script src={(src)} defer crossorigin {}
             }}
-            @if let Some(scripts) = self.inlines.clone() { @for script in scripts {
+            @if let Some(scripts) = &self.inlines { @for script in scripts {
                 script {(PreEscaped(script))}
             }}
         )

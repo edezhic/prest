@@ -8,7 +8,7 @@ async fn main() {
     let router: Router<()> = route(
         "/",
         get(html!((DOCTYPE) html {
-            (Head::example("With HTTPS"))
+            (Head::with_title("With HTTPS"))
             body {h1{"Check out the connection / protocol!"}}
         })),
     );

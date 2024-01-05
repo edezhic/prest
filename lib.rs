@@ -1,6 +1,5 @@
-//! These docs are focused on technical details. For examples check out [prest.blog](https://prest.blog)
+//! These docs are focused on technical details. For tutorials check out [prest.blog](https://prest.blog)
 #![doc(html_favicon_url = "https://prest.blog/favicon.ico")]
-#![allow(dead_code, unused_imports)]
 
 mod db;
 mod embed;
@@ -24,6 +23,7 @@ pub use service_worker::*;
 pub(crate) use crate as prest;
 
 pub use anyhow::{anyhow, bail, Error, Result};
+pub use async_trait::async_trait;
 use axum::routing::method_routing;
 pub use axum::{
     self,
@@ -33,7 +33,7 @@ pub use axum::{
         self, Extension, Form, FromRequest, FromRequestParts, Host, MatchedPath, NestedPath,
         OriginalUri, Path, Query, Request,
     },
-    http::{self, header, HeaderMap, HeaderValue, StatusCode, Uri, Method},
+    http::{self, header, HeaderMap, HeaderValue, Method, StatusCode, Uri},
     middleware::{from_extractor, from_extractor_with_state, from_fn, from_fn_with_state, Next},
     response::*,
     routing::{any, delete, get, patch, post, put},
@@ -45,11 +45,9 @@ pub use futures::{
 };
 pub use once_cell::sync::Lazy;
 pub use serde_json::json;
-use std::ops::Deref;
 pub use std::{env, sync::Arc};
 pub use tower::{self, BoxError, Layer, Service, ServiceBuilder};
-pub use tracing::{trace, debug, info, warn, error};
-pub use async_trait::async_trait;
+pub use tracing::{debug, error, info, trace, warn};
 
 // --- GENERAL UTILS ---
 
@@ -59,7 +57,7 @@ pub const DOCTYPE: PreEscaped<&'static str> = PreEscaped("<!DOCTYPE html>");
 pub const REGISTER_SW_SNIPPET: &str =
     "if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {type: 'module'});";
 
-embed_as!(DefaultAssets from "assets" only "*.css");
+embed_as!(DefaultAssets from "assets");
 
 /// A little helper to init router and route in a single call to improve formatting
 pub fn route<S: Clone + Send + Sync + 'static>(
@@ -69,6 +67,19 @@ pub fn route<S: Clone + Send + Sync + 'static>(
     Router::<S>::new().route(path, method_router)
 }
 
+/// Explicit Uuid generation fn
 pub fn generate_uuid() -> Uuid {
     Uuid::new_v4()
+}
+
+pub fn is_pwa() -> bool {
+    #[cfg(target_arch = "wasm32")]
+    return true;
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        #[cfg(debug_assertions)]
+        return std::env::var("PWA").map_or(false, |v| v == "debug");
+        #[cfg(not(debug_assertions))]
+        return std::env::var("PWA").map_or(true, |v| v == "release");
+    }
 }

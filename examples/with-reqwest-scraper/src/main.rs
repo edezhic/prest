@@ -24,7 +24,7 @@ fn main() {
 }
 
 async fn homepage() -> Markup {
-    html!(html {(Head::example("With scraping"))
+    html!(html {(Head::with_title("With scraping"))
         body {h1{"Check out terminal for scraping results!"}}
     })
 }

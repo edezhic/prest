@@ -86,17 +86,13 @@ fn delete_todo(uuid: String) {
 
 fn render_item(uuid: String, todo: Todo) -> Markup {
     let id = format!("uuid-{}", uuid);
-    let cb = format!("on change from .{id} trigger submit on #{id}");
     html!(
         div style="height: 64px; display: flex; justify-content: space-between; align-items: center;" {
             form #(id) hx-patch="/"  style="margin-bottom: 0px;" {
                 input type="hidden" name="uuid" value={(uuid)} {}
                 input type="hidden" name="done" value={(todo.done)} {}
                 label {
-                    @match todo.done {
-                        false => { input .(id) type="checkbox" _={(cb)} {} },
-                        true  => { input .(id) type="checkbox" _={(cb)} checked {} },
-                    }
+                    input .(id) type="checkbox" onchange="this.form.submit()" checked[todo.done] {}
                     {(todo.task)}
                 }
             }
@@ -110,14 +106,14 @@ fn render_item(uuid: String, todo: Todo) -> Markup {
 
 async fn page(content: Markup) -> Markup {
     html! { html data-theme="dark" {
-        (Head::example("With Redis"))
-        body."container" hx-target="article" style="margin-top: 16px;" {
-            form hx-put="/" _="on htmx:afterRequest reset() me" {
+        (Head::with_title("With Redis"))
+        body."container" hx-target="div" style="margin-top: 16px;" {
+            form hx-put="/" hx-on--after-request="this.reset()" {
                 label for="task" {"Task description:"}
                 input type="text" name="task" {}
                 button type="submit" {"Add"}
             }
-            article {(content)}
+            ."w-full" {(content)}
             (Scripts::default())
         }
     }}

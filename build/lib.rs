@@ -1,3 +1,6 @@
+mod pwa;
+
+use pwa::is_pwa;
 use std::{
     env, format as f,
     fs::{read_to_string, rename, write},
@@ -7,7 +10,6 @@ use std::{
 use webmanifest::{DisplayMode, Icon, Manifest};
 
 pub struct PWAOptions<'a> {
-    pub release_only: bool,
     pub listeners: Vec<(&'a str, &'a str)>,
     pub name: String,
     pub desc: String,
@@ -20,7 +22,6 @@ pub struct PWAOptions<'a> {
 impl Default for PWAOptions<'_> {
     fn default() -> Self {
         Self {
-            release_only: true,
             listeners: vec![
                 (
                     "install",
@@ -51,7 +52,7 @@ static LOGO: &[u8] = include_bytes!("default-logo.png");
 static LISTENER_TEMPLATE: &str = "self.addEventListener('NAME', event => LISTENER);\n";
 
 pub fn build_pwa(opts: PWAOptions) {
-    if env::var("SELF_PWA_BUILD").is_ok() || (opts.release_only && cfg!(debug_assertions)) {
+    if env::var("SELF_PWA_BUILD").is_ok() || !is_pwa() {
         return;
     }
     let start = Instant::now();
@@ -84,8 +85,9 @@ pub fn build_pwa(opts: PWAOptions) {
         .input_path(f!("{lib_path}.wasm"))
         .web(true)
         .unwrap()
-        .remove_name_section(true)
-        .remove_producers_section(true)
+        .remove_name_section(cfg!(not(debug_assertions)))
+        .remove_producers_section(cfg!(not(debug_assertions)))
+        .keep_debug(cfg!(debug_assertions))
         .omit_default_module_path(true)
         .generate(profile_path)
         .unwrap();

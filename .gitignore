@@ -4,7 +4,7 @@ key.pem
 Cargo.lock
 target
 target_sw
-sled_db
+prest_storage
 .DS_Store
 migrations.toml
 commands.sh

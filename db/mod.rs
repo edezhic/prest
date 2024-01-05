@@ -45,7 +45,8 @@ pub enum Db {
 }
 
 impl Db {
-    fn exec(&self, query: &str) -> Result<Vec<Payload>> {
+    #[allow(dead_code)]
+    fn query(&self, query: &str) -> Result<Vec<Payload>> {
         // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1265
         let payload = block_on(Glue::new(self.clone()).execute(query))?;
         Ok(payload)
@@ -54,7 +55,7 @@ impl Db {
 
 pub trait Executable {
     fn exec(self) -> Result<Payload>;
-    fn find(self) -> Result<Vec<Vec<DbValue>>>;
+    fn rows(self) -> Result<Vec<Vec<DbValue>>>;
 }
 
 impl<Q: BuildSQL> Executable for Q {
@@ -65,11 +66,11 @@ impl<Q: BuildSQL> Executable for Q {
         Ok(payload)
     }
 
-    fn find(self) -> Result<Vec<Vec<DbValue>>> {
+    fn rows(self) -> Result<Vec<Vec<DbValue>>> {
         match self.exec() {
             Ok(Payload::Select { rows, .. }) => Ok(rows),
             Ok(p) => return Err(anyhow!(
-                "find method used on non-select query that returned: {:?}",
+                "rows method used on non-select query that returned: {:?}",
                 p
             ).into()),
             Err(e) => return Err(anyhow!("query execution failed with: {e:?}").into()),
@@ -90,7 +91,7 @@ pub trait Table: Sized {
         }
     }
 
-    fn init_table();
+    fn migrate();
     fn into_row(&self) -> String;
     fn from_row(row: Vec<DbValue>) -> Self;
     fn get_key(&self) -> &Self::Key;
@@ -116,21 +117,21 @@ pub trait Table: Sized {
         table(Self::TABLE_NAME).update()
     }
 
-    fn find_by_key(key: &Self::Key) -> Option<Self> {
-        let mut rows = Self::select().filter(Self::key_filter(key)).find().unwrap();
-        match rows.pop() {
-            Some(row) => Some(Self::from_row(row)),
-            None => None,
-        }
-    }
-
     fn find_all() -> Vec<Self> {
-        Self::from_rows(Self::select().find().unwrap())
+        Self::from_rows(Self::select().rows().unwrap())
     }
 
     fn insert_self(&self) -> Result<()> {
         Self::insert().values(vec![self.into_row()]).exec()?;
         Ok(())
+    }
+
+    fn find_by_key(key: &Self::Key) -> Option<Self> {
+        let mut rows = Self::select().filter(Self::key_filter(key)).rows().unwrap();
+        match rows.pop() {
+            Some(row) => Some(Self::from_row(row)),
+            None => None,
+        }
     }
 
     fn update_by_key(key: &Self::Key) -> UpdateNode<'static> {

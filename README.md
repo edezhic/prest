@@ -11,7 +11,7 @@ fn main() {
 
 Yes. Initial motivation came from [Rust](https://www.rust-lang.org/) - arguably the most [reliable practical language](https://edezhic.medium.com/reliable-software-engineering-with-rust-5bb4553b5d54) with an [amazingly wide ecosystem](https://github.com/rust-unofficial/awesome-rust). It's adoption is growing rapidly, but many newcomers stumble upon onboarding pains and getting lost in the myriads of libraries. So, I decided to build prest in attempts to _make application development simple again_.
 
-**Prest allows building full-stack cross-platform apps for the development cost of writing HTML**. Deployment? Just compile and you'll get a single all-included binary. Database? Already embedded one with a query builder for you. Authentication? Session and user management are built-in as well. The fullstack [todo app example](https://prest.blog/app-todo) is just about 50 lines of code total. And there are plenty of examples how to include other tech into your prest app.
+**Prest allows building full-stack cross-platform apps for the development cost of writing HTML**. Deployment? Just compile and you'll get a single all-included binary. Database? Already embedded one with a query builder for you. Authentication? Sessions, user management and Google OpenID are built-in as well. The fullstack [todo app example](https://prest.blog/app-todo) is just about 50 lines of code total. And there are plenty of examples how to include other tech into your prest app.
 
 It's based on mature web standards instead of custom solutions like [React Native](https://reactnative.dev/) or [Flutter](https://flutter.dev/), and built with full-stack in mind from the very beginning. Modern web capabilities have more than enough for most apps - you can even build games & AI with near-native performance using wasm and [WebGPU](https://developer.chrome.com/blog/webgpu-io2023/), and on the other hand you can relatively easily support old platforms and hardware. 
 
@@ -32,7 +32,6 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 Some of the examples that showcase how to use prest with other things:
 
 * different databases - postgres through [seaorm](https://prest.blog/with-seaorm-postgres) or [diesel](https://prest.blog/with-diesel-postgres), sqlite through [sqlx](https://prest.blog/with-sqlx-sqlite) or [turbosql](https://prest.blog/with-turbosql-sqlite), [mongo](https://prest.blog/with-mongo-driver), [redis](https://prest.blog/with-redis-driver)
-* authentication, user and session management with [Google OpenID/OAuth](https://prest.blog/with-openid-google)
 * compilation and bundling of [SASS/SCSS](https://prest.blog/with-grass-scss), [TypeScript](https://prest.blog/with-swc-typescript) and other sources in the build pipeline
 * other templating engines like [Askama](https://prest.blog/with-jinja-askama) which provides Jinja-like syntax
 * even [Large Language Models](https://prest.blog/with-candle-mistral) and [blockchain Smart Contracts](https://prest.blog/with-substrate-contract)!
@@ -48,6 +47,6 @@ While rust allows working with native bindings on any platform, prest is mostly 
 
 ### what's next
 This is a hobby project and plans change frequently, but there are things I'd likely work on or consider next:
++ collaborative todo board example
 + docs updates
-+ auth integration (user extractor - https://github.com/maxcountryman/axum-login/commit/1717ead4ba1228807d27191e342e39f549e2ae9c etc)
-+ turn tutorials into 2 parts: Backend and Frontend for a Todo app. How to fit state and PWA into it?
++ move prest errors from anyhow to thiserror

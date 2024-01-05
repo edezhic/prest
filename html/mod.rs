@@ -186,7 +186,6 @@ impl<T: Default> Default for PreEscaped<T> {
     }
 }
 
-use crate::*;
 use http::{header, HeaderMap, HeaderValue, Response};
 
 impl IntoResponse for PreEscaped<String> {

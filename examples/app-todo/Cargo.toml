@@ -1,7 +1,0 @@
-[package]
-name = "todo-app"
-edition = "2021"
-
-[dependencies]
-prest = { path = "../../" }
-serde = { version = "1", features = ["derive"] }

@@ -44,14 +44,16 @@ time = { version = "0.3", features = ["wasm-bindgen"] }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 axum = "0.7.3"
 tokio = { version = "1.25.0", features = ["rt", "rt-multi-thread", "net", "sync"] }
-tower-http = { version = "0.5.0", features = ["trace", "catch-panic", "compression-br", "limit"] }
+tower-http = { version = "0.5", features = ["trace", "catch-panic", "compression-br", "limit"] }
 tracing-subscriber = { version = "0.3.18", features = ["fmt", "chrono", "env-filter"] } 
 tower-livereload = "0.9.1"
 gluesql = { version = "0.15", default-features = false, features = ["sled-storage", "shared-memory-storage"]}
 tower-sessions = "0.9"
 uuid = { version = "1.6", features = ["v4", "serde"] }
 axum-login = "0.12"
-dotenvy = "0.15.7"
+dotenvy = "0.15"
+openidconnect = "3.4"
+password-auth = "1"
 
 # service worker
 [target.'cfg(target_arch = "wasm32")'.dependencies]
