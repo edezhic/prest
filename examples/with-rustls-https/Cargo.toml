@@ -1,8 +1,0 @@
-[package]
-name = "with-rustls-https"
-edition = "2021"
-
-[dependencies]
-prest = { path = "../../" }
-tokio = { version = "*", features = ["full"] }
-axum-server = { version = "0.6", features = ["tls-rustls"] }

@@ -1,0 +1,16 @@
+[package]
+name = "llm-mistral"
+edition = "2021"
+
+[[bin]]
+name = "serve"
+path = "./serve.rs"
+
+[dependencies]
+prest = { path = "../../" }
+serde = { version = "1", features = ["derive"] }
+
+hf-hub = "0.3"
+tokenizers = "0.15"
+candle-core = "0.3"
+candle-transformers = "0.3"

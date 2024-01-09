@@ -3,19 +3,13 @@ use crate::*;
 mod state;
 
 pub use console_error_panic_hook::set_once as set_panic_hook;
-use js_sys::{Array, Promise, Reflect, Set, Uint8Array};
-use std::sync::Mutex;
-use tracing_subscriber::fmt::{
-    format::{FmtSpan, Pretty},
-    time::UtcTime,
-};
-use tracing_subscriber::prelude::*;
-use tracing_web::{performance_layer, MakeWebConsoleWriter};
+use js_sys::{Array, Reflect, Set, Uint8Array};
 pub use wasm_bindgen::prelude::wasm_bindgen;
 use wasm_bindgen::{JsCast, JsValue};
 pub use web_sys::{console, FetchEvent, ServiceWorkerGlobalScope};
 
 // TODO: figure out how to use gluesql::idb_storage::IdbStorage as PersistentStorage for SW
+#[cfg(feature = "db")]
 pub(crate) type PersistentStorage = gluesql::shared_memory_storage::SharedMemoryStorage;
 
 /// Util trait to add handle_fetch_events function to the Router
@@ -32,21 +26,33 @@ impl ServiceWorkerUtils for Router {
         unsafe { ROUTER = Some(self) }
     }
     fn init_tracing(self) -> Self {
-        let fmt_layer = tracing_subscriber::fmt::layer()
-            .with_ansi(false) // Only partially supported across browsers
-            .with_timer(UtcTime::rfc_3339())
-            .with_writer(tracing_web::MakeWebConsoleWriter::new().with_pretty_level())
-            .with_level(false)
-            .with_span_events(FmtSpan::ACTIVE);
-        let perf_layer = performance_layer().with_details_from_fields(Pretty::default());
+        #[cfg(feature = "traces")]
+        {
+            use tracing_subscriber::fmt::{
+                format::{FmtSpan, Pretty},
+                time::UtcTime,
+            };
+            use tracing_subscriber::prelude::*;
+            use tracing_web::{performance_layer, MakeWebConsoleWriter};
 
-        tracing_subscriber::registry()
-            .with(fmt_layer)
-            .with(perf_layer)
-            .init(); // Install these as subscribers to tracing events
-        // self = self.layer(tower_http::trace::TraceLayer::new_for_http());
-        // panicked at library/std/src/sys/wasm/../unsupported/time.rs:13:9:
-        // "time not implemented on this platform"
+            let fmt_layer = tracing_subscriber::fmt::layer()
+                .with_ansi(false) // Only partially supported across browsers
+                .with_timer(UtcTime::rfc_3339())
+                .with_writer(MakeWebConsoleWriter::new().with_pretty_level())
+                .with_level(false)
+                .with_span_events(FmtSpan::ACTIVE);
+            let perf_layer = performance_layer().with_details_from_fields(Pretty::default());
+
+            tracing_subscriber::registry()
+                .with(fmt_layer)
+                .with(perf_layer)
+                .init();
+
+            // Install these as subscribers to tracing events
+            // self = self.layer(tower_http::trace::TraceLayer::new_for_http());
+            // panicked at library/std/src/sys/wasm/../unsupported/time.rs:13:9:
+            // "time not implemented on this platform"
+        }
         self
     }
 }

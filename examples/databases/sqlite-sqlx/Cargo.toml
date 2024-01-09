@@ -1,0 +1,12 @@
+[package]
+name = "sqlite-sqlx"
+edition = "2021"
+
+[[bin]]
+name = "serve"
+path = "./serve.rs"
+
+[dependencies]
+prest = { path = "../../../" }
+serde = { version = "1", features = ["derive"] }
+sqlx = { version = "0.7", features = [ "runtime-tokio", "tls-rustls", "sqlite", "macros" ] }

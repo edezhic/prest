@@ -1,9 +1,5 @@
 use crate::*;
 
-pub fn not_htmx_predicate<Body>(req: &Request<Body>) -> bool {
-    !req.headers().contains_key("hx-request")
-}
-
 /// Convenience trait to easily add [`HtmxLayer`] to the [`Router`]
 pub trait HtmxRouting<F> {
     fn wrap_non_htmx(self, wrapper: F) -> Self;

@@ -1,6 +1,7 @@
 mod pwa;
-
 use pwa::is_pwa;
+
+use anyhow::Result;
 use std::{
     env, format as f,
     fs::{read_to_string, rename, write},
@@ -8,6 +9,25 @@ use std::{
     time::Instant,
 };
 use webmanifest::{DisplayMode, Icon, Manifest};
+
+#[cfg(feature = "typescript")]
+mod typescript;
+#[cfg(feature = "typescript")]
+pub use typescript::*;
+
+#[cfg(feature = "sass")]
+mod sass {
+    use std::{path::Path, fs::write};
+    pub fn bundle_sass(path: &str) {
+        let css = grass::from_path(path, &Default::default())?;
+        let scss_filename = Path::new(path).file_name()?.to_str()?;
+        let css_filename = scss_filename.replace(".scss", ".css").replace(".sass", ".css");
+        let out_file = super::out_path(&css_filename);
+        write(out_file, css)?;
+    }
+}
+#[cfg(feature = "sass")]
+pub use sass::bundle_sass;
 
 pub struct PWAOptions<'a> {
     pub listeners: Vec<(&'a str, &'a str)>,
@@ -51,12 +71,12 @@ static LOGO: &[u8] = include_bytes!("default-logo.png");
 
 static LISTENER_TEMPLATE: &str = "self.addEventListener('NAME', event => LISTENER);\n";
 
-pub fn build_pwa(opts: PWAOptions) {
+pub fn build_pwa(opts: PWAOptions) -> Result<()> {
     if env::var("SELF_PWA_BUILD").is_ok() || !is_pwa() {
-        return;
+        return Ok(());
     }
     let start = Instant::now();
-    let lib_name = &read_lib_name();
+    let lib_name = &read_lib_name()?;
     let target_dir = sw_target_dir();
     let profile_dir = match cfg!(debug_assertions) {
         true => "debug",
@@ -71,6 +91,7 @@ pub fn build_pwa(opts: PWAOptions) {
         .arg("rustc")
         .arg("--lib")
         .args(["--crate-type", "cdylib"])
+        //.args(["--features", "traces html embed"])
         .args(["--target", "wasm32-unknown-unknown"])
         .args(["--target-dir", &target_dir]);
     
@@ -78,43 +99,43 @@ pub fn build_pwa(opts: PWAOptions) {
         cmd.arg("--release");
     }
     
-    assert!(cmd.status().expect("finished SW wasm build").success());
+    assert!(cmd.status()?.success());
 
     // generate bindings for the wasm binary
     wasm_bindgen_cli_support::Bindgen::new()
         .input_path(f!("{lib_path}.wasm"))
-        .web(true)
-        .unwrap()
+        .web(true)?
         .remove_name_section(cfg!(not(debug_assertions)))
         .remove_producers_section(cfg!(not(debug_assertions)))
         .keep_debug(cfg!(debug_assertions))
         .omit_default_module_path(true)
-        .generate(profile_path)
-        .unwrap();
+        .generate(profile_path)?;
 
     // move the processed wasm binary into final dist
-    rename(&f!("{lib_path}_bg.wasm"), out_path("sw.wasm")).unwrap();
+    rename(&f!("{lib_path}_bg.wasm"), out_path("sw.wasm"))?;
 
     // append event listeners and save js bindings
-    let mut js = read_to_string(&f!("{lib_path}.js")).unwrap();
+    let mut js = read_to_string(&f!("{lib_path}.js"))?;
     for listener in opts.listeners.iter() {
         js += LISTENER_TEMPLATE
             .replace("NAME", listener.0)
             .replace("LISTENER", listener.1)
             .as_str();
     }
-    write(out_path("sw.js"), &js).unwrap();
+    write(out_path("sw.js"), &js)?;
 
     // compose .webmanifest with app metadata
-    write(out_path(".webmanifest"), gen_manifest(opts)).unwrap();
+    write(out_path(".webmanifest"), gen_manifest(opts))?;
 
     // at least one logo is required for PWA installability
-    write(out_path("logo.png"), LOGO).unwrap();
+    write(out_path("logo.png"), LOGO)?;
 
     println!(
         "cargo:warning={}",
         f!("composed PWA in {}ms", start.elapsed().as_millis())
     );
+
+    Ok(())
 }
 
 fn gen_manifest(opts: PWAOptions) -> String {
@@ -130,12 +151,12 @@ fn gen_manifest(opts: PWAOptions) -> String {
     manifest.build().unwrap()
 }
 
-fn read_lib_name() -> String {
+fn read_lib_name() -> Result<String> {
     use toml::{Table, Value};
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")?;
     let manifest_path = &format!("{manifest_dir}/Cargo.toml");
-    let manifest = read_to_string(manifest_path).unwrap();
-    let parsed = manifest.parse::<Table>().unwrap();
+    let manifest = read_to_string(manifest_path)?;
+    let parsed = manifest.parse::<Table>()?;
     let lib_name = if parsed.contains_key("lib") {
         let Value::Table(lib_table) = &parsed["lib"] else {
             panic!("should be unreachable");
@@ -148,7 +169,7 @@ fn read_lib_name() -> String {
     } else {
         parsed["package"]["name"].as_str().unwrap().to_owned()
     };
-    lib_name.replace("-", "_")
+    Ok(lib_name.replace("-", "_"))
 }
 
 fn sw_target_dir() -> String {
@@ -202,3 +223,4 @@ pub fn out_path(filename: &str) -> String {
     let dir = std::env::var("OUT_DIR").unwrap();
     format!("{dir}/{filename}")
 }
+

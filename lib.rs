@@ -1,25 +1,7 @@
 //! These docs are focused on technical details. For tutorials check out [prest.blog](https://prest.blog)
 #![doc(html_favicon_url = "https://prest.blog/favicon.ico")]
 
-mod db;
-mod embed;
-mod html;
-
-pub use db::*;
-pub use embed::*;
-pub use html::*;
-
-#[cfg(not(target_arch = "wasm32"))]
-mod host;
-#[cfg(not(target_arch = "wasm32"))]
-pub use host::*;
-
-#[cfg(target_arch = "wasm32")]
-mod service_worker;
-#[cfg(target_arch = "wasm32")]
-pub use service_worker::*;
-
-// for macro-generated code
+// for macro-generated code inside prest itself
 pub(crate) use crate as prest;
 
 pub use anyhow::{anyhow, bail, Error, Result};
@@ -41,23 +23,45 @@ pub use axum::{
 };
 pub use futures::{
     executor::block_on,
-    stream::{StreamExt, TryStreamExt},
+    stream::{self, Stream, StreamExt, TryStreamExt},
 };
 pub use once_cell::sync::Lazy;
 pub use serde_json::json;
-pub use std::{env, sync::Arc};
+pub use std::{env, sync::Arc, convert::Infallible};
 pub use tower::{self, BoxError, Layer, Service, ServiceBuilder};
 pub use tracing::{debug, error, info, trace, warn};
+pub use uuid::Uuid;
 
-// --- GENERAL UTILS ---
+#[cfg(feature = "db")]
+mod db;
+#[cfg(feature = "db")]
+pub use db::*;
+#[cfg(feature = "embed")]
+mod embed;
+#[cfg(feature = "embed")]
+pub use embed::*;
+#[cfg(feature = "embed")]
+embed_as!(DefaultAssets from "assets");
 
+#[cfg(feature = "html")]
+mod html;
+#[cfg(feature = "html")]
+pub use html::*;
+#[cfg(feature = "html")]
 /// Default doctype for HTML
 pub const DOCTYPE: PreEscaped<&'static str> = PreEscaped("<!DOCTYPE html>");
-/// Default javascript code that registers a service worker from `/sw.js`
-pub const REGISTER_SW_SNIPPET: &str =
-    "if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {type: 'module'});";
 
-embed_as!(DefaultAssets from "assets");
+#[cfg(not(target_arch = "wasm32"))]
+mod host;
+#[cfg(not(target_arch = "wasm32"))]
+pub use host::*;
+
+#[cfg(target_arch = "wasm32")]
+mod service_worker;
+#[cfg(target_arch = "wasm32")]
+pub use service_worker::*;
+
+// --- GENERAL UTILS ---
 
 /// A little helper to init router and route in a single call to improve formatting
 pub fn route<S: Clone + Send + Sync + 'static>(
@@ -67,11 +71,9 @@ pub fn route<S: Clone + Send + Sync + 'static>(
     Router::<S>::new().route(path, method_router)
 }
 
-/// Explicit Uuid generation fn
-pub fn generate_uuid() -> Uuid {
-    Uuid::new_v4()
-}
-
+/// Default javascript code that registers a service worker from `/sw.js`
+pub const REGISTER_SW_SNIPPET: &str =
+    "if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {type: 'module'});";
 pub fn is_pwa() -> bool {
     #[cfg(target_arch = "wasm32")]
     return true;

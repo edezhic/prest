@@ -1,7 +1,7 @@
 [package]
 name = "prest-build"
 description = "Progressive RESTful framework build utils"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 resolver = "2" 
 license = "MIT OR Apache-2.0"
@@ -13,7 +13,27 @@ categories = ["development-tools", "wasm", "web-programming"]
 [lib]
 path = "./lib.rs"
 
+[features]
+sass = ["grass"]
+typescript = ["swc", "swc_atoms", "swc_bundler", "swc_common", "swc_config", "swc_ecma_ast", "swc_ecma_codegen", "swc_ecma_loader", "swc_ecma_minifier", "swc_ecma_parser", "swc_ecma_transforms_base", "swc_ecma_transforms_typescript", "swc_ecma_visit"]
+
 [dependencies]
-toml = "0.8.1"
+anyhow = "1"
+toml = "0.8.8"
 webmanifest = "1.1.1"
 wasm-bindgen-cli-support = "0.2.89"
+grass = { version = "0.13.1", default-features = false, optional = true }
+
+swc = { version = "0.270.7", optional = true }
+swc_atoms = { version = "0.6.5", optional = true }
+swc_bundler = { version = "0.223.5", features = ["concurrent"], optional = true }
+swc_common = { version = "0.33.12", features = ["tty-emitter"], optional = true }
+swc_config = { version = "0.1.9", optional = true }
+swc_ecma_parser = { version = "0.141.33", features = ["typescript"], optional = true }
+swc_ecma_ast = { version = "0.110.15", optional = true }
+swc_ecma_codegen = { version = "0.146.47", optional = true }
+swc_ecma_loader = { version = "0.45.13", optional = true }
+swc_ecma_minifier = { version = "0.190.5", optional = true }
+swc_ecma_transforms_base = { version = "0.135.3", optional = true }
+swc_ecma_transforms_typescript = { version = "0.186.5", optional = true }
+swc_ecma_visit = { version = "0.96.15", optional = true }

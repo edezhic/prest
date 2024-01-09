@@ -3,7 +3,7 @@ use crate::*;
 /// Renders into a `<head>` tag with builder-like interface
 pub struct Head<'a> {
     title: &'a str,
-    styles: Option<Vec<&'a str>>,
+    styles: Option<Vec<PreEscaped<&'a str>>>,
     stylesheets: Option<Vec<&'a str>>,
     favicon: Option<&'a str>,
     webmanifest: Option<&'a str>,
@@ -33,7 +33,7 @@ impl<'a> Head<'a> {
         self
     }
     /// Add inline css to the [`Head`]
-    pub fn style(mut self, style: &'a str) -> Self {
+    pub fn style(mut self, style: PreEscaped<&'a str>) -> Self {
         if let Some(styles) = &mut self.styles {
             styles.push(style)
         } else {
@@ -76,10 +76,10 @@ impl<'a> Render for Head<'a> {
                 @if let Some(href) = self.webmanifest { link rel="manifest" href=(href) {} }
                 @if let Some(viewport) = self.viewport { meta name="viewport" content=(viewport); }
                 @if let Some(color) = self.theme_color { meta name="theme-color" content=(color); }
-                @if let Some(stylesheets) = &self.stylesheets { @for stylesheet in stylesheets {link href={(stylesheet)} rel="stylesheet"{}}}
-                @if let Some(styles) = &self.styles { @for style in styles { style {(style)}}}
                 script src="https://cdn.tailwindcss.com?plugins=typography" {}
                 link href="https://cdn.jsdelivr.net/npm/daisyui@4.5.0/dist/full.min.css" rel="stylesheet"{}
+                @if let Some(stylesheets) = &self.stylesheets { @for stylesheet in stylesheets {link href={(stylesheet)} rel="stylesheet"{}}}
+                @if let Some(styles) = &self.styles { @for style in styles { style {(style)}}}
                 @if let Some(markup) = &self.other {(markup)}
             }
         )
@@ -122,9 +122,15 @@ impl<'a> Scripts<'a> {
 
 impl<'a> Render for Scripts<'a> {
     fn render(&self) -> Markup {
+        #[cfg(debug_assertions)]
+        let htmx_src = "https://unpkg.com/htmx.org@1.9.10/dist/htmx.js";
+        #[cfg(not(debug_assertions))]
+        let htmx_src = "https://unpkg.com/htmx.org@1.9.10";
+        
         html!(
             @if is_pwa() { script {(REGISTER_SW_SNIPPET)} }
-            script src="https://unpkg.com/htmx.org@1.9.10" defer crossorigin {}
+            script src=(htmx_src) defer crossorigin {}
+            script src="https://unpkg.com/htmx.org/dist/ext/sse.js" defer crossorigin {}
             @if let Some(srcs) = &self.others { @for src in srcs {
                 script src={(src)} defer crossorigin {}
             }}

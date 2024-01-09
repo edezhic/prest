@@ -1,10 +1,10 @@
-Served at [prest.blog](https://prest.blog). This whole blog source code is around 150 lines of rust + 60 lines of css. Here is all of it:
+Built from repo's markdown files as a proof-of-concept for prest and maintained to prettify documentation. Served at [prest.blog](https://prest.blog). Here goes all it's source code:
 
 {Cargo.toml}
 
-{src/main.rs}
-
 {build.rs}
+
+{src/main.rs}
 
 {src/lib.rs}
 

@@ -1,7 +1,14 @@
 use crate::*;
 use openidconnect::{core::*, reqwest::async_http_client, *};
 
+state!(WITH_GOOGLE_AUTH: bool = {
+    env::var("GOOGLE_CLIENT_ID").is_ok() && env::var("GOOGLE_CLIENT_SECRET").is_ok()
+});
+
 state!(GOOGLE_CLIENT: GoogleClient = async {
+    if !*WITH_GOOGLE_AUTH {
+        panic!("Attempted to use google client without credentials!")
+    }
     let client_id = env::var("GOOGLE_CLIENT_ID")?;
     let client_secret = env::var("GOOGLE_CLIENT_SECRET")?;
     let callback_url = "http://localhost/auth/google/callback".to_owned(); // TODO: replace hardcoded cb url with ...? built-in routes?

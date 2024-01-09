@@ -1,0 +1,12 @@
+[package]
+name = "todo-pwa-auth-sync"
+edition = "2021"
+
+[dependencies]
+prest = { path = "../../", features = ["auth"] }
+serde = { version = "1", features = ["derive"] }
+wasm-bindgen = "0.2"
+async-broadcast = "0.6"
+
+[build-dependencies]
+prest-build = { path = "../../build" }

@@ -1,0 +1,11 @@
+[package]
+name = "todo-pwa"
+edition = "2021"
+
+[dependencies]
+prest = { path = "../../" }
+serde = { version = "1", features = ["derive"] }
+wasm-bindgen = "0.2"
+
+[build-dependencies]
+prest-build = { path = "../../build" }

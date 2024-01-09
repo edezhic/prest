@@ -1,4 +1,4 @@
-// DUPLICATED FROM ../pwa.rs DUE TO AN ISSUE WITH RUST-ANALYZER FAILING TO RESOLVE #[path...] ATTRIBUTE
+// DUPLICATED FROM ../lib.rs DUE TO AN ISSUE WITH RUST-ANALYZER FAILING TO RESOLVE #[path...] ATTRIBUTE
 pub fn is_pwa() -> bool {
     #[cfg(target_arch = "wasm32")]
     return true;

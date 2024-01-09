@@ -3,8 +3,6 @@ cert.pem
 key.pem
 Cargo.lock
 target
-target_sw
 prest_storage
 .DS_Store
 migrations.toml
-commands.sh

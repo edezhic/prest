@@ -1,24 +1,61 @@
 mod google_openid;
 use axum::http::request::Parts;
-pub use google_openid::GOOGLE_CLIENT;
-use tower_sessions::{Expiry, SessionManagerLayer};
+pub use google_openid::{GOOGLE_CLIENT, WITH_GOOGLE_AUTH};
 
 use crate::*;
-use axum_login::{
-    AuthManagerLayer, AuthManagerLayerBuilder, AuthSession, AuthUser, AuthnBackend, UserId,
-};
+use axum_login::{AuthManagerLayer, AuthManagerLayerBuilder, AuthSession, AuthUser, AuthnBackend};
 pub use openidconnect::{CsrfToken as OAuthCSRF, Nonce as OAuthNonce};
+use password_auth::{generate_hash, verify_password};
 pub use tower_sessions::Session;
 use tower_sessions::{
     session::{Id, Record},
     session_store::{Error, Result},
-    SessionStore,
+    Expiry, SessionManagerLayer, SessionStore,
 };
-use password_auth::{generate_hash, verify_password};
 
+pub type UserId = Uuid;
 pub type AuthLayer = AuthManagerLayer<Db, Db>;
+pub type Auth = AuthSession<Db>;
+pub type OAuthCode = String;
 
-pub fn init_auth() -> (AuthLayer, Router) {
+#[derive(Table, Clone, Debug)]
+pub struct User {
+    pub id: Uuid,
+    #[unique_column]
+    pub username: Option<String>,
+    #[unique_column]
+    pub email: Option<String>,
+    pub password_hash: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub enum Credentials {
+    UsernamePassword { username: String, password: String },
+    EmailPassword { email: String, password: String },
+    GoogleOpenID { code: OAuthCode, nonce: OAuthNonce },
+}
+
+pub type OAuthQuery = Query<OAuthQueryParams>;
+#[derive(Debug, serde::Deserialize)]
+pub struct OAuthQueryParams {
+    pub code: OAuthCode,
+    pub state: OAuthCSRF,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct UsernamePasswordForm {
+    username: String,
+    password: String,
+    redirect: Option<String>,
+}
+
+trait AuthBackend:
+    AuthnBackend<User = User, Credentials = Credentials, Error = Infallible> + SessionStore
+{
+}
+impl AuthBackend for Db {}
+
+pub fn init_auth_module() -> (AuthLayer, Router) {
     SessionRow::migrate();
     User::migrate();
     let mut session_layer = SessionManagerLayer::new(DB.clone())
@@ -30,24 +67,53 @@ pub fn init_auth() -> (AuthLayer, Router) {
     }
     let layer = AuthManagerLayerBuilder::new(DB.clone(), session_layer).build();
 
-    let router = route("/auth/username_password/login", post(username_password_login))
-        .route("/auth/username_password/signup", post(username_password_signup))
-        .route("/auth/google", get(init_google_oauth))
-        .route("/auth/google/callback", get(google_oauth_callback))
-        .route("/auth/logout", get(logout));
+    let mut router = route(
+        "/auth/username_password/signin",
+        post(username_password_signin),
+    )
+    .route(
+        "/auth/username_password/signup",
+        post(username_password_signup),
+    )
+    .route("/auth/logout", get(logout));
+
+    if *WITH_GOOGLE_AUTH {
+        router = router
+            .route("/auth/google", get(init_google_oauth))
+            .route("/auth/google/callback", get(google_oauth_callback));
+    }
 
     (layer, router)
 }
 
-#[derive(Debug, serde::Deserialize)]
-struct UsernamePasswordForm {
-    username: String,
-    password: String,
-    redirect: Option<String>,
+impl User {
+    pub fn from_email(email: String) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            username: None,
+            email: Some(email),
+            password_hash: None,
+        }
+    }
+    pub fn from_username_password(username: String, password: String) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            username: Some(username),
+            email: None,
+            password_hash: Some(generate_hash(password)),
+        }
+    }
 }
 
-async fn username_password_login(mut auth: Auth, Form(form): Form<UsernamePasswordForm>) -> impl IntoResponse {
-    let UsernamePasswordForm { username, password, redirect } = form;
+async fn username_password_signin(
+    mut auth: Auth,
+    Form(form): Form<UsernamePasswordForm>,
+) -> impl IntoResponse {
+    let UsernamePasswordForm {
+        username,
+        password,
+        redirect,
+    } = form;
 
     let credentials = Credentials::UsernamePassword { username, password };
     let Ok(Some(user)) = auth.authenticate(credentials).await else {
@@ -67,14 +133,23 @@ async fn username_password_login(mut auth: Auth, Form(form): Form<UsernamePasswo
     }
 }
 
-async fn username_password_signup(mut auth: Auth, Form(form): Form<UsernamePasswordForm>) -> impl IntoResponse {
-    let UsernamePasswordForm { username, password, redirect } = form;
+async fn username_password_signup(
+    mut auth: Auth,
+    Form(form): Form<UsernamePasswordForm>,
+) -> impl IntoResponse {
+    let UsernamePasswordForm {
+        username,
+        password,
+        redirect,
+    } = form;
 
     if User::find_by_username(&username).is_some() {
-        return StatusCode::CONFLICT.into_response()
+        return StatusCode::CONFLICT.into_response();
     }
 
     let user = User::from_username_password(username, password);
+
+    user.save().unwrap();
 
     if auth.login(&user).await.is_err() {
         #[cfg(debug_assertions)]
@@ -99,7 +174,10 @@ const CSRF_KEY: &str = "oauth_csrf";
 const NONCE_KEY: &str = "oauth_nonce";
 const REDIRECT_KEY: &str = "after_auth_redirect";
 
-async fn init_google_oauth(session: Session, Query(NextUrl { next }): Query<NextUrl>) -> impl IntoResponse {
+async fn init_google_oauth(
+    session: Session,
+    Query(NextUrl { next }): Query<NextUrl>,
+) -> impl IntoResponse {
     let (authz_url, csrf_token, nonce) = GOOGLE_CLIENT.authz_request();
     let ins1 = session.insert(NONCE_KEY, nonce).await;
     let ins2 = session.insert(CSRF_KEY, csrf_token).await;
@@ -114,7 +192,11 @@ async fn init_google_oauth(session: Session, Query(NextUrl { next }): Query<Next
     Redirect::to(authz_url.as_str()).into_response()
 }
 
-async fn google_oauth_callback(session: Session, Query(query): OAuthQuery, mut auth: Auth) -> impl IntoResponse {
+async fn google_oauth_callback(
+    session: Session,
+    Query(query): OAuthQuery,
+    mut auth: Auth,
+) -> impl IntoResponse {
     let Ok(Some(initial_csrf)) = session.remove::<OAuthCSRF>(CSRF_KEY).await else {
         return StatusCode::UNAUTHORIZED.into_response();
     };
@@ -153,46 +235,6 @@ async fn logout(mut auth: Auth) -> impl IntoResponse {
         auth.logout().await.unwrap();
     }
     Redirect::to("/")
-}
-
-pub type Auth = AuthSession<Db>;
-
-pub type OAuthQuery = Query<OAuthQueryParams>;
-pub type OAuthCode = String;
-
-#[derive(Debug, serde::Deserialize)]
-pub struct OAuthQueryParams {
-    pub code: OAuthCode,
-    pub state: OAuthCSRF,
-}
-
-#[derive(Table, Clone, Debug)]
-pub struct User {
-    pub id: Uuid,
-    #[unique_column]
-    pub username: Option<String>,
-    #[unique_column]
-    pub email: Option<String>,
-    pub password_hash: Option<String>,
-}
-
-impl User {
-    pub fn from_email(email: String) -> Self {
-        Self {
-            id: generate_uuid(),
-            username: None,
-            email: Some(email),
-            password_hash: None,
-        }
-    }
-    pub fn from_username_password(username: String, password: String) -> Self {
-        Self {
-            id: generate_uuid(),
-            username: Some(username),
-            email: None,
-            password_hash: Some(generate_hash(password)),
-        }
-    }
 }
 
 #[async_trait]
@@ -236,18 +278,11 @@ impl AuthUser for User {
     }
 }
 
-#[derive(Clone, Debug)]
-pub enum Credentials {
-    UsernamePassword { username: String, password: String },
-    EmailPassword { email: String, password: String },
-    GoogleOpenID { code: OAuthCode, nonce: OAuthNonce },
-}
-
 #[async_trait]
 impl AuthnBackend for Db {
     type User = User;
     type Credentials = Credentials;
-    type Error = std::convert::Infallible;
+    type Error = Infallible;
 
     async fn authenticate(
         &self,
@@ -255,6 +290,10 @@ impl AuthnBackend for Db {
     ) -> std::result::Result<Option<Self::User>, Self::Error> {
         match creds {
             Credentials::GoogleOpenID { code, nonce } => {
+                if !*WITH_GOOGLE_AUTH {
+                    warn!("Attempted to authenticate with google credentials without google credentials!");
+                    return Ok(None); // TODO an error here
+                }
                 let Ok(email) = GOOGLE_CLIENT.get_email(code, nonce).await else {
                     return Ok(None); // TODO an error here
                 };
@@ -269,23 +308,34 @@ impl AuthnBackend for Db {
             }
             Credentials::UsernamePassword { username, password } => {
                 let Some(user) = User::find_by_username(&username) else {
-                    return Ok(None) // TODO an error here
+                    return Ok(None); // TODO an error here
                 };
                 let Some(pw_hash) = &user.password_hash else {
-                    return Ok(None) // TODO an error here
+                    return Ok(None); // TODO an error here
                 };
                 let Ok(()) = verify_password(password, pw_hash) else {
-                    return Ok(None) // TODO an error here
+                    return Ok(None); // TODO an error here
                 };
                 Ok(Some(user))
             }
-            _ => todo!("auth with other {creds:?}"),
+            Credentials::EmailPassword { email, password } => {
+                let Some(user) = User::find_by_email(&email) else {
+                    return Ok(None); // TODO an error here
+                };
+                let Some(pw_hash) = &user.password_hash else {
+                    return Ok(None); // TODO an error here
+                };
+                let Ok(()) = verify_password(password, pw_hash) else {
+                    return Ok(None); // TODO an error here
+                };
+                Ok(Some(user))
+            }
         }
     }
 
     async fn get_user(
         &self,
-        user_id: &UserId<Self>,
+        user_id: &axum_login::UserId<Self>,
     ) -> std::result::Result<Option<Self::User>, Self::Error> {
         Ok(User::find_by_id(user_id))
     }

@@ -1,4 +1,4 @@
-**P**rogressive **REST**ful framework that simplifies app development. Its still in early active development and recommended only for personal projects, experimentation and rust/web dev learning. The docs are in the [blog](https://prest.blog/) which is also [made with prest](https://prest.blog/about). Quick peek into prest's hello world:
+**P**rogressive **REST**ful framework that _makes application development simple again_. Beware that its still alpha and recommended only for personal projects, as well as rust web development training. Tutorials are available in the [blog](https://prest.blog/) which is also built with prest. Quick peek into prest's hello world:
 
 ```rust
 use prest::*;
@@ -9,44 +9,51 @@ fn main() {
 
 ### yet another framework?
 
-Yes. Initial motivation came from [Rust](https://www.rust-lang.org/) - arguably the most [reliable practical language](https://edezhic.medium.com/reliable-software-engineering-with-rust-5bb4553b5d54) with an [amazingly wide ecosystem](https://github.com/rust-unofficial/awesome-rust). It's adoption is growing rapidly, but many newcomers stumble upon onboarding pains and getting lost in the myriads of libraries. So, I decided to build prest in attempts to _make application development simple again_.
+Yes. Initial motivation came from [Rust](https://www.rust-lang.org/) itself - arguably the most [reliable practical language](https://edezhic.medium.com/reliable-software-engineering-with-rust-5bb4553b5d54). It's adoption is growing rapidly, but most newcomers are getting lost in the myriads of libraries and struggle to build their first apps. So, this project is aiming to provide a batteries-included basic setup.
 
-**Prest allows building full-stack cross-platform apps for the development cost of writing HTML**. Deployment? Just compile and you'll get a single all-included binary. Database? Already embedded one with a query builder for you. Authentication? Sessions, user management and Google OpenID are built-in as well. The fullstack [todo app example](https://prest.blog/app-todo) is just about 50 lines of code total. And there are plenty of examples how to include other tech into your prest app.
+**Prest allows building full-stack cross-platform apps for the development cost of writing HTML**. Database? Already embedded one. Authentication? Built-in as well. UI? Everything necessary for smooth UX is included. Deployment? Just `cargo build` and you'll get a single all-included server binary that can also distribute an [installable PWA](https://web.dev/articles/what-are-pwas). This is possible thanks to a bunch of amazing dependencies described in the [internals](https://prest.blog/internals).
 
-It's based on mature web standards instead of custom solutions like [React Native](https://reactnative.dev/) or [Flutter](https://flutter.dev/), and built with full-stack in mind from the very beginning. Modern web capabilities have more than enough for most apps - you can even build games & AI with near-native performance using wasm and [WebGPU](https://developer.chrome.com/blog/webgpu-io2023/), and on the other hand you can relatively easily support old platforms and hardware. 
+### available features
 
-However, rust requires some understanding of low-level details which are *somewhat* hidden in languages like Javascript and Dart. Prest attempts to keep them as far as possible, but you won't be able to dodge them if you want top performance. Also, web apis aren't as all-powerful as native ones, so if you rely on direct access to OS apis then building with prest is probably not worth it. Anyway, rust has plenty of libraries to work with modern platforms so check it out even without prest!
+The core of prest is built around the usual REST components: async http processing with router, middleware, handlers, state and other utilities. Default features include: embedded sql `db` with query builder and orm-like helpers, macros to easily `embed` any files, `html` macro for rust'y templating, and `traces` for extensive and convenient logging. All of the above can be compiled both for the server side and into the client's service worker to achieve powerful progressive enchancement and reuse code.
+
+There is also a couple of optional features:
+
++ `auth` - session and user management based on passwords or openID
++ `https` - TLS integration based on rustls that avoids openssl linking issues and redirects from http to https.
++ `lazy-embed` - to load embedded files from the filesystem even in the release mode
++ `webview` - running host functionality with a webview for client/offline-first apps. Somewhat like Electron but with much smaller and faster binaries.
+
+PWA build process is just a few lines of code thanks to the `prest-build` utility crate that also has a couple of optional features to bundle other sources with your app:
+
++ `sass` - SASS/SCSS transpilation and bundling 
++ `typescript` - same for TypeScript/JS
+
+Rust ecosystem has plenty of crates for all kinds of tasks and some of them are showcased in prest's examples. You can also disable any of these features (except core) to speed up compilation or to replace with other tools.
 
 ### getting started
 
-Prest docs assume that you're familiar with rust. If you aren't yet check out [The Rust Book](https://doc.rust-lang.org/book/) - definitely the best guide with interactive examples (available in dozens of languages!). Also, I strongly recommend skimming through the first three chapters of the [async book](https://rust-lang.github.io/async-book/) to get an overall understanding how concurrency works in rust. 
+Further docs assume that you're familiar with rust. If you aren't yet check out [The Rust Book](https://doc.rust-lang.org/book/) - definitely the best guide with interactive examples (available in dozens of languages!). Also, I strongly recommend skimming through the first three chapters of the [async book](https://rust-lang.github.io/async-book/) to get an overall understanding how concurrency works in rust. 
 
-Here are the onboarding examples to the core features of prest:
+Prest tutorials are designed to start from basics and then add more and more features on top:
 
-1. [Hello Host](https://prest.blog/hello-host) - setting up the server
-2. [Hello HTML](https://prest.blog/hello-html) - adding an interface
-3. [Hello PWA](https://prest.blog/hello-pwa) - making UI [installable](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable)
+1. [Todo](https://prest.blog/todo) = basic full-stack todo app in just about 50 lines of code
+2. [PWA](https://prest.blog/todo-pwa) = 1 + PWA capabilities and an offline view, ~80 LoC
+3. [Auth](https://prest.blog/todo-pwa-auth) = 2 + username+password and Google auth, ~130 LoC
+4. [Sync](https://prest.blog/todo-pwa-auth-sync) = 3 + synchronization between clients, ~180 LoC
 
-To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/). Many examples are also supported on [replit](https://replit.com/) so you can [fork it there](https://replit.com/@eDezhic/prest-app) and run in the cloud without any setup. It runs [rust-analyzer](https://rust-analyzer.github.io/) and I recommend it for local development as well. To build & start any example from the forked prest repo use `cargo run -p EXAMPLE-NAME`, or just copy the selected example's code from the blog and `cargo run` it. Some examples require additional setup which is described in their docs.
+There are also todo examples with different databases - postgres through [seaorm](https://prest.blog/postgres-seaorm) or [diesel](https://prest.blog/postgres-diesel), sqlite through [sqlx](https://prest.blog/sqlite-sqlx) or [turbosql](https://prest.blog/sqlite-turbosql), [mongo](https://prest.blog/mongo-driver), [redis](https://prest.blog/redis-driver). Also, there is a couple of examples that showcase how one might use prest with uncommon for web development tech: [web scraper](https://prest.blog/scraper), [Large Language Model](https://prest.blog/llm-mistral) and a [blockchain Smart Contract](https://prest.blog/smart-contract).
 
-Some of the examples that showcase how to use prest with other things:
-
-* different databases - postgres through [seaorm](https://prest.blog/with-seaorm-postgres) or [diesel](https://prest.blog/with-diesel-postgres), sqlite through [sqlx](https://prest.blog/with-sqlx-sqlite) or [turbosql](https://prest.blog/with-turbosql-sqlite), [mongo](https://prest.blog/with-mongo-driver), [redis](https://prest.blog/with-redis-driver)
-* compilation and bundling of [SASS/SCSS](https://prest.blog/with-grass-scss), [TypeScript](https://prest.blog/with-swc-typescript) and other sources in the build pipeline
-* other templating engines like [Askama](https://prest.blog/with-jinja-askama) which provides Jinja-like syntax
-* even [Large Language Models](https://prest.blog/with-candle-mistral) and [blockchain Smart Contracts](https://prest.blog/with-substrate-contract)!
-
-You can also compile prest apps [into native binaries](https://prest.blog/into-native) if you need access to system APIs or want to distribute as a file, and you can compile the host [into WebAssembly with a system interface](https://prest.blog/into-wasi). You can even combine the best of both worlds and [create portable wasi binaries](https://github.com/dylibso/hermit). The range of possibilities is so wide that only C and C++ can exceed it, but rust provides much better development and maintenance experience in most cases. To be fair the rust ecosystem is relatively young, but it's growing fast and already has a suprisingly large and diverse set of stable libraries.
-
-### under the hood
-Prest itself is a relatively thin wrapper around a whole bunch of rust libs, and it is intended to stay that way for the foreseeable future to enable frequent major changes. The initial goal is to come up with a simple interface over an extendable foundation with reasonable defaults. So, its existance is only possible thanks to a number of brilliant projects which you can find among the [prest's dependencies](https://github.com/edezhic/prest/blob/main/Cargo.toml) and mentions in the docs.
-
-Architectural inspiration came from [this proof-of-concept](https://github.com/richardanaya/wasm-service) - combination of a rust-based [Service Worker](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API) compiled into [WebAssembly](https://webassembly.org/) with [HTMX](https://htmx.org/) library. This will likely sound pretty wild if you haven't worked with these technologies, but the underlying idea is simple - extend the regular [REST architecture](https://htmx.org/essays/rest-explained/) with a client-side worker that can respond to some of the requests. Thanks to the rich wasm support in rust you can easily cross-compile rendering code for both server and the service worker. Thanks to HTMX you can easily build dynamic UIs without writing a single line of javascript. And thanks to [progressive web capabilities](https://web.dev/what-are-pwas/) this combo easily becomes a native-like installable application.
-
-While rust allows working with native bindings on any platform, prest is mostly focused on web apis and standards to be as cross-platform and easily distributable as it gets. Nowadays there are plenty of them for all kinds of use cases, check [chromium's](https://fugu-tracker.web.app/) for example. In many cases a bit of js or hyperscript would be easier to make and use on the client side, but you can also work with web apis in rust using [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) if you want more reliability or aren't comfortable with these languages.
+To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/). I also recommend setting up the [rust-analyzer](https://rust-analyzer.github.io/) for your favourite IDE right away. To build & start any example from the cloned prest repo use `cargo run -p EXAMPLE-NAME`. Or just copy the selected example's code from the tutorials into local files and `cargo run` it. Some examples require additional setup and credentials which are mentioned in their docs.
 
 ### what's next
-This is a hobby project and plans change frequently, but there are things I'd likely work on or consider next:
-+ collaborative todo board example
-+ docs updates
-+ move prest errors from anyhow to thiserror
+
+This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
++ ship v0.2.0!
++ add broadcast channel type for SSEs
++ register templates for different response codes 
++ rewrite scraping example
++ rewrite blockchain example
++ add something storybook-like
++ containerization/deployment utils: currently blog is built using `CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld CARGO_PROFILE_RELEASE_LTO=fat cargo build -p blog --release --target=x86_64-unknown-linux-musl` and simply executed, but it's not as simple when `auth` or `https` is enabled due to the cross-compilation issues of `ring`. Maybe based on [youki](https://github.com/containers/youki)
++ migrate prest errors from anyhow to thiserror; other stabilization efforts

@@ -1,16 +1,14 @@
-use std::collections::HashMap;
-
 use crate::*;
 pub use gluesql::{
-    core::ast_builder::{
-        col, table, Build as BuildSQL, DeleteNode, ExprNode, FilterNode, InsertNode, SelectNode,
-        UpdateNode,
-    },
-    prelude::{Glue, Payload, Value as DbValue},
+    core::ast_builder::{col, table},
+    prelude::{Payload, Value as DbValue},
 };
+pub use prest_db_macro::Table;
+
 use gluesql::{
     core::{
         ast::{ColumnDef, IndexOperator, OrderByExpr},
+        ast_builder::{Build as BuildSQL, DeleteNode, InsertNode, SelectNode, UpdateNode},
         data::{CustomFunction as StructCustomFunction, Key, Schema},
         error::Error as GlueError,
         store::{
@@ -18,15 +16,15 @@ use gluesql::{
             RowIter, Store, StoreMut, Transaction,
         },
     },
+    prelude::Glue,
     shared_memory_storage::SharedMemoryStorage as MemoryStorage,
 };
-pub use prest_db_macro::Table;
-pub use uuid::Uuid;
 
 type GResult<T> = std::result::Result<T, GlueError>;
 
 state!(DB: Db = {
     #[cfg(not(target_arch = "wasm32"))] {
+        check_dot_env();
         match env::var("DB_PATH") {
             Ok(path) => {
                 Db::Persistent(PersistentStorage::new(&path).unwrap())
@@ -43,10 +41,11 @@ pub enum Db {
     Memory(MemoryStorage),
     Persistent(PersistentStorage),
 }
+use Db::*;
 
 impl Db {
     #[allow(dead_code)]
-    fn query(&self, query: &str) -> Result<Vec<Payload>> {
+    pub fn query(&self, query: &str) -> Result<Vec<Payload>> {
         // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1265
         let payload = block_on(Glue::new(self.clone()).execute(query))?;
         Ok(payload)
@@ -69,10 +68,13 @@ impl<Q: BuildSQL> Executable for Q {
     fn rows(self) -> Result<Vec<Vec<DbValue>>> {
         match self.exec() {
             Ok(Payload::Select { rows, .. }) => Ok(rows),
-            Ok(p) => return Err(anyhow!(
-                "rows method used on non-select query that returned: {:?}",
-                p
-            ).into()),
+            Ok(p) => {
+                return Err(anyhow!(
+                    "rows method used on non-select query that returned: {:?}",
+                    p
+                )
+                .into())
+            }
             Err(e) => return Err(anyhow!("query execution failed with: {e:?}").into()),
         }
     }
@@ -142,7 +144,7 @@ pub trait Table: Sized {
         let payload = Self::delete().filter(Self::key_filter(key)).exec()?;
         match payload {
             Payload::Delete(_) => Ok(()),
-            _ => return Err(anyhow!("Couldn't delete item with key = {key}").into())
+            _ => return Err(anyhow!("Couldn't delete item with key = {key}").into()),
         }
     }
 
@@ -150,8 +152,6 @@ pub trait Table: Sized {
         Self::delete_by_key(&self.get_key())
     }
 }
-
-use Db::*;
 
 #[async_trait(?Send)]
 impl Store for Db {
@@ -372,6 +372,7 @@ impl IndexMut for Db {
 }
 
 type ObjectName = String;
+use std::collections::HashMap;
 pub type MetaIter = Box<dyn Iterator<Item = GResult<(ObjectName, HashMap<String, DbValue>)>>>;
 
 #[async_trait(?Send)]
