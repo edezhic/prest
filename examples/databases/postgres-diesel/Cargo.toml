@@ -7,7 +7,7 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = { path = "../../../" }
+prest = "0.2"
 serde = { version = "1", features = ["derive"] }
 diesel = { version = "2.1.0", features = ["uuid"] }
 diesel-async = { version = "0.3.1", features = ["deadpool", "postgres"] }

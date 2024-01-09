@@ -3,7 +3,7 @@ name = "redis-driver"
 edition = "2021"
 
 [dependencies]
-prest = { path = "../../../" }
+prest = "0.2"
 redis = "0.23.3"
 uuid = { version = "1.6", features = ["v4"] }
 serde = { version = "1", features = ["derive"] }

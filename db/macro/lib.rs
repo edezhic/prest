@@ -41,7 +41,7 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
         _ => panic!("Table macro doesn't support more than one key at the moment")
     };
 
-    let key_column = columns.iter().find(|c| c.key).unwrap().clone();
+    let key_column = columns.iter().find(|c| c.key).unwrap();
 
     let add_columns = columns.iter().map(
         |Column {
@@ -281,13 +281,11 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
     }
 }
 
-#[derive(Debug, Clone)]
 enum FromRowTransform {
     UuidFromU128,
     None,
 }
 
-#[derive(Debug, Clone)]
 struct Column {
     name_ident: Ident,
     name_str: String,
