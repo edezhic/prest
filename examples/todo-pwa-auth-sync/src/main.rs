@@ -58,25 +58,14 @@ async fn todos(auth: Auth) -> Markup {
             }
         } @else {
             @if *WITH_GOOGLE_AUTH {
-                a."btn btn-ghost" href="/auth/google" {"Login with Google"}
+                a."btn btn-ghost" href=(GOOGLE_LOGIN_ROUTE) {"Login with Google"}
                 ."divider" {"OR"}
             }
-            ."flex" {
-                ."bg-base-100 border-base-300 rounded-box p-6" {
-                    form."flex flex-col gap-4 items-center" method="POST" action="/auth/username_password/signin" {
-                        input."input input-bordered input-primary" type="text" name="username" placeholder="username" {}
-                        input."input input-bordered input-primary" type="password" name="password" placeholder="password" {}
-                        button."btn btn-outline btn-primary ml-4" type="submit" {"Sign in"}
-                    }
-                }
-                ."divider divider-horizontal" {}
-                ."bg-base-100 border-base-300 rounded-box p-6" {
-                    form."flex flex-col gap-4 items-center" method="POST" action="/auth/username_password/signup" {
-                        input."input input-bordered input-primary" type="text" name="username" placeholder="username" {}
-                        input."input input-bordered input-primary" type="password" name="password" placeholder="password" {}
-                        button."btn btn-outline btn-primary ml-4" type="submit" {"Sign up"}
-                    }
-                }
+            form."flex flex-col gap-4 items-center" method="POST" action=(LOGIN_ROUTE) {
+                input."input input-bordered input-primary" type="text" name="username" placeholder="username" {}
+                input."input input-bordered input-primary" type="password" name="password" placeholder="password" {}
+                input type="hidden" name="signup" value="true" {}
+                button."btn btn-outline btn-primary ml-4" type="submit" {"Sign in / Sign up"}
             }
         }
         #"todos" ."w-full" hx-ext="sse" sse-connect="/todos/subscribe" sse-swap="add" hx-swap="beforeend" {
@@ -96,60 +85,47 @@ async fn todos_subscribe(auth: Auth) -> Sse<impl Stream<Item = SseItem>> {
     Sse::new(stream.map(Ok)).keep_alive(SseKeepAlive::default())
 }
 
-async fn add(user: User, Form(mut todo): Form<Todo>) -> StatusCode {
+async fn add(user: User, Form(mut todo): Form<Todo>) -> Result<()> {
     todo.owner = user.id;
-    let Ok(_) = todo.save() else {
-        return StatusCode::INTERNAL_SERVER_ERROR;
-    };
-    let Ok(_) = BROADCAST
+    todo.save()?;
+    BROADCAST
         .0
         .broadcast_direct(BroadcastMsg {
             event: "add".to_owned(),
             data: Some(todo),
         })
         .await
-    else {
-        return StatusCode::INTERNAL_SERVER_ERROR;
-    };
-    StatusCode::OK
+        .map_err(|e| anyhow!("{e}"))?;
+    Ok(())
 }
 
-async fn toggle(user: User, Form(mut todo): Form<Todo>) -> StatusCode {
-    if todo.owner != user.id {
-        return StatusCode::UNAUTHORIZED;
+async fn toggle(user: User, Form(mut todo): Form<Todo>) -> Result<()> {
+    if !todo.check_owner(user.id)? {
+        return Err(Error::Unauthorized);
     }
-    let Ok(_) = todo.update_done(!todo.done) else {
-        return StatusCode::INTERNAL_SERVER_ERROR;
-    };
-
-    let Ok(_) = BROADCAST
+    todo.update_done(!todo.done)?;
+    BROADCAST
         .0
         .broadcast_direct(BroadcastMsg {
             event: todo.id.to_string(),
             data: Some(todo),
         })
         .await
-    else {
-        return StatusCode::INTERNAL_SERVER_ERROR;
-    };
-    StatusCode::OK
+        .map_err(|e| anyhow!("{e}"))?;
+    Ok(())
 }
-async fn delete(user: User, Form(todo): Form<Todo>) -> StatusCode {
-    if todo.owner != user.id {
-        return StatusCode::UNAUTHORIZED;
+async fn delete(user: User, Form(todo): Form<Todo>) -> Result<()> {
+    if !todo.check_owner(user.id)? {
+        return Err(Error::Unauthorized);
     }
-    let Ok(_) = todo.remove() else {
-        return StatusCode::INTERNAL_SERVER_ERROR;
-    };
-    let Ok(_) = BROADCAST
+    todo.remove()?;
+    BROADCAST
         .0
         .broadcast_direct(BroadcastMsg {
             event: todo.id.to_string(),
             data: None,
         })
         .await
-    else {
-        return StatusCode::INTERNAL_SERVER_ERROR;
-    };
-    StatusCode::OK
+        .map_err(|e| anyhow!("{e}"))?;
+    Ok(())
 }

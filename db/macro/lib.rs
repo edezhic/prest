@@ -26,19 +26,15 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
         _ => panic!("Expected a `struct` with named fields"),
     };
 
-    let mut columns: Vec<Column> = fields
-        .named
-        .into_iter()
-        .map(decompose)
-        .collect();
+    let mut columns: Vec<Column> = fields.named.into_iter().map(decompose).collect();
 
     match columns.iter().filter(|c| c.key).count() {
         0 => {
             columns[0].key = true;
             columns[0].unique = true;
         }
-        1 => {},
-        _ => panic!("Table macro doesn't support more than one key at the moment")
+        1 => {}
+        _ => panic!("Table macro doesn't support more than one key at the moment"),
     };
 
     let key_column = columns.iter().find(|c| c.key).unwrap();
@@ -72,6 +68,7 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
             let inner = ident("inner");
             let transform = match from_row_transform {
                 FromRowTransform::UuidFromU128 => quote!(let #inner = prest::Uuid::from_u128(#inner);),
+                FromRowTransform::Deserialize => quote!(let #inner = serde_json::from_str(&#inner).unwrap();),
                 FromRowTransform::None => quote!(),
             };
             if *list {
@@ -120,23 +117,27 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
         let Column {
             name_ident,
             optional,
+            custom_type,
             ..
         } = col;
 
         let into_row_fmt = row_value_fmt(col);
 
+        let serialize = match custom_type {
+            true => quote!(format!(#into_row_fmt, serde_json::to_string(#name_ident).unwrap())),
+            false => quote!(format!(#into_row_fmt)),
+        };
+
         if *optional {
             quote! {
                 let #name_ident = if let Some(#name_ident) = #name_ident {
-                    format!(#into_row_fmt)
+                    #serialize
                 } else {
                     "NULL".to_owned()
                 };
             }
         } else {
-            quote! {
-                let #name_ident = format!(#into_row_fmt);
-            }
+            quote! { let #name_ident = #serialize; }
         }
     });
 
@@ -160,9 +161,16 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
             inner_type,
             optional,
             unique,
+            custom_type,
             ..
         } = col;
-        let values = quote!(Self::select().filter(filter).rows().unwrap().into_iter().map(Self::from_row).collect());
+        let values = quote!(Self::select()
+            .filter(filter)
+            .rows()
+            .unwrap()
+            .into_iter()
+            .map(Self::from_row)
+            .collect());
 
         let find_null_fn = if *optional {
             let fn_name = find_by_null_(col);
@@ -179,16 +187,20 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
         };
 
         let fn_name = find_by_(col);
-        let fn_value = if *unique { quote!(Option<Self>) } else { quote!(Vec<Self>) };
-        let fn_arg = if *optional { inner_type } else { field_type };
-        let filter_str = match optional {
-            true => format!("{name_str} = {}", row_value_fmt(col)),
-            false => format!("{name_str} = {}", row_value_fmt(col))
+        let fn_value = if *unique {
+            quote!(Option<Self>)
+        } else {
+            quote!(Vec<Self>)
         };
-        let filter = quote!(format!(#filter_str));
+        let fn_arg = if *optional { inner_type } else { field_type };
+        let filter_str = format!("{name_str} = {}", row_value_fmt(col));
+        let filter = match custom_type {
+            true => quote!(format!(#filter_str, serde_json::to_string(#name_ident).unwrap())),
+            false => quote!(format!(#filter_str)),
+        };
         let fn_return = match unique {
             true => quote!(values.pop()),
-            false => quote!(values)
+            false => quote!(values),
         };
         quote! {
             pub fn #fn_name(#name_ident: &#fn_arg) -> #fn_value {
@@ -215,6 +227,24 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
                     #set_column
                     .exec()?;
                 Ok(self)
+            }
+        }
+    });
+
+    let check_fns = columns.iter().map(|col| {
+        let Column {
+            name_ident,
+            field_type,
+            ..
+        } = col;
+        let fn_name = check_(col);
+        quote! {
+            pub fn #fn_name(&self, value: #field_type) -> prest::Result<bool> {
+                if let Some(item) = Self::find_by_key(self.get_key()) {
+                    Ok(item.#name_ident == value)
+                } else {
+                    Err(prest::Error::NotFound)
+                }
             }
         }
     });
@@ -270,19 +300,21 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
                 #(#fields_idents_into_row_items)*
                 format!(#into_row_format)
             }
-            
+
             #save_fn
         }
 
         impl #struct_name {
             #(#find_fns)*
             #(#update_fns)*
+            #(#check_fns)*
         }
     }
 }
 
 enum FromRowTransform {
     UuidFromU128,
+    Deserialize,
     None,
 }
 
@@ -299,6 +331,7 @@ struct Column {
     optional: bool,
     list: bool,
     unique: bool,
+    custom_type: bool,
 }
 
 fn decompose(field: Field) -> Column {
@@ -334,18 +367,16 @@ fn decompose(field: Field) -> Column {
             (type_str, false, false)
         };
 
+    if key && optional || key && list {
+        panic!("Primary Key (first attribute by default) cannot be Option<...> or Vec<...>")
+    }
+
+    let custom_type = match inner_type_str {
+        "Uuid" | "String" | "bool" | "u64" | "f64" | "u8" => false,
+        _ => true,
+    };
+
     let inner_type: syn::Type = syn::parse_str(inner_type_str).unwrap();
-
-    match inner_type_str {
-        "Uuid" | "String" | "bool" | "u64" | "f64" | "u8" => (),
-        _ => panic!("Type {inner_type_str} is not supported in the Table derive macro"),
-    };
-
-    match (key, optional, list) {
-        (true, true, _) => panic!("Key (first attribute) cannot be optional"),
-        (true, _, true) => panic!("Key (first attribute) cannot be list"),
-        _ => (),
-    };
 
     let column_type = if list {
         "LIST"
@@ -357,7 +388,7 @@ fn decompose(field: Field) -> Column {
             "u64" => "UINT64",
             "u8" => "UINT8",
             "f64" => "FLOAT",
-            _ => panic!("Unsupported gluesql type: {inner_type_str}"),
+            _ => "TEXT",
         }
     }
     .to_owned();
@@ -369,16 +400,18 @@ fn decompose(field: Field) -> Column {
         "u64" => "U64",
         "u8" => "U8",
         "f64" => "F64",
-        _ => panic!("Unsupported gluesql value: {inner_type_str}"),
+        _ => "Str",
     };
     let dbvalue_variant = ident(dbvalue_variant);
 
     let from_row_transform = match inner_type_str {
         "Uuid" => FromRowTransform::UuidFromU128,
+        _ if custom_type => FromRowTransform::Deserialize,
         _ => FromRowTransform::None,
     };
 
-    let stringy_in_sql = inner_type_str == "Uuid" || inner_type_str == "String" || list;
+    let stringy_in_sql =
+        list || custom_type || inner_type_str == "Uuid" || inner_type_str == "String";
 
     Column {
         column_type,
@@ -393,6 +426,7 @@ fn decompose(field: Field) -> Column {
         optional,
         list,
         unique,
+        custom_type,
     }
 }
 
@@ -401,9 +435,12 @@ fn row_value_fmt(column: &Column) -> String {
         list,
         stringy_in_sql,
         name_str,
+        custom_type,
         ..
     } = column;
-    if *list {
+    if *custom_type {
+        format!("'{{}}'")
+    } else if *list {
         format!("'{{{name_str}:?}}'")
     } else if *stringy_in_sql {
         format!("'{{{name_str}}}'")
@@ -419,20 +456,25 @@ fn set_column(column: &Column) -> TokenStream2 {
         stringy_in_sql,
         list,
         optional,
+        custom_type,
         ..
     } = column;
     let key: Expr = parse_quote!(#name_str);
     let fmt_str = if *list { "'{:?}'" } else { "'{}'" };
-    let value = match (stringy_in_sql, optional) {
-        (true, true) => {
-            quote!(if let Some(v) = &self.#name_ident { format!(#fmt_str, v.clone()) } else { "NULL".to_owned() })
-        }
-        (true, false) => quote!(format!(#fmt_str, self.#name_ident.clone())),
-        (false, true) => {
-            quote!(if let Some(v) = &self.#name_ident { v.clone() } else { "NULL".to_owned() })
-        }
-        (false, false) => quote!(self.#name_ident.clone()),
+    let value = if *custom_type && *optional {
+        quote!(if let Some(v) = &self.#name_ident { format!(#fmt_str, serde_json::to_string(v).unwrap()) } else { "NULL".to_owned() })
+    } else if *custom_type {
+        quote!(format!(#fmt_str, serde_json::to_string(&self.#name_ident).unwrap()))
+    } else if *stringy_in_sql && *optional {
+        quote!(if let Some(v) = &self.#name_ident { format!(#fmt_str, v.clone()) } else { "NULL".to_owned() })
+    } else if *optional {
+        quote!(if let Some(v) = &self.#name_ident { v.clone() } else { "NULL".to_owned() })
+    } else if *stringy_in_sql {
+        quote!(format!(#fmt_str, self.#name_ident.clone()))
+    } else {
+        quote!(self.#name_ident.clone())
     };
+
     quote! { .set(#key, #value) }
 }
 
@@ -446,6 +488,10 @@ fn find_by_null_(col: &Column) -> Ident {
 
 fn update_(col: &Column) -> Ident {
     ident(&format!("update_{}", col.name_str))
+}
+
+fn check_(col: &Column) -> Ident {
+    ident(&format!("check_{}", col.name_str))
 }
 
 fn ident(name: &str) -> Ident {

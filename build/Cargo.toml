@@ -14,14 +14,17 @@ categories = ["development-tools", "wasm", "web-programming"]
 path = "./lib.rs"
 
 [features]
+default = ["pwa"]
+pwa = ["webmanifest", "wasm-bindgen-cli-support"]
 sass = ["grass"]
 typescript = ["swc", "swc_atoms", "swc_bundler", "swc_common", "swc_config", "swc_ecma_ast", "swc_ecma_codegen", "swc_ecma_loader", "swc_ecma_minifier", "swc_ecma_parser", "swc_ecma_transforms_base", "swc_ecma_transforms_typescript", "swc_ecma_visit"]
 
 [dependencies]
 anyhow = "1"
 toml = "0.8.8"
-webmanifest = "1.1.1"
-wasm-bindgen-cli-support = "0.2.89"
+cfg_aliases = "0.2"
+webmanifest = { version = "1.1.1", optional = true }
+wasm-bindgen-cli-support = { version = "0.2.89", optional = true }
 grass = { version = "0.13.1", default-features = false, optional = true }
 
 swc = { version = "0.270.7", optional = true }

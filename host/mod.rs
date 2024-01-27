@@ -35,6 +35,7 @@ pub trait HostUtils {
     /// Init env vars, DB, auth, tracing, other utils and start the server
     fn run(self);
     fn serve(self);
+    fn admin(self) -> Self;
     fn init_tracing(self) -> Self;
     fn init_auth(self) -> Self;
     fn default_embeddings(self) -> Self;
@@ -49,6 +50,7 @@ impl HostUtils for Router {
             .init_tracing()
             .default_embeddings()
             .add_utility_layers()
+            .admin()
             .serve()
     }
     #[cfg(feature = "webview")]
@@ -75,6 +77,10 @@ impl HostUtils for Router {
                 https::serve_https().await
             })
             .unwrap();
+    }
+    fn admin(self) -> Self {
+        //self.route("/admin", get("Admin"))
+        self
     }
     fn init_auth(self) -> Self {
         #[cfg(feature = "auth")]

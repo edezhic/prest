@@ -8,4 +8,5 @@ serde = { version = "1", features = ["derive"] }
 wasm-bindgen = "0.2"
 
 [build-dependencies]
-prest-build = "0.2"
+prest-build = { path = "../../build/", version = "0.2" }
+

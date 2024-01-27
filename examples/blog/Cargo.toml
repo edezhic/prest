@@ -9,4 +9,5 @@ markdown = "1.0.0-alpha.16"
 toml = "0.8.8"
 
 [build-dependencies]
-prest-build = "0.2.0"
+prest-build = { path = "../../build/", version = "0.2" }
+

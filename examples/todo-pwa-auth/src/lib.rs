@@ -23,7 +23,7 @@ pub async fn into_page(content: Markup) -> Markup {
     }}
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(sw)]
 #[wasm_bindgen(start)]
 pub fn main() {
     shared_routes().handle_fetch_events()

@@ -39,8 +39,8 @@ Prest tutorials are designed to start from basics and then add more and more fea
 
 1. [Todo](https://prest.blog/todo) = basic full-stack todo app in just about 50 lines of code
 2. [PWA](https://prest.blog/todo-pwa) = 1 + PWA capabilities and an offline view, ~80 LoC
-3. [Auth](https://prest.blog/todo-pwa-auth) = 2 + username+password and Google auth, ~130 LoC
-4. [Sync](https://prest.blog/todo-pwa-auth-sync) = 3 + synchronization between clients, ~180 LoC
+3. [Auth](https://prest.blog/todo-pwa-auth) = 2 + username+password and Google auth, ~110 LoC
+4. [Sync](https://prest.blog/todo-pwa-auth-sync) = 3 + synchronization between clients, ~160 LoC
 
 There are also todo examples with different databases - postgres through [seaorm](https://prest.blog/postgres-seaorm) or [diesel](https://prest.blog/postgres-diesel), sqlite through [sqlx](https://prest.blog/sqlite-sqlx) or [turbosql](https://prest.blog/sqlite-turbosql), [mongo](https://prest.blog/mongo-driver), [redis](https://prest.blog/redis-driver). Also, there is a couple of examples that showcase how one might use prest with uncommon for web development tech: [web scraper](https://prest.blog/scraper), [Large Language Model](https://prest.blog/llm-mistral) and a [blockchain Smart Contract](https://prest.blog/smart-contract).
 
@@ -49,10 +49,14 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ add broadcast channel type for SSEs?
++ emails https://github.com/stalwartlabs/mail-server
++ background jobs (queue?)
++ file storage
++ i18n
 + register templates for different response codes 
++ sql escaping?
++ admin panel: logs, db explorer? Only with auth + db features?
 + rewrite scraping example
 + rewrite blockchain example
 + add something storybook-like
 + containerization/deployment utils: currently blog is built using `CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld CARGO_PROFILE_RELEASE_LTO=fat cargo build -p blog --release --target=x86_64-unknown-linux-musl` and simply executed, but it's not as simple when `auth` or `https` is enabled due to the cross-compilation issues of `ring`. Maybe based on [youki](https://github.com/containers/youki)
-+ migrate prest errors from anyhow to thiserror; other stabilization efforts

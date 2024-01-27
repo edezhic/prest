@@ -63,7 +63,8 @@ impl GoogleClient {
             .0
             .exchange_code(AuthorizationCode::new(code))
             .request_async(async_http_client)
-            .await?)
+            .await
+            .map_err(|e| anyhow!(e))?)
     }
 }
 

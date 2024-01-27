@@ -2,9 +2,9 @@ use crate::*;
 
 use tower_http::{
     classify::{ServerErrorsAsFailures, SharedClassifier},
-    trace::{DefaultOnResponse, TraceLayer},
+    trace::TraceLayer,
 };
-use tracing::{Level, Span};
+use tracing::Span;
 pub use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::{
     fmt::{self, time::ChronoUtc},
@@ -31,34 +31,28 @@ pub fn init_tracing_subscriber() {
         .with_timer(ChronoUtc::new("%k:%M:%S%.3f".to_owned()))
         .with_filter(_env_filter);
 
-    let _ = tracing_subscriber::registry()
-        .with(fmt_layer)
-        .try_init();
+    let _ = tracing_subscriber::registry().with(fmt_layer).try_init();
 }
 
 pub fn trace_layer() -> TraceLayer<
     SharedClassifier<ServerErrorsAsFailures>,
     impl Fn(&Request<Body>) -> Span + Clone + Copy,
-    impl Fn(&Request<Body>, &Span) + Clone + Copy,
-    DefaultOnResponse,
+    (),
+    impl Fn(&Response<Body>, std::time::Duration, &Span) + Clone + Copy,
     (),
     (),
 > {
     let layer = TraceLayer::new_for_http()
         .on_eos(())
         .on_body_chunk(())
-        .on_request(|request: &Request, _span: &Span| {
-            if internal_req(request) {
-                tracing::trace!("started {} {}", request.method(), request.uri().path())
-            } else {
-                tracing::debug!("started {} {}", request.method(), request.uri().path())
-            }
-        })
-        .on_response(DefaultOnResponse::new().level(Level::TRACE))
-        // BROKEN ATM: https://github.com/tower-rs/tower-http/issues/432
-        //.on_response(|response: &Response, latency: std::time::Duration, span: &Span| {
-        //    tracing::debug!("response generated in {:?}", latency)
-        //})
+        .on_request(())
+        .on_response(
+            |resp: &Response, latency: std::time::Duration, _: &Span| {
+                let millis = latency.as_secs_f64() * 1000.0;
+                let status = resp.status();
+                tracing::debug!("processed with '{status}' in {millis:.2}ms")
+            },
+        )
         .make_span_with(|request: &Request| {
             let method = request.method().as_str();
             let uri = request.uri();
@@ -74,10 +68,10 @@ pub fn trace_layer() -> TraceLayer<
             }
 
             match *request.method() {
-                Method::GET => tracing::debug_span!("-> GET", uri),
-                Method::POST => tracing::debug_span!("-> POST", uri),
-                Method::PUT => tracing::debug_span!("-> PUT", uri),
-                Method::PATCH => tracing::debug_span!("-> PATCH", uri),
+                Method::GET => tracing::debug_span!("-> GET   ", uri),
+                Method::POST => tracing::debug_span!("-> POST  ", uri),
+                Method::PUT => tracing::debug_span!("-> PUT   ", uri),
+                Method::PATCH => tracing::debug_span!("-> PATCH ", uri),
                 Method::DELETE => tracing::debug_span!("-> DELETE", uri),
                 _ => tracing::debug_span!("->", method, uri),
             }
@@ -90,7 +84,7 @@ fn internal_req(request: &Request) -> bool {
     let path = request.uri().path();
     for internal in INTERNAL_PATHS {
         if path.starts_with(internal) {
-            return true
+            return true;
         }
     }
     false

@@ -23,16 +23,14 @@ use gluesql::{
 type GResult<T> = std::result::Result<T, GlueError>;
 
 state!(DB: Db = {
-    #[cfg(not(target_arch = "wasm32"))] {
+    #[cfg(host)] {
         check_dot_env();
         match env::var("DB_PATH") {
-            Ok(path) => {
-                Db::Persistent(PersistentStorage::new(&path).unwrap())
-            }
-            Err(_) => Db::Memory(MemoryStorage::new())
+            Ok(path) => Db::Persistent(PersistentStorage::new(&path).unwrap()),
+            Err(_) => Db::Memory(MemoryStorage::new()),
         }
     }
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(sw)]
     Db::Memory(MemoryStorage::new())
 });
 

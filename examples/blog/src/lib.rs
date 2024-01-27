@@ -11,7 +11,6 @@ pub fn routes() -> Router {
     router.wrap_non_htmx(page)
 }
 
-static LINKS_JS: &str = "document.querySelectorAll('main a').forEach(el => !el.href.includes('prest') && !el.href.includes('localhost') && el.setAttribute('target', '_blank'))";
 async fn page(content: Markup) -> Markup {
     let dbs = EXAMPLES.iter().filter(|r| r.category == Database);
     let todos = EXAMPLES.iter().filter(|r| r.category == Todo);
@@ -81,6 +80,7 @@ async fn page(content: Markup) -> Markup {
     })
 }
 
+const LINKS_JS: &str = "document.querySelectorAll('main a').forEach(el => !el.href.includes('prest') && !el.href.includes('localhost') && el.setAttribute('target', '_blank'))";
 const CODE_STYLES: PreEscaped<&str> = PreEscaped(
     r#"
 code {
@@ -101,7 +101,7 @@ p:has(> code):has(+ pre) {
 "#,
 );
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(sw)]
 #[wasm_bindgen(start)]
 pub fn main() {
     routes().handle_fetch_events()

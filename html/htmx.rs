@@ -78,7 +78,7 @@ where
     }
 
     fn call(&mut self, request: Request<Body>) -> Self::Future {
-        let not_htmx_request = request.headers().get("HX-Request").is_none();
+        let not_htmx_request = request.headers().get(axum_htmx::HX_REQUEST).is_none();
         let future = self.inner.call(request);
         let wrapper = self.wrapper.clone();
         Box::pin(async move {

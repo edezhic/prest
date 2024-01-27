@@ -24,63 +24,45 @@ fn main() {
 }
 
 async fn todos(auth: Auth) -> Markup {
-    if let Some(user) = auth.user {
-        html!(
+    html!(
+        @if let Some(user) = auth.user {
             form hx-put="/todos" hx-target="div" hx-swap="beforeend" hx-on--after-request="this.reset()" {
                 input."input input-bordered input-primary" type="text" name="task" {}
                 button."btn btn-outline btn-primary ml-4" type="submit" {"Add"}
             }
             ."w-full" {@for todo in Todo::find_by_owner(&user.id) {(todo)}}
-        )
-    } else {
-        html!(
+        } @else {
             @if *WITH_GOOGLE_AUTH {
-                a."btn btn-ghost" href="/auth/google" {"Login with Google"}
+                a."btn btn-ghost" href=(GOOGLE_LOGIN_ROUTE) {"Login with Google"}
                 ."divider" {"OR"}
             }
-            ."flex" {
-                ."bg-base-100 border-base-300 rounded-box p-6" {
-                    form."flex flex-col gap-4 items-center" method="POST" action="/auth/username_password/signin" {
-                        input."input input-bordered input-primary" type="text" name="username" placeholder="username" {}
-                        input."input input-bordered input-primary" type="password" name="password" placeholder="password" {}
-                        button."btn btn-outline btn-primary ml-4" type="submit" {"Sign in"}
-                    }
-                }
-                ."divider divider-horizontal" {}
-                ."bg-base-100 border-base-300 rounded-box p-6" {
-                    form."flex flex-col gap-4 items-center" method="POST" action="/auth/username_password/signup" {
-                        input."input input-bordered input-primary" type="text" name="username" placeholder="username" {}
-                        input."input input-bordered input-primary" type="password" name="password" placeholder="password" {}
-                        button."btn btn-outline btn-primary ml-4" type="submit" {"Sign up"}
-                    }
-                }
+            form."flex flex-col gap-4 items-center" method="POST" action=(LOGIN_ROUTE) {
+                input."input input-bordered input-primary" type="text" name="username" placeholder="username" {}
+                input."input input-bordered input-primary" type="password" name="password" placeholder="password" {}
+                input type="hidden" name="signup" value="true" {}
+                button."btn btn-outline btn-primary ml-4" type="submit" {"Sign in / Sign up"}
             }
-        )
-    }
+        }
+    )
 }
 
-async fn add(user: User, Form(mut todo): Form<Todo>) -> Markup {
+async fn add(user: User, Form(mut todo): Form<Todo>) -> Result<Markup> {
     todo.owner = user.id;
-    todo.save().unwrap().render()
+    Ok(todo.save()?.render())
 }
 
-async fn toggle(user: User, Form(mut todo): Form<Todo>) -> impl IntoResponse {
-    if todo.owner == user.id {
-        todo.update_done(!todo.done)
-            .unwrap()
-            .render()
-            .into_response()
-    } else {
-        StatusCode::UNAUTHORIZED.into_response()
+async fn toggle(user: User, Form(mut todo): Form<Todo>) -> Result<Markup> {
+    if !todo.check_owner(user.id)? {
+        return Err(Error::Unauthorized);
     }
+    Ok(todo.update_done(!todo.done)?.render())
 }
-async fn delete(user: User, Form(todo): Form<Todo>) -> impl IntoResponse {
-    if todo.owner == user.id {
-        todo.remove().unwrap();
-        StatusCode::OK
-    } else {
-        StatusCode::UNAUTHORIZED
+
+async fn delete(user: User, Form(todo): Form<Todo>) -> Result<()> {
+    if !todo.check_owner(user.id)? {
+        return Err(Error::Unauthorized);
     }
+    Ok(todo.remove()?)
 }
 
 impl Render for Todo {
