@@ -2,9 +2,10 @@ use crate::*;
 
 mod state;
 
-#[cfg(feature = "schedule")]
+mod shutdown;
+pub use shutdown::*;
+
 mod schedule;
-#[cfg(feature = "schedule")]
 pub use schedule::*;
 
 #[cfg(feature = "auth")]
@@ -24,10 +25,7 @@ use traces::*;
 mod webview;
 
 pub use axum::response::sse::{Event as SseEvent, KeepAlive as SseKeepAlive, Sse};
-use axum_server::Handle;
 use std::net::SocketAddr;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Duration;
 pub use tokio::{
     runtime::{Builder as RuntimeBuilder, Handle as RuntimeHandle, Runtime, RuntimeFlavor},
     sync::{Mutex, OnceCell, RwLock},
@@ -38,45 +36,6 @@ pub type SseItem = Result<SseEvent, Infallible>;
 pub(crate) use gluesql::sled_storage::SledStorage as PersistentStorage;
 
 type Port = u16;
-
-state!(SHUTDOWN: Shutdown = { Shutdown::default() });
-
-#[derive(Debug, Default)]
-pub struct Shutdown {
-    pub initiated: AtomicBool,
-    pub server_handles: std::sync::RwLock<Vec<Handle>>,
-    pub scheduled_task_running: AtomicBool,
-}
-
-impl Shutdown {
-    pub fn new_server_handle(&self) -> Handle {
-        let handle = Handle::new();
-        self.server_handles.write().unwrap().push(handle.clone());
-        handle
-    }
-
-    pub fn initiate(&self) {
-        if self.initiated.load(Ordering::SeqCst) {
-            return;
-        } else {
-            tracing::warn!("Initiating shutdown process");
-        }
-
-        self.initiated.store(true, Ordering::SeqCst);
-        for handle in self.server_handles.read().unwrap().iter() {
-            handle.graceful_shutdown(Some(Duration::from_secs(1)))
-        }
-        while self.scheduled_task_running.load(Ordering::SeqCst) {
-            continue;
-        }
-        #[cfg(feature = "db")]
-        DB.flush();
-    }
-
-    pub fn in_progress(&self) -> bool {
-        self.initiated.load(Ordering::SeqCst)
-    }
-}
 
 /// Utility trait to use Router as the host
 pub trait HostUtils {

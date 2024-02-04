@@ -32,7 +32,7 @@ members = [
 ]
 
 [features]
-default = ["db", "embed", "html", "traces", "schedule"]
+default = ["db", "embed", "html", "traces"]
 auth = ["tower-sessions", "axum-login", "openidconnect", "password-auth", "db"]
 db = ["gluesql", "prest-db-macro"]
 embed = ["prest-embed-macro", "prest-embed-utils", "hex"]
@@ -44,7 +44,6 @@ webview = ["wry", "tao"]
 validator = ["axum-valid/full_validator"]
 validify = ["axum-valid/full_validify"]
 garde = ["axum-valid/full_garde"]
-schedule = ["tokio_schedule"]
 
 [dependencies]
 prest-html-macro = { path = "html/macro", version = "0.1.0", optional = true }
@@ -86,7 +85,7 @@ openidconnect = { version = "3.4", optional = true }
 password-auth = { version = "1", optional = true }
 wry = { version = "0.35", optional = true }
 tao = { version = "0.24", default-features = false, features = [ "rwh_05" ], optional = true }
-tokio_schedule = { version = "0.3.1", optional = true }
+tokio_schedule = "0.3.1"
 
 # service worker
 [target.'cfg(target_arch = "wasm32")'.dependencies]

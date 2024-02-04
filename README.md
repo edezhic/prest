@@ -15,7 +15,7 @@ Yes. Initial motivation came from [Rust](https://www.rust-lang.org/) itself - ar
 
 ### available features
 
-The core of prest is built around the usual REST components: async http processing with router, middleware, handlers, state and other utilities. Default features include: embedded sql `db` with query builder and orm-like helpers, macros to easily `embed` any files, `html` macro for rust'y templating, `traces` for extensive and convenient logging. All of the above can be compiled both for the server side and into the client's service worker to achieve powerful progressive enchancement and reuse code. Also, there is a default server feature `schedule` that simplifies handling of the background tasks.
+The core of prest is built around the usual REST components: async http processing with router, middleware, handlers, state and other utilities. Default features include: embedded sql `db` with query builder and orm-like helpers, macros to easily `embed` any files, `html` macro for rust'y templating, `traces` for extensive and convenient logging. All of the above can be compiled both for the server side and into the client's service worker to achieve powerful progressive enchancement and reuse code.
 
 There is also a couple of optional features:
 
@@ -53,7 +53,7 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ admin panel: logs, db explorer? Only with auth + db features? Runtimes metrics? Schedule info?
++ admin features: logs, db explorer? Only with auth + db features? [Runtimes metrics](https://docs.rs/tokio/latest/tokio/runtime/struct.RuntimeMetrics.html#)? Schedule info?
 + file storage
 + i18n
 + register templates for different response codes? Or just use htmx-based error handling (and maybe redirects) in these cases?
