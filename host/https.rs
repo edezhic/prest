@@ -12,6 +12,7 @@ pub async fn serve_https(router: Router) -> Result<()> {
     let https_addr = SocketAddr::from(([0, 0, 0, 0], 443));
     info!("Starting serving at {https_addr}");
     axum_server::bind_rustls(https_addr, tls_config)
+        .handle(SHUTDOWN.new_server_handle())
         .serve(router.into_make_service())
         .await?;
     Ok(())
@@ -27,6 +28,8 @@ async fn redirect_to_https() -> Result<()> {
     let http_addr = SocketAddr::from(([0, 0, 0, 0], 80));
     info!("Starting redirecting to https at {http_addr}");
     axum_server::bind(http_addr)
+        .handle(SHUTDOWN.new_server_handle())
         .serve(redirect.into_make_service())
         .await?;
+    Ok(())
 }

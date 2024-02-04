@@ -119,6 +119,8 @@ pub enum Error {
     #[error(transparent)]
     GlueSQL(#[from] gluesql::core::error::Error),
     #[error(transparent)]
+    IO(#[from] std::io::Error),
+    #[error(transparent)]
     Anyhow(#[from] anyhow::Error),
 }
 

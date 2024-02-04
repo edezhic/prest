@@ -23,26 +23,70 @@ use traces::*;
 #[cfg(feature = "webview")]
 mod webview;
 
+pub use axum::response::sse::{Event as SseEvent, KeepAlive as SseKeepAlive, Sse};
+use axum_server::Handle;
+use std::net::SocketAddr;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Duration;
 pub use tokio::{
     runtime::{Builder as RuntimeBuilder, Handle as RuntimeHandle, Runtime, RuntimeFlavor},
     sync::{Mutex, OnceCell, RwLock},
     task::block_in_place,
 };
-#[allow(unused_imports)] // for some reason ra complains about Sse
-pub use axum::response::sse::{Event as SseEvent, Sse, KeepAlive as SseKeepAlive};
 pub type SseItem = Result<SseEvent, Infallible>;
 #[cfg(feature = "db")]
 pub(crate) use gluesql::sled_storage::SledStorage as PersistentStorage;
+
+type Port = u16;
+
+state!(SHUTDOWN: Shutdown = { Shutdown::default() });
+
+#[derive(Debug, Default)]
+pub struct Shutdown {
+    pub initiated: AtomicBool,
+    pub server_handles: std::sync::RwLock<Vec<Handle>>,
+    pub scheduled_task_running: AtomicBool,
+}
+
+impl Shutdown {
+    pub fn new_server_handle(&self) -> Handle {
+        let handle = Handle::new();
+        self.server_handles.write().unwrap().push(handle.clone());
+        handle
+    }
+
+    pub fn initiate(&self) {
+        if self.initiated.load(Ordering::SeqCst) {
+            return;
+        } else {
+            tracing::warn!("Initiating shutdown process");
+        }
+
+        self.initiated.store(true, Ordering::SeqCst);
+        for handle in self.server_handles.read().unwrap().iter() {
+            handle.graceful_shutdown(Some(Duration::from_secs(1)))
+        }
+        while self.scheduled_task_running.load(Ordering::SeqCst) {
+            continue;
+        }
+        #[cfg(feature = "db")]
+        DB.flush();
+    }
+
+    pub fn in_progress(&self) -> bool {
+        self.initiated.load(Ordering::SeqCst)
+    }
+}
 
 /// Utility trait to use Router as the host
 pub trait HostUtils {
     /// Init env vars, DB, auth, tracing, other utils and start the server
     fn run(self);
     fn serve(self);
-    fn admin(self) -> Self;
-    fn init_tracing(self) -> Self;
-    fn init_auth(self) -> Self;
-    fn default_embeddings(self) -> Self;
+    fn add_admin(self) -> Self;
+    fn add_tracing(self) -> Self;
+    fn add_auth(self) -> Self;
+    fn add_default_embeddings(self) -> Self;
     fn add_utility_layers(self) -> Self;
 }
 
@@ -50,43 +94,50 @@ impl HostUtils for Router {
     #[cfg(not(feature = "webview"))]
     fn run(self) {
         check_dot_env();
-        self.init_auth()
-            .init_tracing()
-            .default_embeddings()
+        self.add_admin()
+            .add_auth()
+            .add_tracing()
+            .add_default_embeddings()
             .add_utility_layers()
-            .admin()
             .serve()
     }
     #[cfg(feature = "webview")]
     fn run(self) {
-        std::thread::spawn(|| self.read_env().init_tracing().default_embeddings().serve());
-        webview::init_webview(&localhost(&check_addr())).unwrap();
+        std::thread::spawn(|| {
+            self.read_env()
+                .add_tracing()
+                .add_default_embeddings()
+                .serve()
+        });
+        webview::init_webview(&localhost(&check_port())).unwrap();
     }
     fn serve(self) {
         Runtime::new()
             .unwrap()
             .block_on(async move {
-                #[cfg(any(not(feature = "https"), debug_assertions))]
+                #[cfg(any(not(feature = "https"), debug))]
                 {
-                    let addr = check_addr();
+                    let port = check_port();
+                    let addr = SocketAddr::from(([0, 0, 0, 0], port));
                     #[cfg(debug_assertions)]
-                    info!("Starting serving at {}", localhost(&addr));
+                    info!("Starting serving at {}", localhost(port));
                     #[cfg(not(debug_assertions))]
                     info!("Starting serving at {addr}");
                     axum_server::bind(addr)
+                        .handle(SHUTDOWN.new_server_handle())
                         .serve(self.into_make_service())
                         .await
                 }
-                #[cfg(all(feature = "https", not(debug_assertions)))]
+                #[cfg(all(feature = "https", release))]
                 https::serve_https().await
             })
             .unwrap();
     }
-    fn admin(self) -> Self {
-        //self.route("/admin", get("Admin"))
-        self
+    fn add_admin(self) -> Self {
+        self.route("/health", get(StatusCode::OK))
+            .route("/shutdown", get(|| async { SHUTDOWN.initiate() }))
     }
-    fn init_auth(self) -> Self {
+    fn add_auth(self) -> Self {
         #[cfg(feature = "auth")]
         {
             let (auth_layer, auth_routes) = auth::init_auth_module();
@@ -95,7 +146,7 @@ impl HostUtils for Router {
         #[cfg(not(feature = "auth"))]
         self
     }
-    fn init_tracing(self) -> Self {
+    fn add_tracing(self) -> Self {
         #[cfg(feature = "traces")]
         {
             init_tracing_subscriber();
@@ -104,7 +155,7 @@ impl HostUtils for Router {
         #[cfg(not(feature = "traces"))]
         self
     }
-    fn default_embeddings(self) -> Self {
+    fn add_default_embeddings(self) -> Self {
         #[cfg(feature = "embed")]
         return self.embed(DefaultAssets); // TODO: what to do about these?
         #[cfg(not(feature = "embed"))]
@@ -148,14 +199,12 @@ fn handle_panic(err: Box<dyn std::any::Any + Send + 'static>) -> Response {
         .unwrap()
 }
 
-use std::net::SocketAddr;
-fn check_addr() -> SocketAddr {
-    let port = if let Ok(v) = env::var("PORT") {
-        v.parse::<u16>().unwrap_or(80)
+fn check_port() -> Port {
+    if let Ok(v) = env::var("PORT") {
+        v.parse::<Port>().unwrap_or(80)
     } else {
         80
-    };
-    SocketAddr::from(([0, 0, 0, 0], port))
+    }
 }
 
 pub fn check_dot_env() {
@@ -165,13 +214,13 @@ pub fn check_dot_env() {
 }
 
 #[allow(dead_code)]
-fn localhost(addr: &SocketAddr) -> String {
+fn localhost(port: Port) -> String {
     format!(
         "http://localhost{}",
-        if addr.port() == 80 {
-            String::new()
+        if port == 80 {
+            "".to_owned()
         } else {
-            format!(":{}", addr.port())
+            format!(":{port}")
         }
     )
 }

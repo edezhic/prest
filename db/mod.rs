@@ -48,6 +48,16 @@ impl Db {
         let payload = block_on(Glue::new(self.clone()).execute(query))?;
         Ok(payload)
     }
+    pub fn flush(&self) {
+        match self {
+            Memory(_) => (),
+            Persistent(sled) => {
+                if let Err(e) = sled.tree.flush() {
+                    tracing::error!("flushing DB failed with: {e}");
+                }
+            }
+        }
+    }
 }
 
 pub trait Executable {

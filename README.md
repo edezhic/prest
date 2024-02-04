@@ -31,6 +31,10 @@ PWA build process is just a few lines of code thanks to the `prest-build` utilit
 
 Rust ecosystem has plenty of crates for all kinds of tasks and some of them are showcased in prest's examples. You can also disable any of these features (except core) to speed up compilation or to replace with other tools.
 
+### closer look
+
+short code snippets using features above
+
 ### getting started
 
 Further docs assume that you're familiar with rust. If you aren't yet check out [The Rust Book](https://doc.rust-lang.org/book/) - definitely the best guide with interactive examples (available in dozens of languages!). Also, I strongly recommend skimming through the first three chapters of the [async book](https://rust-lang.github.io/async-book/) to get an overall understanding how concurrency works in rust. 
@@ -49,15 +53,15 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ graceful shutdown
++ admin panel: logs, db explorer? Only with auth + db features? Runtimes metrics? Schedule info?
 + file storage
 + i18n
 + register templates for different response codes? Or just use htmx-based error handling (and maybe redirects) in these cases?
 + sql escaping?
-+ admin panel: logs, db explorer? Only with auth + db features?
 + rewrite scraping example
 + rewrite blockchain example
 + add something storybook-like
-+ containerization/deployment utils: currently blog is built using `CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld CARGO_PROFILE_RELEASE_LTO=fat cargo build -p blog --release --target=x86_64-unknown-linux-musl` and simply executed, but it's not as simple when `auth` or `https` is enabled due to the cross-compilation issues of `ring`. Maybe based on [youki](https://github.com/containers/youki)
++ self-update mechanism based on [self-replace](https://github.com/mitsuhiko/self-replace) or [shellflip](https://github.com/cloudflare/shellflip) or smth like that
++ Host build utils? Currently blog is built using `CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld CARGO_PROFILE_RELEASE_LTO=fat cargo build -p blog --release --target=x86_64-unknown-linux-musl` and simply executed 
 + emails https://github.com/stalwartlabs/mail-server
 
