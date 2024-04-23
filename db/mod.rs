@@ -1,3 +1,6 @@
+mod editor;
+pub use editor::*;
+
 use crate::*;
 pub use gluesql::{
     core::ast_builder::{col, table},
@@ -22,6 +25,13 @@ use gluesql::{
 
 type GResult<T> = std::result::Result<T, GlueError>;
 
+#[derive(Clone, Debug)]
+pub enum Db {
+    Memory(MemoryStorage),
+    Persistent(PersistentStorage),
+}
+use Db::*;
+
 state!(DB: Db = {
     #[cfg(host)] {
         check_dot_env();
@@ -34,12 +44,44 @@ state!(DB: Db = {
     Db::Memory(MemoryStorage::new())
 });
 
-#[derive(Clone, Debug)]
-pub enum Db {
-    Memory(MemoryStorage),
-    Persistent(PersistentStorage),
+#[derive(Debug, Clone, Copy)]
+pub struct ColumnSchema {
+    pub name: &'static str,
+    pub rust_type: &'static str,
+    pub glue_type: &'static str,
+    pub unique: bool,
+    pub key: bool,
 }
-use Db::*;
+
+pub type ColumnsSchema = &'static [ColumnSchema];
+
+#[derive(Debug, Clone)]
+
+pub struct TableSchema {
+    pub name: &'static str,
+    pub columns: ColumnsSchema,
+}
+
+pub struct DbSchema(std::sync::RwLock<Vec<&'static dyn TableSchemaTrait>>);
+impl DbSchema {
+    fn init() -> Self {
+        Self(std::sync::RwLock::new(vec![]))
+    }
+    pub fn add_table(&self, schema: &'static dyn TableSchemaTrait) {
+        self.0.write().unwrap().push(schema);
+    }
+    pub fn tables(&self) -> Vec<&dyn TableSchemaTrait> {
+        self.0.read().unwrap().clone()
+    }
+}
+state!(DB_SCHEMA: DbSchema = { DbSchema::init() });
+
+pub trait TableSchemaTrait: Sync {
+    fn name(&self) -> &'static str;
+    fn schema(&self) -> ColumnsSchema;
+    fn router(&self) -> Router;
+    fn get_all_route(&self) -> &'static str;
+}
 
 impl Db {
     #[allow(dead_code)]
@@ -90,23 +132,24 @@ impl<Q: BuildSQL> Executable for Q {
 
 pub trait Table: Sized {
     const TABLE_NAME: &'static str;
+    const TABLE_SCHEMA: ColumnsSchema;
     const KEY: &'static str;
     const STRINGY_KEY: bool;
     type Key: std::fmt::Display;
 
+    fn prepare_table();
+    fn into_row(&self) -> String;
+    fn from_row(row: Vec<DbValue>) -> Self;
+    fn get_key(&self) -> &Self::Key;
+    fn save(&self) -> Result<&Self>;
+    
     fn key_filter(key: &Self::Key) -> String {
         match Self::STRINGY_KEY {
             true => format!("{} = '{key}'", Self::KEY),
             false => format!("{} = {key}", Self::KEY),
         }
     }
-
-    fn migrate();
-    fn into_row(&self) -> String;
-    fn from_row(row: Vec<DbValue>) -> Self;
-    fn get_key(&self) -> &Self::Key;
-    fn save(&self) -> Result<&Self>;
-
+    
     fn from_rows(rows: Vec<Vec<DbValue>>) -> Vec<Self> {
         rows.into_iter().map(Self::from_row).collect::<Vec<Self>>()
     }

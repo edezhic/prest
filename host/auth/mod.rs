@@ -65,8 +65,8 @@ pub const GOOGLE_LOGIN_ROUTE: &str = "/auth/google";
 pub const GOOGLE_CALLBACK_ROUTE: &str = "/auth/google/callback";
 
 pub fn init_auth_module() -> (AuthLayer, Router) {
-    SessionRow::migrate();
-    User::migrate();
+    SessionRow::prepare_table();
+    User::prepare_table();
     let mut session_layer = SessionManagerLayer::new(DB.clone())
         .with_name("prest_session")
         .with_same_site(tower_sessions::cookie::SameSite::Lax)

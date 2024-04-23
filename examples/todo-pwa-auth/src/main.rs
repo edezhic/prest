@@ -15,7 +15,7 @@ struct Todo {
 }
 
 fn main() {
-    Todo::migrate();
+    Todo::prepare_table();
     shared_routes()
         .route("/todos", get(todos).put(add).patch(toggle).delete(delete))
         .wrap_non_htmx(into_page)

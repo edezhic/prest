@@ -1,6 +1,6 @@
 use prest::*;
 
-#[derive(Table, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Table, Default, serde::Serialize, serde::Deserialize)]
 struct Todo {
     #[serde(default = "Uuid::new_v4")]
     pub id: Uuid,
@@ -28,14 +28,21 @@ async fn into_page(content: Markup) -> Markup {
                 input."input input-bordered input-primary" type="text" name="task" {}
                 button."btn btn-outline btn-primary ml-4" type="submit" {"Add"}
             }
-            ."w-full" {(content)} 
+            ."w-full" {(content)}
             (Scripts::default())
         }
     }}
 }
 
 fn main() {
-    Todo::migrate();
+    Todo::prepare_table();
+    /*
+    SCHEDULE.every(1).second().spawn(|| async {
+        for handle in SHUTDOWN.server_handles.read().unwrap().iter() {
+            info!("connections: {}", handle.connection_count())
+        }
+    });
+    */
     route(
         "/",
         get(|| async { html!(@for todo in Todo::find_all() {(todo)}) })

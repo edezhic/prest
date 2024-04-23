@@ -1,4 +1,4 @@
-use std::{sync::atomic::{AtomicBool, Ordering}, time::Duration};
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use axum_server::Handle;
 
@@ -23,7 +23,7 @@ impl Shutdown {
         }
         // stopping the servers
         for handle in self.server_handles.read().unwrap().iter() {
-            handle.graceful_shutdown(Some(Duration::from_secs(1)))
+            handle.graceful_shutdown(None)
         }
         // awaiting currently running scheduled tasks
         while self.scheduled_task_running.load(Ordering::SeqCst) {

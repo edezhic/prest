@@ -39,6 +39,27 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
 
     let key_column = columns.iter().find(|c| c.key).unwrap();
 
+    let table_schema = columns.iter().map(
+        |Column {
+             name_str,
+             type_string,
+             column_type,
+             key,
+             unique,
+             ..
+         }| {
+            quote! { 
+                ColumnSchema { 
+                    name: #name_str,
+                    rust_type: #type_string,
+                    glue_type: #column_type,
+                    unique: #unique,
+                    key: #key,
+                }
+            }
+        },
+    );
+
     let add_columns = columns.iter().map(
         |Column {
              name_str,
@@ -112,6 +133,7 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
 
     let from_fields_idents = columns.iter().map(|col| col.name_ident.clone());
     let into_fields_idents = from_fields_idents.clone();
+    let render_fields_idents = into_fields_idents.clone();
 
     let fields_idents_into_row_items = columns.iter().rev().map(|col| {
         let Column {
@@ -271,9 +293,78 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
         }
     );
 
+    let schema_name = ident(&format!("{}Schema", struct_name.to_string()));
+    let table_schema_clone = table_schema.clone();
+
+    let get_all_route = format!("/db/{}", table_name_str);
+
+    let cells_renders = columns.iter().map(|col| {
+        let Column {
+            name_str,
+            name_ident,
+            html_repr,
+            key,
+            list,
+            optional,
+            ..
+        } = col;
+        let input_type = match (key, html_repr) {
+            (true, _) => "hidden",
+            (false, HtmlRepr::String) | (false, HtmlRepr::Serialized) => "text",
+            (false, HtmlRepr::Number) => "number",
+            (false, HtmlRepr::Boolean) => "checkbox",
+        };
+        if *html_repr == HtmlRepr::Serialized || *list || *optional {
+            quote! {
+                let #name_ident = to_json_string(&#name_ident).unwrap();
+                let #name_ident = html! {
+                    input type=#input_type name=#name_str value=(#name_ident) {}
+                };
+                row.push(#name_ident);
+            }
+        } else {
+            quote! {
+                let #name_ident = html! {
+                    input type=#input_type name=#name_str value=(#name_ident) {}
+                };
+                row.push(#name_ident);
+            }
+        }
+    });
+
     quote! {
+        struct #schema_name;
+        impl TableSchemaTrait for #schema_name {
+            fn name(&self) -> &'static str {
+                #table_name_str
+            }
+            fn schema(&self) -> ColumnsSchema {
+                &[#(#table_schema),*]
+            }
+            fn get_all_route(&self) -> &'static str {
+                #get_all_route
+            }
+            fn router(&self) -> Router {
+                Router::new()
+                    .route(#get_all_route, get(|| async {
+                        let mut rows = vec![];
+                        for item in #struct_name::find_all() {
+                            let #struct_name { #(#render_fields_idents ,)* } = item;
+                            let mut row = vec![];
+                            #(#cells_renders)*
+                            let rendered_row = html! {
+                                tr {@for cell in row { td{(cell)}}}
+                            };
+                            rows.push(rendered_row);
+                        }
+                        html! {@for row in rows {(row)}}
+                    }))
+            }
+        }
+
         impl prest::Table for #struct_name {
             const TABLE_NAME: &'static str = #table_name_str;
+            const TABLE_SCHEMA: ColumnsSchema = &[#(#table_schema_clone),*];
             const KEY: &'static str = #key_name_str;
             const STRINGY_KEY: bool = #key_stringy;
             type Key = #key_type_token;
@@ -282,12 +373,13 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
                 &self.#key_name_ident
             }
 
-            fn migrate() {
+            fn prepare_table() {
                 prest::table(Self::TABLE_NAME)
                     .create_table_if_not_exists()
                     #(#add_columns)*
                     .exec()
                     .unwrap();
+                prest::DB_SCHEMA.add_table(&#schema_name);
             }
 
             fn from_row(mut row: ::std::vec::Vec<prest::DbValue>) -> Self {
@@ -318,9 +410,18 @@ enum FromRowTransform {
     None,
 }
 
+#[derive(PartialEq)]
+enum HtmlRepr {
+    String,
+    Number,
+    Boolean,
+    Serialized,
+}
+
 struct Column {
     name_ident: Ident,
     name_str: String,
+    type_string: String,
     field_type: Type,
     inner_type: Type,
     column_type: String,
@@ -332,6 +433,7 @@ struct Column {
     list: bool,
     unique: bool,
     custom_type: bool,
+    html_repr: HtmlRepr,
 }
 
 fn decompose(field: Field) -> Column {
@@ -393,7 +495,7 @@ fn decompose(field: Field) -> Column {
     }
     .to_owned();
 
-    let dbvalue_variant = match inner_type_str {
+    let raw_dbvalue_variant = match inner_type_str {
         "Uuid" => "Uuid",
         "String" => "Str",
         "bool" => "Bool",
@@ -402,7 +504,7 @@ fn decompose(field: Field) -> Column {
         "f64" => "F64",
         _ => "Str",
     };
-    let dbvalue_variant = ident(dbvalue_variant);
+    let dbvalue_variant = ident(raw_dbvalue_variant);
 
     let from_row_transform = match inner_type_str {
         "Uuid" => FromRowTransform::UuidFromU128,
@@ -413,7 +515,15 @@ fn decompose(field: Field) -> Column {
     let stringy_in_sql =
         list || custom_type || inner_type_str == "Uuid" || inner_type_str == "String";
 
+    let html_repr = match raw_dbvalue_variant {
+        "Bool" => HtmlRepr::Boolean,
+        "U64" | "U8" | "F64" => HtmlRepr::Number,
+        "Str" => HtmlRepr::String,
+        _ => HtmlRepr::Serialized,
+    };
+
     Column {
+        type_string: type_str.to_owned(),
         column_type,
         dbvalue_variant,
         from_row_transform,
@@ -427,6 +537,7 @@ fn decompose(field: Field) -> Column {
         list,
         unique,
         custom_type,
+        html_repr,
     }
 }
 

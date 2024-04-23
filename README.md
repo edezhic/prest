@@ -53,11 +53,13 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ admin features: logs, db explorer? Only with auth + db features? [Runtimes metrics](https://docs.rs/tokio/latest/tokio/runtime/struct.RuntimeMetrics.html#)? Schedule info?
-+ file storage
-+ i18n
++ admin features: logs
++ file storage - https://github.com/dirs-dev/directories-rs
++ i18n - https://github.com/longbridgeapp/rust-i18n
 + register templates for different response codes? Or just use htmx-based error handling (and maybe redirects) in these cases?
++ htmx! macro 
 + sql escaping?
++ does SW DB make sense? Too exotic to make sense?
 + rewrite scraping example
 + rewrite blockchain example
 + add something storybook-like

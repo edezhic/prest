@@ -33,7 +33,7 @@ pub use futures::{
     stream::{self, Stream, StreamExt, TryStreamExt},
 };
 pub use once_cell::sync::Lazy;
-pub use serde_json::json;
+pub use serde_json::{json, to_string as to_json_string};
 pub use std::{convert::Infallible, env, sync::Arc};
 pub use tower::{self, BoxError, Layer, Service, ServiceBuilder};
 pub use tracing::{debug, error, info, trace, warn};
