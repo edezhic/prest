@@ -48,8 +48,8 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
              unique,
              ..
          }| {
-            quote! { 
-                ColumnSchema { 
+            quote! {
+                ColumnSchema {
                     name: #name_str,
                     rust_type: #type_string,
                     glue_type: #column_type,
@@ -515,11 +515,14 @@ fn decompose(field: Field) -> Column {
     let stringy_in_sql =
         list || custom_type || inner_type_str == "Uuid" || inner_type_str == "String";
 
-    let html_repr = match raw_dbvalue_variant {
-        "Bool" => HtmlRepr::Boolean,
-        "U64" | "U8" | "F64" => HtmlRepr::Number,
-        "Str" => HtmlRepr::String,
-        _ => HtmlRepr::Serialized,
+    let html_repr = if custom_type {
+        HtmlRepr::Serialized
+    } else {
+        match raw_dbvalue_variant {
+            "Bool" => HtmlRepr::Boolean,
+            "U64" | "U8" | "F64" => HtmlRepr::Number,
+            "Str" | _ => HtmlRepr::String,
+        }
     };
 
     Column {
