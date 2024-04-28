@@ -46,6 +46,9 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
              column_type,
              key,
              unique,
+             list,
+             optional,
+             custom_type,
              ..
          }| {
             quote! {
@@ -55,6 +58,9 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
                     glue_type: #column_type,
                     unique: #unique,
                     key: #key,
+                    list: #list,
+                    optional: #optional,
+                    custom_type: #custom_type,
                 }
             }
         },
@@ -294,54 +300,33 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
     );
 
     let schema_name = ident(&format!("{}Schema", struct_name.to_string()));
+    let path = format!("/admin/table/{}", table_name_str);
+            
     let table_schema_clone = table_schema.clone();
-
-    let select_all_route = format!("/admin/table/{}", table_name_str);
 
     let cells_renders = columns.iter().map(|col| {
         let Column {
-            name_str,
             name_ident,
-            html_repr,
-            key,
             list,
             optional,
+            custom_type,
             ..
         } = col;
-        let input_type = match html_repr {
-            HtmlRepr::String | HtmlRepr::Serialized => "text",
-            HtmlRepr::Number => "number",
-            HtmlRepr::Boolean => "checkbox",
-        };
 
-        let cell_class = match key {
-            true => "hidden",
-            false => "text-center",
-        };
-
-        let input_class = match input_type {
-            "text" | "number" => "input input-bordered w-full",
-            "checkbox" => "checkbox",
-            _ => "",
-        };
-
-        let preprocessing = if *html_repr == HtmlRepr::Serialized || *list || *optional {
+        let preprocessing = (*custom_type || *list || *optional).then(|| {
             quote!(let #name_ident = to_json_string(&#name_ident).unwrap();)
-        } else {
-            quote!()
-        };
+        });
 
         quote! {
             #preprocessing
-            let #name_ident = html! {
-                td.#cell_class {input.#input_class type=#input_type name=#name_str value=(#name_ident) {}}
-            };
+            let #name_ident: String = #name_ident.to_string();
             row.push(#name_ident);
         }
     });
 
     quote! {
         struct #schema_name;
+        #[async_trait]
         impl TableSchemaTrait for #schema_name {
             fn name(&self) -> &'static str {
                 #table_name_str
@@ -349,24 +334,28 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
             fn schema(&self) -> ColumnsSchema {
                 &[#(#table_schema),*]
             }
-            fn select_all_route(&self) -> &'static str {
-                #select_all_route
+            fn path(&self) -> &'static str {
+                #path
             }
-            fn router(&self) -> Router {
-                Router::new()
-                    .route(#select_all_route, get(|| async {
-                        let mut rows = vec![];
-                        for item in #struct_name::find_all() {
-                            let #struct_name { #(#render_fields_idents ,)* } = item;
-                            let mut row = vec![];
-                            #(#cells_renders)*
-                            let rendered_row = html! {
-                                tr {@for cell in row {(cell)}}
-                            };
-                            rows.push(rendered_row);
-                        }
-                        html! {@for row in rows {(row)}}
-                    }))
+            fn get_all(&self) -> Vec<Vec<String>> {
+                let mut rows = vec![];
+                for item in #struct_name::find_all() {
+                    let #struct_name { #(#render_fields_idents ,)* } = item;
+                    let mut row = vec![];
+                    #(#cells_renders)*
+                    rows.push(row);
+                }
+                rows
+            }
+            async fn save(&self, req: Request) -> std::result::Result<(), prest::Error> {
+                let value: #struct_name = Form::from_request(req, &()).await?.0;
+                value.save()?;
+                Ok(())
+            }
+            async fn remove(&self, req: Request) -> std::result::Result<(), prest::Error> {
+                let value: #struct_name = Form::from_request(req, &()).await?.0;
+                value.remove()?;
+                Ok(())
             }
         }
 
@@ -422,14 +411,6 @@ enum FromRowTransform {
     None,
 }
 
-#[derive(PartialEq)]
-enum HtmlRepr {
-    String,
-    Number,
-    Boolean,
-    Serialized,
-}
-
 struct Column {
     name_ident: Ident,
     name_str: String,
@@ -445,7 +426,6 @@ struct Column {
     list: bool,
     unique: bool,
     custom_type: bool,
-    html_repr: HtmlRepr,
 }
 
 fn decompose(field: Field) -> Column {
@@ -527,16 +507,6 @@ fn decompose(field: Field) -> Column {
     let stringy_in_sql =
         list || custom_type || inner_type_str == "Uuid" || inner_type_str == "String";
 
-    let html_repr = if custom_type {
-        HtmlRepr::Serialized
-    } else {
-        match raw_dbvalue_variant {
-            "Bool" => HtmlRepr::Boolean,
-            "U64" | "U8" | "F64" => HtmlRepr::Number,
-            "Str" | _ => HtmlRepr::String,
-        }
-    };
-
     Column {
         type_string: type_str.to_owned(),
         column_type,
@@ -552,7 +522,6 @@ fn decompose(field: Field) -> Column {
         list,
         unique,
         custom_type,
-        html_repr,
     }
 }
 

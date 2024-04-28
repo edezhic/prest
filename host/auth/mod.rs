@@ -16,13 +16,14 @@ use tower_sessions::{
     session_store::{Error, Result},
     Expiry, SessionManagerLayer, SessionStore,
 };
+use serde::{Deserialize, Serialize};
 
 pub type UserId = Uuid;
 pub type AuthLayer = AuthManagerLayer<Db, Db>;
 pub type Auth = AuthSession<Db>;
 pub type OAuthCode = String;
 
-#[derive(Table, Clone, Debug)]
+#[derive(Table, Clone, Debug, Serialize, Deserialize)]
 pub struct User {
     pub id: Uuid,
     pub permissions: Vec<String>,
@@ -34,7 +35,7 @@ pub struct User {
     pub password_hash: Option<String>,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum UserGroup {
     Admin,
     Visitor,
@@ -407,7 +408,7 @@ impl AuthzBackend for Db {
     }
 }
 
-#[derive(Table, Debug)]
+#[derive(Table, Debug, Serialize, Deserialize)]
 pub struct SessionRow {
     pub id: Uuid,
     pub record: String,

@@ -122,6 +122,8 @@ pub enum Error {
     IO(#[from] std::io::Error),
     #[error(transparent)]
     Anyhow(#[from] anyhow::Error),
+    #[error(transparent)]
+    FormRejection(#[from] axum::extract::rejection::FormRejection),
 }
 
 impl IntoResponse for Error {

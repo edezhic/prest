@@ -1,6 +1,6 @@
 use crate::{host::LOG, *};
 
-pub async fn page() -> impl IntoResponse {
+pub async fn page() -> Markup {
     let routes_stats = RouteStats::find_all();
     let routes_info = html! {
         h2{"Routes stats"}
@@ -22,11 +22,7 @@ pub async fn page() -> impl IntoResponse {
         h2{"DB explorer"}
         @for table in DB_SCHEMA.tables() {
             h3 {(table.name())}
-            table."w-full" {
-                @let headers = table.schema().iter().filter(|c| !c.key).map(|c| c.name);
-                @for header in headers {th {(header)}}
-                tr."loader" hx-get=(table.select_all_route()) hx-trigger="load" hx-swap="outerHTML" hx-target="this" {}
-            }
+            div."loader" hx-get=(table.path()) hx-trigger="load" hx-swap="outerHTML" hx-target="this" {}
         }
     };
     let schedule_running_tasks = SCHEDULE

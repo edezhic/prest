@@ -67,6 +67,9 @@ pub struct ColumnSchema {
     pub glue_type: &'static str,
     pub unique: bool,
     pub key: bool,
+    pub list: bool,
+    pub optional: bool,
+    pub custom_type: bool,
 }
 
 pub type ColumnsSchema = &'static [ColumnSchema];
@@ -78,7 +81,7 @@ pub struct TableSchema {
     pub columns: ColumnsSchema,
 }
 
-pub struct DbSchema(std::sync::RwLock<Vec<&'static dyn TableSchemaTrait>>);
+pub struct DbSchema(pub std::sync::RwLock<Vec<&'static dyn TableSchemaTrait>>);
 impl DbSchema {
     fn init() -> Self {
         Self(std::sync::RwLock::new(vec![]))
@@ -92,11 +95,14 @@ impl DbSchema {
 }
 state!(DB_SCHEMA: DbSchema = { DbSchema::init() });
 
+#[async_trait]
 pub trait TableSchemaTrait: Sync {
     fn name(&self) -> &'static str;
     fn schema(&self) -> ColumnsSchema;
-    fn router(&self) -> Router;
-    fn select_all_route(&self) -> &'static str;
+    fn path(&self) -> &'static str;
+    fn get_all(&self) -> Vec<Vec<String>>;
+    async fn save(&self, req: Request) -> Result<()>;
+    async fn remove(&self, req: Request) -> Result<()>;
 }
 
 pub trait Executable {
