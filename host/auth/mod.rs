@@ -5,7 +5,9 @@ use axum::http::request::Parts;
 pub use google_openid::{GOOGLE_CLIENT, WITH_GOOGLE_AUTH};
 
 use crate::*;
-use axum_login::{AuthManagerLayer, AuthManagerLayerBuilder, AuthSession, AuthUser, AuthnBackend, AuthzBackend};
+use axum_login::{
+    AuthManagerLayer, AuthManagerLayerBuilder, AuthSession, AuthUser, AuthnBackend, AuthzBackend,
+};
 pub use openidconnect::{CsrfToken as OAuthCSRF, Nonce as OAuthNonce};
 use password_auth::{generate_hash, verify_password};
 pub use tower_sessions::Session;
@@ -36,7 +38,7 @@ pub struct User {
 pub enum UserGroup {
     Admin,
     Visitor,
-    Custom(String)
+    Custom(String),
 }
 
 #[derive(Clone, Debug)]
@@ -374,20 +376,33 @@ pub type Permission = String;
 #[async_trait]
 impl AuthzBackend for Db {
     type Permission = Permission;
- 
-    async fn get_user_permissions(&self, user: &Self::User) -> std::result::Result<HashSet<Self::Permission> , Self::Error> {
+
+    async fn get_user_permissions(
+        &self,
+        user: &Self::User,
+    ) -> std::result::Result<HashSet<Self::Permission>, Self::Error> {
         Ok(user.permissions.iter().map(|s| s.to_owned()).collect())
     }
 
-    async fn get_group_permissions(&self, user: &Self::User) -> std::result::Result<HashSet<Self::Permission> , Self::Error> {
+    async fn get_group_permissions(
+        &self,
+        user: &Self::User,
+    ) -> std::result::Result<HashSet<Self::Permission>, Self::Error> {
         Ok(user.permissions.iter().map(|s| s.to_owned()).collect())
     }
 
-    async fn get_all_permissions(&self, user: &Self::User) -> std::result::Result<HashSet<Self::Permission> , Self::Error> {
+    async fn get_all_permissions(
+        &self,
+        user: &Self::User,
+    ) -> std::result::Result<HashSet<Self::Permission>, Self::Error> {
         Ok(user.permissions.iter().map(|s| s.to_owned()).collect())
     }
 
-    async fn has_perm(&self, user: &Self::User, perm: Self::Permission) -> std::result::Result<bool, Self::Error> {
+    async fn has_perm(
+        &self,
+        user: &Self::User,
+        perm: Self::Permission,
+    ) -> std::result::Result<bool, Self::Error> {
         Ok(user.permissions.iter().find(|p| **p == perm).is_some())
     }
 }

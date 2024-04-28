@@ -1,5 +1,5 @@
 use prest::*;
-use todo_pwa::{shared_routes, into_page};
+use todo_pwa::{into_page, shared_routes};
 
 embed_build_output_as!(BuiltAssets);
 
@@ -15,20 +15,20 @@ struct Todo {
 fn main() {
     Todo::prepare_table();
     shared_routes()
-    .route(
-        "/todos",
-        get(todos)
-            .put(|Form(todo): Form<Todo>| async move { todo.save().unwrap().render() })
-            .patch(|Form(mut todo): Form<Todo>| async move {
-                todo.update_done(!todo.done).unwrap().render()
-            })
-            .delete(|Form(todo): Form<Todo>| async move {
-                todo.remove().unwrap();
-            }),
-    )
-    .wrap_non_htmx(into_page)
-    .embed(BuiltAssets)
-    .run();
+        .route(
+            "/todos",
+            get(todos)
+                .put(|Form(todo): Form<Todo>| async move { todo.save().unwrap().render() })
+                .patch(|Form(mut todo): Form<Todo>| async move {
+                    todo.update_done(!todo.done).unwrap().render()
+                })
+                .delete(|Form(todo): Form<Todo>| async move {
+                    todo.remove().unwrap();
+                }),
+        )
+        .wrap_non_htmx(into_page)
+        .embed(BuiltAssets)
+        .run();
 }
 
 async fn todos() -> Markup {
@@ -52,5 +52,3 @@ impl Render for Todo {
         }
     }
 }
-
-

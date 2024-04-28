@@ -12,11 +12,13 @@ pub use typescript::*;
 
 #[cfg(feature = "sass")]
 mod sass {
-    use std::{path::Path, fs::write};
+    use std::{fs::write, path::Path};
     pub fn bundle_sass(path: &str) {
         let css = grass::from_path(path, &Default::default())?;
         let scss_filename = Path::new(path).file_name()?.to_str()?;
-        let css_filename = scss_filename.replace(".scss", ".css").replace(".sass", ".css");
+        let css_filename = scss_filename
+            .replace(".scss", ".css")
+            .replace(".sass", ".css");
         let out_file = super::out_path(&css_filename);
         write(out_file, css)?;
     }
@@ -101,4 +103,3 @@ pub fn out_path(filename: &str) -> String {
     let dir = std::env::var("OUT_DIR").unwrap();
     format!("{dir}/{filename}")
 }
-

@@ -1,6 +1,3 @@
-mod editor;
-pub use editor::*;
-
 use crate::*;
 pub use gluesql::{
     core::ast_builder::{col, table},
@@ -44,6 +41,25 @@ state!(DB: Db = {
     Db::Memory(MemoryStorage::new())
 });
 
+impl Db {
+    #[allow(dead_code)]
+    pub fn query(&self, query: &str) -> Result<Vec<Payload>> {
+        // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1265
+        let payload = block_on(Glue::new(self.clone()).execute(query))?;
+        Ok(payload)
+    }
+    pub fn flush(&self) {
+        match self {
+            Memory(_) => (),
+            Persistent(sled) => {
+                if let Err(e) = sled.tree.flush() {
+                    tracing::error!("flushing DB failed with: {e}");
+                }
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct ColumnSchema {
     pub name: &'static str,
@@ -80,26 +96,7 @@ pub trait TableSchemaTrait: Sync {
     fn name(&self) -> &'static str;
     fn schema(&self) -> ColumnsSchema;
     fn router(&self) -> Router;
-    fn get_all_route(&self) -> &'static str;
-}
-
-impl Db {
-    #[allow(dead_code)]
-    pub fn query(&self, query: &str) -> Result<Vec<Payload>> {
-        // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1265
-        let payload = block_on(Glue::new(self.clone()).execute(query))?;
-        Ok(payload)
-    }
-    pub fn flush(&self) {
-        match self {
-            Memory(_) => (),
-            Persistent(sled) => {
-                if let Err(e) = sled.tree.flush() {
-                    tracing::error!("flushing DB failed with: {e}");
-                }
-            }
-        }
-    }
+    fn select_all_route(&self) -> &'static str;
 }
 
 pub trait Executable {
@@ -137,19 +134,20 @@ pub trait Table: Sized {
     const STRINGY_KEY: bool;
     type Key: std::fmt::Display;
 
+    fn migrate();
     fn prepare_table();
     fn into_row(&self) -> String;
     fn from_row(row: Vec<DbValue>) -> Self;
     fn get_key(&self) -> &Self::Key;
     fn save(&self) -> Result<&Self>;
-    
+
     fn key_filter(key: &Self::Key) -> String {
         match Self::STRINGY_KEY {
             true => format!("{} = '{key}'", Self::KEY),
             false => format!("{} = {key}", Self::KEY),
         }
     }
-    
+
     fn from_rows(rows: Vec<Vec<DbValue>>) -> Vec<Self> {
         rows.into_iter().map(Self::from_row).collect::<Vec<Self>>()
     }

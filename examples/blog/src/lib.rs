@@ -60,9 +60,9 @@ async fn page(content: Markup) -> Markup {
                     }
                 }}
             }
-            main."view-transition mx-auto p-4 prose lg:prose-xl lg:w-[1024px] lg:max-w-[1024px] [overflow-wrap:anywhere]" 
+            main."view-transition mx-auto p-4 prose lg:prose-xl lg:w-[1024px] lg:max-w-[1024px] [overflow-wrap:anywhere]"
                 hx-history-elt hx-on--before-swap="document.activeElement.blur()"
-                hx-on--after-swap=(format!("Prism.highlightAll(); {LINKS_JS}")) 
+                hx-on--after-swap=(format!("Prism.highlightAll(); {LINKS_JS}"))
                 {(content)}
             script {(PreEscaped(LINKS_JS))}
             ."menu menu-horizontal w-full items-center justify-center bg-base-200 rounded-box mb-4 mx-auto"{

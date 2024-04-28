@@ -14,7 +14,7 @@ async fn home() -> Markup {
 }
 
 pub async fn into_page(content: Markup) -> Markup {
-    html! { html data-theme="dark" { 
+    html! { html data-theme="dark" {
         (Head::with_title("Todo app"))
         body."max-w-screen-sm mx-auto mt-12 flex flex-col items-center" {
             (content)

@@ -1,6 +1,9 @@
 use crate::*;
 use chrono::TimeZone;
-use std::{future::Future, sync::atomic::{AtomicUsize, Ordering}};
+use std::{
+    future::Future,
+    sync::atomic::{AtomicUsize, Ordering},
+};
 use tokio::time::sleep;
 pub use tokio_schedule::Job;
 use tokio_schedule::{every, Every};
@@ -48,7 +51,9 @@ impl<T: Job> Schedulable for T {
                 SCHEDULE.running_tasks.fetch_add(1, Ordering::SeqCst);
                 func().await;
                 let current_tasks = SCHEDULE.running_tasks.fetch_sub(1, Ordering::SeqCst);
-                SHUTDOWN.scheduled_task_running.store(current_tasks == 0, Ordering::SeqCst);
+                SHUTDOWN
+                    .scheduled_task_running
+                    .store(current_tasks == 0, Ordering::SeqCst);
             }
         });
     }

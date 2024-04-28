@@ -296,7 +296,7 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
     let schema_name = ident(&format!("{}Schema", struct_name.to_string()));
     let table_schema_clone = table_schema.clone();
 
-    let get_all_route = format!("/db/{}", table_name_str);
+    let select_all_route = format!("/admin/table/{}", table_name_str);
 
     let cells_renders = columns.iter().map(|col| {
         let Column {
@@ -308,27 +308,35 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
             optional,
             ..
         } = col;
-        let input_type = match (key, html_repr) {
-            (true, _) => "hidden",
-            (false, HtmlRepr::String) | (false, HtmlRepr::Serialized) => "text",
-            (false, HtmlRepr::Number) => "number",
-            (false, HtmlRepr::Boolean) => "checkbox",
+        let input_type = match html_repr {
+            HtmlRepr::String | HtmlRepr::Serialized => "text",
+            HtmlRepr::Number => "number",
+            HtmlRepr::Boolean => "checkbox",
         };
-        if *html_repr == HtmlRepr::Serialized || *list || *optional {
-            quote! {
-                let #name_ident = to_json_string(&#name_ident).unwrap();
-                let #name_ident = html! {
-                    input type=#input_type name=#name_str value=(#name_ident) {}
-                };
-                row.push(#name_ident);
-            }
+
+        let cell_class = match key {
+            true => "hidden",
+            false => "text-center",
+        };
+
+        let input_class = match input_type {
+            "text" | "number" => "input input-bordered w-full",
+            "checkbox" => "checkbox",
+            _ => "",
+        };
+
+        let preprocessing = if *html_repr == HtmlRepr::Serialized || *list || *optional {
+            quote!(let #name_ident = to_json_string(&#name_ident).unwrap();)
         } else {
-            quote! {
-                let #name_ident = html! {
-                    input type=#input_type name=#name_str value=(#name_ident) {}
-                };
-                row.push(#name_ident);
-            }
+            quote!()
+        };
+
+        quote! {
+            #preprocessing
+            let #name_ident = html! {
+                td.#cell_class {input.#input_class type=#input_type name=#name_str value=(#name_ident) {}}
+            };
+            row.push(#name_ident);
         }
     });
 
@@ -341,19 +349,19 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
             fn schema(&self) -> ColumnsSchema {
                 &[#(#table_schema),*]
             }
-            fn get_all_route(&self) -> &'static str {
-                #get_all_route
+            fn select_all_route(&self) -> &'static str {
+                #select_all_route
             }
             fn router(&self) -> Router {
                 Router::new()
-                    .route(#get_all_route, get(|| async {
+                    .route(#select_all_route, get(|| async {
                         let mut rows = vec![];
                         for item in #struct_name::find_all() {
                             let #struct_name { #(#render_fields_idents ,)* } = item;
                             let mut row = vec![];
                             #(#cells_renders)*
                             let rendered_row = html! {
-                                tr {@for cell in row { td{(cell)}}}
+                                tr {@for cell in row {(cell)}}
                             };
                             rows.push(rendered_row);
                         }
@@ -373,12 +381,16 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
                 &self.#key_name_ident
             }
 
-            fn prepare_table() {
+            fn migrate() {
                 prest::table(Self::TABLE_NAME)
                     .create_table_if_not_exists()
                     #(#add_columns)*
                     .exec()
                     .unwrap();
+            }
+
+            fn prepare_table() {
+                Self::migrate();
                 prest::DB_SCHEMA.add_table(&#schema_name);
             }
 

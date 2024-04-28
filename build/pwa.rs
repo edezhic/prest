@@ -73,11 +73,11 @@ pub fn build_pwa(opts: PWAOptions) -> Result<()> {
         //.args(["--features", "traces html embed"])
         .args(["--target", "wasm32-unknown-unknown"])
         .args(["--target-dir", &target_dir]);
-    
+
     if !cfg!(debug_assertions) {
         cmd.arg("--release");
     }
-    
+
     assert!(cmd.status()?.success());
 
     // generate bindings for the wasm binary
@@ -138,7 +138,7 @@ fn sw_target_dir() -> String {
     }
 }
 
-// SHOULD BE SYNCED WITH THE SAME FN IN ../lib.rs 
+// SHOULD BE SYNCED WITH THE SAME FN IN ../lib.rs
 pub fn is_pwa() -> bool {
     #[cfg(target_arch = "wasm32")]
     return true;

@@ -28,6 +28,7 @@ pub use axum_htmx::{
     HxRedirect, HxRefresh, HxReplaceUrl, HxRequest, HxReselect, HxResponseTrigger, HxReswap,
     HxRetarget, HxTarget, HxTrigger, HxTriggerName,
 };
+pub use axum_valid::*;
 pub use futures::{
     executor::block_on,
     stream::{self, Stream, StreamExt, TryStreamExt},
@@ -38,7 +39,6 @@ pub use std::{convert::Infallible, env, sync::Arc};
 pub use tower::{self, BoxError, Layer, Service, ServiceBuilder};
 pub use tracing::{debug, error, info, trace, warn};
 pub use uuid::Uuid;
-pub use axum_valid::*;
 
 #[cfg(feature = "db")]
 mod db;

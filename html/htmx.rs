@@ -70,8 +70,9 @@ where
 {
     type Response = S::Response;
     type Error = S::Error;
-    type Future =
-        Pin<Box<dyn Future<Output = std::result::Result<Self::Response, Self::Error>> + Send + 'static>>;
+    type Future = Pin<
+        Box<dyn Future<Output = std::result::Result<Self::Response, Self::Error>> + Send + 'static>,
+    >;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<std::result::Result<(), Self::Error>> {
         self.inner.poll_ready(cx)
@@ -85,7 +86,7 @@ where
             let (mut parts, body) = future.await?.into_parts();
 
             if parts.status.as_u16() != 200 {
-                return Ok(Response::from_parts(parts, body))
+                return Ok(Response::from_parts(parts, body));
             }
 
             parts

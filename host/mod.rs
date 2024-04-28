@@ -1,8 +1,11 @@
 use crate::*;
 
+mod admin;
 mod state;
 
 mod shutdown;
+use axum::middleware;
+use serde::{Deserialize, Serialize};
 pub use shutdown::*;
 
 mod schedule;
@@ -35,6 +38,14 @@ pub type SseItem = Result<SseEvent, Infallible>;
 #[cfg(feature = "db")]
 pub(crate) use gluesql::sled_storage::SledStorage as PersistentStorage;
 
+use std::collections::HashMap;
+#[derive(Debug, Table, Serialize, Deserialize)]
+pub struct RouteStats {
+    path: String,
+    hits: i64,
+    statuses: HashMap<u16, u64>,
+}
+
 type Port = u16;
 
 /// Utility trait to use Router as the host
@@ -42,22 +53,24 @@ pub trait HostUtils {
     /// Init env vars, DB, auth, tracing, other utils and start the server
     fn run(self);
     fn serve(self);
+    fn add_utility_layers(self) -> Self;
+    fn add_default_embeddings(self) -> Self;
+    fn add_route_stats(self) -> Self;
     fn add_tracing(self) -> Self;
     fn add_auth(self) -> Self;
-    fn add_default_embeddings(self) -> Self;
-    fn add_utility_layers(self) -> Self;
+    fn add_admin(self) -> Self;
 }
 
 impl HostUtils for Router {
     #[cfg(not(feature = "webview"))]
     fn run(self) {
         check_dot_env();
-        let r = self
-            .route("/health", get(StatusCode::OK))
-            .route("/shutdown", get(|| async { SHUTDOWN.initiate() }));
-        let r = add_db_editor(r);
-        r.add_auth()
+        self.route("/health", get(StatusCode::OK))
+            .route("/shutdown", get(|| async { SHUTDOWN.initiate() }))
+            .add_auth()
+            .add_admin()
             .add_tracing()
+            .add_route_stats()
             .add_default_embeddings()
             .add_utility_layers()
             .serve()
@@ -93,6 +106,36 @@ impl HostUtils for Router {
                 https::serve_https().await
             })
             .unwrap();
+    }
+    fn add_admin(self) -> Self {
+        let mut router = self;
+        for schema in DB_SCHEMA.tables().iter() {
+            router = router.merge(schema.router());
+        }
+        router.route("/admin", get(admin::page))
+    }
+    fn add_route_stats(self) -> Self {
+        RouteStats::migrate();
+        self.layer(middleware::from_fn(|request: Request, next: Next| async {
+            let path = request.uri().path().to_owned();
+            let response = next.run(request).await;
+            let status = response.status().as_u16();
+            let mut stats = RouteStats::find_by_path(&path).unwrap_or(RouteStats {
+                path,
+                hits: 0,
+                statuses: HashMap::new(),
+            });
+            stats.hits += 1;
+            stats
+                .statuses
+                .entry(status)
+                .and_modify(|v| *v += 1)
+                .or_insert(1);
+            if let Err(e) = stats.save() {
+                tracing::warn!("Failed to update stats: {e}");
+            }
+            response
+        }))
     }
     fn add_auth(self) -> Self {
         #[cfg(feature = "auth")]

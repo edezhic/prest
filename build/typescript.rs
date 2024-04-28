@@ -1,4 +1,4 @@
-use anyhow::{Result, Error};
+use anyhow::{Error, Result};
 use std::{collections::HashMap, sync::Arc};
 use swc_bundler::{Bundler, Hook, Load, ModuleData, ModuleRecord};
 use swc_common::{
@@ -18,7 +18,7 @@ use swc_ecma_parser::{parse_file_as_module, Syntax, TsConfig};
 use swc_ecma_transforms_base::fixer::fixer;
 use swc_ecma_visit::{FoldWith, VisitMutWith};
 
-use std::{path::Path, fs::write};
+use std::{fs::write, path::Path};
 pub fn bundle_ts(path: &str) -> Result<()> {
     let minify = !cfg!(debug_assertions);
     let tree_shaking = false;
@@ -26,7 +26,7 @@ pub fn bundle_ts(path: &str) -> Result<()> {
     let ts_filename = Path::new(path).file_name().unwrap().to_str().unwrap();
     let js_filename = ts_filename.replace(".ts", ".js").replace(".tsx", ".js");
     let out_file = super::out_path(&js_filename);
-     write(out_file, js)?;
+    write(out_file, js)?;
     Ok(())
 }
 

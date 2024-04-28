@@ -43,8 +43,7 @@ impl<'a> Head<'a> {
     }
     /// Builds a default [`Head`] with provided title
     pub fn with_title(title: &'a str) -> Self {
-        Self::default()
-            .title(title)
+        Self::default().title(title)
     }
 }
 
@@ -126,7 +125,7 @@ impl<'a> Render for Scripts<'a> {
         let htmx_src = "https://unpkg.com/htmx.org@1.9.10/dist/htmx.js";
         #[cfg(not(debug_assertions))]
         let htmx_src = "https://unpkg.com/htmx.org@1.9.10";
-        
+
         html!(
             @if is_pwa() { script {(REGISTER_SW_SNIPPET)} }
             script src=(htmx_src) defer crossorigin {}

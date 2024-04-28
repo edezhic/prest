@@ -8,7 +8,7 @@ pub async fn serve_https(router: Router) -> Result<()> {
 
     // init http -> https redirection service
     tokio::spawn(redirect_to_https());
-    
+
     let https_addr = SocketAddr::from(([0, 0, 0, 0], 443));
     info!("Starting serving at {https_addr}");
     axum_server::bind_rustls(https_addr, tls_config)

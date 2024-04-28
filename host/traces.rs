@@ -46,13 +46,11 @@ pub fn trace_layer() -> TraceLayer<
         .on_eos(())
         .on_body_chunk(())
         .on_request(())
-        .on_response(
-            |resp: &Response, latency: std::time::Duration, _: &Span| {
-                let millis = latency.as_secs_f64() * 1000.0;
-                let status = resp.status();
-                tracing::debug!("processed with '{status}' in {millis:.2}ms")
-            },
-        )
+        .on_response(|resp: &Response, latency: std::time::Duration, _: &Span| {
+            let millis = latency.as_secs_f64() * 1000.0;
+            let status = resp.status();
+            tracing::debug!("'{status}' in {millis:.1}ms")
+        })
         .make_span_with(|request: &Request| {
             let method = request.method().as_str();
             let uri = request.uri();
