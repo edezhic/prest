@@ -4,7 +4,7 @@ use tower_http::{
     classify::{ServerErrorsAsFailures, SharedClassifier},
     trace::TraceLayer,
 };
-use tracing::Span;
+use tracing::{Level, Span};
 pub use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::{
     fmt::{self, time::ChronoUtc},
@@ -12,6 +12,37 @@ use tracing_subscriber::{
     util::SubscriberInitExt,
     EnvFilter, Layer,
 };
+
+use std::sync::RwLock;
+
+state!(LOG: RwLock<String> = { RwLock::default() });
+
+pub struct Logger;
+
+impl std::io::Write for Logger {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        let Ok(log) = std::str::from_utf8(buf) else {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Not UTF-8 log"));
+        };
+        let Ok(log) = ansi_to_html::convert(log) else {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Not ANSI log"));
+        };
+        LOG.write().unwrap().push_str(&log);
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+impl<'a> tracing_subscriber::fmt::writer::MakeWriter<'a> for Logger {
+    type Writer = Logger;
+
+    fn make_writer(&'a self) -> Self::Writer {
+        Logger
+    }
+}
 
 pub fn init_tracing_subscriber() {
     let _env_filter = EnvFilter::builder()
@@ -28,8 +59,11 @@ pub fn init_tracing_subscriber() {
     let fmt_layer = fmt::layer();
     #[cfg(debug_assertions)]
     let fmt_layer = fmt_layer
-        .with_timer(ChronoUtc::new("%k:%M:%S%.3f".to_owned()))
+        .with_timer(ChronoUtc::new("%k:%M:%S".to_owned()))
+        //.with_target(false)
+        .map_writer(move |_| Logger)
         .with_filter(_env_filter);
+        
 
     let _ = tracing_subscriber::registry().with(fmt_layer).try_init();
 }
@@ -46,10 +80,16 @@ pub fn trace_layer() -> TraceLayer<
         .on_eos(())
         .on_body_chunk(())
         .on_request(())
-        .on_response(|resp: &Response, latency: std::time::Duration, _: &Span| {
+        .on_response(|resp: &Response, latency: std::time::Duration, span: &Span| {
             let millis = latency.as_secs_f64() * 1000.0;
             let status = resp.status();
-            tracing::debug!("'{status}' in {millis:.1}ms")
+            if let Some(metadata) = span.metadata() {
+                match *metadata.level() {
+                    Level::DEBUG => tracing::debug!("'{status}' in {millis:.1}ms"),
+                    Level::TRACE => tracing::trace!("'{status}' in {millis:.1}ms"),
+                    _ => {}
+                }
+            }
         })
         .make_span_with(|request: &Request| {
             let method = request.method().as_str();
@@ -61,7 +101,7 @@ pub fn trace_layer() -> TraceLayer<
                 uri.to_string()
             };
 
-            if internal_req(request) {
+            if super::internal_req(request) {
                 return tracing::trace_span!("->", method, uri);
             }
 
@@ -77,13 +117,3 @@ pub fn trace_layer() -> TraceLayer<
     layer
 }
 
-const INTERNAL_PATHS: [&str; 2] = ["/tower-livereload", "/default-view-transition"];
-fn internal_req(request: &Request) -> bool {
-    let path = request.uri().path();
-    for internal in INTERNAL_PATHS {
-        if path.starts_with(internal) {
-            return true;
-        }
-    }
-    false
-}

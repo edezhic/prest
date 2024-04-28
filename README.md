@@ -53,7 +53,6 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ admin features: logs
 + file storage - https://github.com/dirs-dev/directories-rs
 + i18n - https://github.com/longbridgeapp/rust-i18n
 + register templates for different response codes? Or just use htmx-based error handling (and maybe redirects) in these cases?

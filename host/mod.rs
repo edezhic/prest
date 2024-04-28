@@ -117,22 +117,29 @@ impl HostUtils for Router {
     fn add_route_stats(self) -> Self {
         RouteStats::migrate();
         self.layer(middleware::from_fn(|request: Request, next: Next| async {
-            let path = request.uri().path().to_owned();
+            let path = match internal_req(&request) {
+                true => None,
+                false => Some(request.uri().path().to_owned()),
+            };
+
             let response = next.run(request).await;
-            let status = response.status().as_u16();
-            let mut stats = RouteStats::find_by_path(&path).unwrap_or(RouteStats {
-                path,
-                hits: 0,
-                statuses: HashMap::new(),
-            });
-            stats.hits += 1;
-            stats
-                .statuses
-                .entry(status)
-                .and_modify(|v| *v += 1)
-                .or_insert(1);
-            if let Err(e) = stats.save() {
-                tracing::warn!("Failed to update stats: {e}");
+
+            if let Some(path) = path {
+                let status = response.status().as_u16();
+                let mut stats = RouteStats::find_by_path(&path).unwrap_or(RouteStats {
+                    path,
+                    hits: 0,
+                    statuses: HashMap::new(),
+                });
+                stats.hits += 1;
+                stats
+                    .statuses
+                    .entry(status)
+                    .and_modify(|v| *v += 1)
+                    .or_insert(1);
+                if let Err(e) = stats.save() {
+                    tracing::warn!("Failed to update stats: {e}");
+                }
             }
             response
         }))
@@ -239,4 +246,15 @@ fn request_body_limit() -> usize {
 #[allow(dead_code)]
 fn not_htmx_predicate<Body>(req: &Request<Body>) -> bool {
     !req.headers().contains_key("hx-request")
+}
+
+const INTERNAL_PATHS: [&str; 3] = ["/tower-livereload", "/default-view-transition", "/admin"];
+fn internal_req(request: &Request) -> bool {
+    let path = request.uri().path();
+    for internal in INTERNAL_PATHS {
+        if path.starts_with(internal) {
+            return true;
+        }
+    }
+    false
 }

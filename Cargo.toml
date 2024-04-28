@@ -38,7 +38,7 @@ db = ["gluesql", "prest-db-macro"]
 embed = ["prest-embed-macro", "prest-embed-utils", "hex"]
 html = ["prest-html-macro"]
 https = ["axum-server/tls-rustls"]
-traces = ["tracing-subscriber", "tracing-web", "tower-http/trace", "axum/tracing"]
+traces = ["tracing-subscriber", "tracing-web", "tower-http/trace", "axum/tracing", "ansi-to-html"]
 lazy-embed = ["embed", "prest-embed-macro/lazy-embed", "prest-embed-utils/lazy-embed"]
 webview = ["wry", "tao"]
 validator = ["axum-valid/full_validator"]
@@ -86,6 +86,7 @@ password-auth = { version = "1", optional = true }
 wry = { version = "0.35", optional = true }
 tao = { version = "0.24", default-features = false, features = [ "rwh_05" ], optional = true }
 tokio_schedule = "0.3.1"
+ansi-to-html = { version = "0.2.1", optional = true }
 
 # service worker
 [target.'cfg(target_arch = "wasm32")'.dependencies]
