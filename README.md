@@ -53,17 +53,16 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-* admin panel docs
++ admin panel design and docs
++ register templates for different response codes? Or just use htmx-based error handling (and maybe redirects) in these cases?
++ self-update mechanism based on [self-replace](https://github.com/mitsuhiko/self-replace) or [shellflip](https://github.com/cloudflare/shellflip) or smth like that
++ adapt maud for usage with tailwind and htmx?
++ add something storybook-like
 + file storage - https://github.com/dirs-dev/directories-rs
 + i18n - https://github.com/longbridgeapp/rust-i18n
-+ register templates for different response codes? Or just use htmx-based error handling (and maybe redirects) in these cases?
-+ htmx! macro 
-+ sql escaping?
-+ does SW DB make sense? Too exotic to make sense?
++ sql escaping
 + rewrite scraping example
 + rewrite blockchain example
-+ add something storybook-like
-+ self-update mechanism based on [self-replace](https://github.com/mitsuhiko/self-replace) or [shellflip](https://github.com/cloudflare/shellflip) or smth like that
 + Host build utils? Currently blog is built using `CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld CARGO_PROFILE_RELEASE_LTO=fat cargo build -p blog --release --target=x86_64-unknown-linux-musl` and simply executed 
 + emails https://github.com/stalwartlabs/mail-server
 
