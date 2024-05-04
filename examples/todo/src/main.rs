@@ -35,14 +35,7 @@ async fn into_page(content: Markup) -> Markup {
 }
 
 fn main() {
-    Todo::prepare_table();
-    /*
-    SCHEDULE.every(1).second().spawn(|| async {
-        for handle in SHUTDOWN.server_handles.read().unwrap().iter() {
-            info!("connections: {}", handle.connection_count())
-        }
-    });
-    */
+    init!(tables Todo);
     route(
         "/",
         get(|| async { html!(@for todo in Todo::find_all() {(todo)}) })

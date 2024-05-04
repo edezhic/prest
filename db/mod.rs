@@ -29,27 +29,48 @@ pub enum Db {
 }
 use Db::*;
 
-state!(DB: Db = {
-    #[cfg(host)] {
-        check_dot_env();
-        match env::var("DB_PATH") {
-            Ok(path) => Db::Persistent(PersistentStorage::new(&path).unwrap()),
-            Err(_) => Db::Memory(MemoryStorage::new()),
-        }
-    }
-    #[cfg(sw)]
-    Db::Memory(MemoryStorage::new())
-});
+pub static DB: std::sync::OnceLock<Db> = std::sync::OnceLock::new();
 
-impl Db {
-    #[allow(dead_code)]
-    pub fn query(&self, query: &str) -> Result<Vec<Payload>> {
+pub trait DbAccess {
+    fn init(&self);
+    fn cloned(&self) -> Db;
+    fn query(&self, query: &str) -> Result<Vec<Payload>>;
+    fn flush(&self);
+}
+
+impl DbAccess for std::sync::OnceLock<Db> {
+    fn init(&self) {
+        let CrateConfig {
+            project_dirs,
+            persistent,
+            ..
+        } = CRATE_CONFIG.check();
+        
+        let db = if *persistent {
+            let mut db_path = project_dirs.data_dir().to_path_buf();
+            db_path.push("db");
+            Db::Persistent(PersistentStorage::new(db_path.to_str().unwrap()).unwrap())
+        } else {
+            Db::Memory(MemoryStorage::new())
+        };
+
+        self.get_or_init(|| db);
+    }
+
+    fn cloned(&self) -> Db {
+        DB.get()
+            .expect("DB should be initialized before access")
+            .clone()
+    }
+
+    fn query(&self, query: &str) -> Result<Vec<Payload>> {
         // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1265
-        let payload = block_on(Glue::new(self.clone()).execute(query))?;
+        let payload = block_on(Glue::new(DB.cloned()).execute(query))?;
         Ok(payload)
     }
-    pub fn flush(&self) {
-        match self {
+
+    fn flush(&self) {
+        match DB.cloned() {
             Memory(_) => (),
             Persistent(sled) => {
                 if let Err(e) = sled.tree.flush() {
@@ -114,7 +135,7 @@ impl<Q: BuildSQL> Executable for Q {
     fn exec(self) -> Result<Payload> {
         let statement = self.build()?;
         // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1265
-        let payload = block_on(Glue::new(DB.clone()).execute_stmt(&statement))?;
+        let payload = block_on(Glue::new(DB.cloned()).execute_stmt(&statement))?;
         Ok(payload)
     }
 

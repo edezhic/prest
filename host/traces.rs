@@ -45,7 +45,7 @@ impl<'a> tracing_subscriber::fmt::writer::MakeWriter<'a> for Logger {
 }
 
 pub fn init_tracing_subscriber() {
-    let _env_filter = EnvFilter::builder()
+    let admin_filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::DEBUG.into())
         .from_env()
         .unwrap()
@@ -56,16 +56,36 @@ pub fn init_tracing_subscriber() {
         .add_directive("rustls=info".parse().unwrap())
         .add_directive("reqwest=info".parse().unwrap())
         .add_directive("sled=info".parse().unwrap());
-    let fmt_layer = fmt::layer();
-    #[cfg(debug_assertions)]
-    let fmt_layer = fmt_layer
+    
+    let admin_layer = fmt::layer()
         .with_timer(ChronoUtc::new("%k:%M:%S".to_owned()))
-        //.with_target(false)
         .map_writer(move |_| Logger)
-        .with_filter(_env_filter);
-        
+        .with_filter(admin_filter);
+    
+    let subscriber = tracing_subscriber::registry().with(admin_layer);
 
-    let _ = tracing_subscriber::registry().with(fmt_layer).try_init();
+    #[cfg(debug_assertions)]
+    let shell_filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::DEBUG.into())
+        .from_env()
+        .unwrap()
+        .add_directive("sqlparser::parser=info".parse().unwrap())
+        .add_directive("tower_sessions_core=info".parse().unwrap())
+        .add_directive("h2=info".parse().unwrap())
+        .add_directive("hyper=info".parse().unwrap())
+        .add_directive("rustls=info".parse().unwrap())
+        .add_directive("reqwest=info".parse().unwrap())
+        .add_directive("sled=info".parse().unwrap());
+
+    #[cfg(debug_assertions)]
+    let shell_layer = fmt::layer()
+        .with_timer(ChronoUtc::new("%k:%M:%S".to_owned()))
+        .with_filter(shell_filter);
+    
+    #[cfg(debug_assertions)]
+    let subscriber = subscriber.with(shell_layer);
+
+    subscriber.init()
 }
 
 pub fn trace_layer() -> TraceLayer<

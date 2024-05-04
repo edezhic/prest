@@ -11,6 +11,9 @@ pub use shutdown::*;
 mod schedule;
 pub use schedule::*;
 
+mod config;
+pub use config::*;
+
 #[cfg(feature = "auth")]
 mod auth;
 #[cfg(feature = "auth")]
@@ -23,6 +26,7 @@ mod https;
 mod traces;
 #[cfg(feature = "traces")]
 use traces::*;
+pub use traces::init_tracing_subscriber;
 
 #[cfg(feature = "webview")]
 mod webview;
@@ -34,6 +38,9 @@ pub use tokio::{
     sync::{Mutex, OnceCell, RwLock},
     task::block_in_place,
 };
+pub use toml::{Table as TomlTable, Value as TomlValue};
+pub use directories::*;
+pub use dotenvy::dotenv;
 pub type SseItem = Result<SseEvent, Infallible>;
 #[cfg(feature = "db")]
 pub(crate) use gluesql::sled_storage::SledStorage as PersistentStorage;
@@ -64,7 +71,6 @@ pub trait HostUtils {
 impl HostUtils for Router {
     #[cfg(not(feature = "webview"))]
     fn run(self) {
-        check_dot_env();
         self.route("/health", get(StatusCode::OK))
             .route("/shutdown", get(|| async { SHUTDOWN.initiate() }))
             .add_auth()
@@ -218,10 +224,7 @@ impl HostUtils for Router {
     }
     fn add_tracing(self) -> Self {
         #[cfg(feature = "traces")]
-        {
-            init_tracing_subscriber();
-            self.layer(trace_layer())
-        }
+        return self.layer(trace_layer());
         #[cfg(not(feature = "traces"))]
         self
     }
@@ -274,12 +277,6 @@ fn check_port() -> Port {
         v.parse::<Port>().unwrap_or(80)
     } else {
         80
-    }
-}
-
-pub fn check_dot_env() {
-    if let Err(e) = dotenvy::dotenv() {
-        info!(".env not used: {e}")
     }
 }
 

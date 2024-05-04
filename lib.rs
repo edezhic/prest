@@ -71,6 +71,24 @@ pub use service_worker::*;
 
 // --- GENERAL UTILS ---
 
+#[macro_export]
+macro_rules! init {
+    ($(tables $($table:ident),+)?) => {
+        {
+            let manifest = include_str!("../Cargo.toml");
+            #[cfg(not(target_arch = "wasm32"))]
+            let ___ = prest::dotenv();
+            prest::init_tracing_subscriber();
+            let config = CRATE_CONFIG.init(manifest);
+            $( 
+                prest::DB.init();  
+                $( $table::prepare_table(); )+ 
+            )?    
+            prest::info!("Initialized {} v{}", config.name, config.version);  
+        }
+    };
+}
+
 /// A little helper to init router and route in a single call to improve formatting
 pub fn route<S: Clone + Send + Sync + 'static>(
     path: &str,

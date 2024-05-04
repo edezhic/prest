@@ -39,6 +39,7 @@ pub async fn page() -> Markup {
 
     html! {(DOCTYPE) (Head::with_title("Prest Admin"))
         body."max-w-screen-sm mx-auto mt-12 flex flex-col items-center gap-y-8" {
+            a href="/shutdown" {"Shutdown"}
             p{"Schedule is running "(schedule_running_tasks)" tasks right now"}
             (routes_info)
             (tables)

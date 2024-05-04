@@ -13,7 +13,7 @@ struct Todo {
 }
 
 fn main() {
-    Todo::prepare_table();
+    init!(tables Todo);
     shared_routes()
         .route(
             "/todos",

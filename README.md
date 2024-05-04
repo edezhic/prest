@@ -53,12 +53,11 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
++ deployment manager: builder for linux, SSH client/server to upload binaries, maybe self-update mechanism based on [self-replace](https://github.com/mitsuhiko/self-replace) or [shellflip](https://github.com/cloudflare/shellflip) or smth like that. 
 + admin panel design and docs
-+ register templates for different response codes? Or just use htmx-based error handling (and maybe redirects) in these cases?
-+ self-update mechanism based on [self-replace](https://github.com/mitsuhiko/self-replace) or [shellflip](https://github.com/cloudflare/shellflip) or smth like that
++ allow setting templates for different non-200 response codes?
 + adapt maud for usage with tailwind and htmx?
 + add something storybook-like
-+ file storage - https://github.com/dirs-dev/directories-rs
 + i18n - https://github.com/longbridgeapp/rust-i18n
 + sql escaping
 + rewrite scraping example

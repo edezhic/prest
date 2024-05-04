@@ -70,14 +70,14 @@ pub const GOOGLE_CALLBACK_ROUTE: &str = "/auth/google/callback";
 pub fn init_auth_module() -> (AuthLayer, Router) {
     SessionRow::prepare_table();
     User::prepare_table();
-    let mut session_layer = SessionManagerLayer::new(DB.clone())
+    let mut session_layer = SessionManagerLayer::new(DB.cloned())
         .with_name("prest_session")
         .with_same_site(tower_sessions::cookie::SameSite::Lax)
         .with_expiry(Expiry::OnInactivity(time::Duration::days(7)));
     if let Ok(domain) = env::var("DOMAIN") {
         session_layer = session_layer.with_domain(domain);
     }
-    let layer = AuthManagerLayerBuilder::new(DB.clone(), session_layer).build();
+    let layer = AuthManagerLayerBuilder::new(DB.cloned(), session_layer).build();
 
     let mut router = route(LOGIN_ROUTE, post(login)).route(LOGOUT_ROUTE, get(logout));
 
