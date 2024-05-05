@@ -1,21 +1,20 @@
 use crate::*;
 
-pub struct CrateConfig {
+pub struct AppConfig {
     pub name: String,
     pub version: semver::Version,
     pub persistent: bool,
-    pub project_dirs: ProjectDirs,
 }
 
-pub static CRATE_CONFIG: std::sync::OnceLock<CrateConfig> = std::sync::OnceLock::new();
+pub static APP_CONFIG: std::sync::OnceLock<AppConfig> = std::sync::OnceLock::new();
 
-pub trait CrateConfigAccess {
-    fn init(&self, manifest: &'static str) -> &CrateConfig;
-    fn check(&self) -> &CrateConfig;
+pub trait AppConfigAccess {
+    fn init(&self, manifest: &'static str) -> &AppConfig;
+    fn check(&self) -> &AppConfig;
 }
 
-impl CrateConfigAccess for std::sync::OnceLock<CrateConfig> {
-    fn init(&self, manifest: &str) -> &CrateConfig {
+impl AppConfigAccess for std::sync::OnceLock<AppConfig> {
+    fn init(&self, manifest: &str) -> &AppConfig {
         let parsed = manifest.parse::<prest::TomlTable>().unwrap();
         let name = parsed["package"]["name"]
             .as_str()
@@ -36,14 +35,12 @@ impl CrateConfigAccess for std::sync::OnceLock<CrateConfig> {
             true
         };
 
-        let project_dirs = prest::ProjectDirs::from("", "", &name).unwrap();
-        
         self.get_or_init(|| {
-            CrateConfig { name, version, persistent, project_dirs }
+            AppConfig { name, version, persistent }
         })
     }
 
-    fn check(&self) -> &CrateConfig {
+    fn check(&self) -> &AppConfig {
         self.get().expect("config should be initialized first")
     }
 }

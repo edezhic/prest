@@ -67,12 +67,16 @@ time = { version = "0.3", features = ["wasm-bindgen"] }
 hex = { version = "0.4", optional = true }
 axum-htmx = { version = "0.5", features = ["serde"] }
 axum-valid = { version = "0.14", default-features = false, features = ["form", "json", "query", "422"] }
+toml = "0.8.8"
+semver = "1.0"
+ansi-to-html = { version = "0.2.1", optional = true }
+
 
 # host
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 axum = "0.7.4"
 tokio = { version = "1.25.0", features = ["rt", "rt-multi-thread", "net", "sync"] }
-tower-http = { version = "0.5.1", features = ["catch-panic", "compression-br", "limit"] }
+tower-http = { version = "0.5.1", features = ["catch-panic", "compression-br", "limit", "normalize-path"] }
 dotenvy = "0.15"
 tower-livereload = "0.9.1"
 uuid = { version = "1.6", features = ["v4", "serde"] }
@@ -87,9 +91,10 @@ wry = { version = "0.35", optional = true }
 tao = { version = "0.24", default-features = false, features = [ "rwh_05" ], optional = true }
 tokio_schedule = "0.3.1"
 directories = "5.0"
-toml = "0.8.8"
-semver = "1.0"
-ansi-to-html = { version = "0.2.1", optional = true }
+sled = "*"
+russh = "0.43"
+russh-keys = "*"
+russh-sftp = "2.0.0-beta.2"
 
 # service worker
 [target.'cfg(target_arch = "wasm32")'.dependencies]

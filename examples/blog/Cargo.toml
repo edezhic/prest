@@ -3,11 +3,10 @@ name = "blog"
 edition = "2021"
 
 [dependencies]
-prest = { version = "0.2", path = "../../", default-features = false, features = ["html", "embed", "traces"] }
+prest = { version = "0.2", path = "../../" }
 wasm-bindgen = "0.2"
 markdown = "1.0.0-alpha.16"
 toml = "0.8.8"
 
 [build-dependencies]
 prest-build = { path = "../../build/", version = "0.2" }
-

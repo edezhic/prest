@@ -15,7 +15,7 @@ pub struct Shutdown {
 
 impl Shutdown {
     pub fn initiate(&self) {
-        if self.initiated.load(Ordering::SeqCst) {
+        if self.in_progress() {
             return;
         } else {
             tracing::warn!("Initiating shutdown process");
@@ -23,7 +23,7 @@ impl Shutdown {
         }
         // stopping the servers
         for handle in self.server_handles.read().unwrap().iter() {
-            handle.graceful_shutdown(None)
+            handle.graceful_shutdown(Some(std::time::Duration::from_secs(1)))
         }
         // awaiting currently running scheduled tasks
         while self.scheduled_task_running.load(Ordering::SeqCst) {

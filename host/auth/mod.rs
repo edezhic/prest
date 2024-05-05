@@ -56,6 +56,7 @@ pub struct OAuthQueryParams {
     pub state: OAuthCSRF,
 }
 
+#[allow(dead_code)]
 trait AuthBackend:
     AuthnBackend<User = User, Credentials = Credentials, Error = AuthError> + SessionStore
 {

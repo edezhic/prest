@@ -8,6 +8,10 @@ pub use wasm_bindgen::prelude::wasm_bindgen;
 use wasm_bindgen::{JsCast, JsValue};
 pub use web_sys::{console, FetchEvent, ServiceWorkerGlobalScope};
 
+// TODO: figure out how to use gluesql::idb_storage::IdbStorage as PersistentStorage for SW
+#[cfg(feature = "db")]
+pub(crate) type PersistentStorage = gluesql::shared_memory_storage::SharedMemoryStorage;
+
 /// Util trait to add handle_fetch_events function to the Router
 pub trait ServiceWorkerUtils {
     fn handle_fetch_events(self);

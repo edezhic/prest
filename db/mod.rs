@@ -40,16 +40,31 @@ pub trait DbAccess {
 
 impl DbAccess for std::sync::OnceLock<Db> {
     fn init(&self) {
-        let CrateConfig {
-            project_dirs,
+        let AppConfig {
+            name,
             persistent,
             ..
-        } = CRATE_CONFIG.check();
+        } = APP_CONFIG.check();
         
         let db = if *persistent {
-            let mut db_path = project_dirs.data_dir().to_path_buf();
-            db_path.push("db");
-            Db::Persistent(PersistentStorage::new(db_path.to_str().unwrap()).unwrap())
+            #[cfg(host)]
+            {
+                let project_dirs = prest::ProjectDirs::from("", "", &name).unwrap();
+                let mut db_path = project_dirs.data_dir().to_path_buf();
+                db_path.push("db");
+                let config = sled::Config::default()
+                    .path(db_path.to_str().unwrap())
+                    .cache_capacity(100_000_000)
+                    .mode(sled::Mode::HighThroughput)
+                    .flush_every_ms(Some(1000));
+
+                let storage = PersistentStorage::try_from(config).unwrap();
+                Db::Persistent(storage)
+            }
+            #[cfg(sw)]
+            {
+                Db::Persistent(MemoryStorage::new())
+            }
         } else {
             Db::Memory(MemoryStorage::new())
         };
@@ -70,6 +85,7 @@ impl DbAccess for std::sync::OnceLock<Db> {
     }
 
     fn flush(&self) {
+        #[cfg(not(target_arch = "wasm32"))]
         match DB.cloned() {
             Memory(_) => (),
             Persistent(sled) => {

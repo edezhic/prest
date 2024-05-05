@@ -53,8 +53,10 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ deployment manager: builder for linux, SSH client/server to upload binaries, maybe self-update mechanism based on [self-replace](https://github.com/mitsuhiko/self-replace) or [shellflip](https://github.com/cloudflare/shellflip) or smth like that. 
-+ admin panel design and docs
++ admin panel designdocs
++ auto HTTPS setup based on letsencrypt (https://github.com/tokio-rs/axum/discussions/495, https://docs.rs/rustls-acme/latest/rustls_acme)
++ manager for multiple apps running on a single host
++ update docs/blog all around
 + allow setting templates for different non-200 response codes?
 + adapt maud for usage with tailwind and htmx?
 + add something storybook-like
@@ -62,6 +64,5 @@ This is a hobby project and plans change on the fly, but there are things I'd li
 + sql escaping
 + rewrite scraping example
 + rewrite blockchain example
-+ Host build utils? Currently blog is built using `CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld CARGO_PROFILE_RELEASE_LTO=fat cargo build -p blog --release --target=x86_64-unknown-linux-musl` and simply executed 
 + emails https://github.com/stalwartlabs/mail-server
 

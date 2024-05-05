@@ -39,6 +39,11 @@ pub use std::{convert::Infallible, env, sync::Arc};
 pub use tower::{self, BoxError, Layer, Service, ServiceBuilder};
 pub use tracing::{debug, error, info, trace, warn};
 pub use uuid::Uuid;
+pub use toml::{Table as TomlTable, Value as TomlValue};
+
+
+mod config;
+pub use config::*;
 
 #[cfg(feature = "db")]
 mod db;
@@ -79,9 +84,9 @@ macro_rules! init {
             #[cfg(not(target_arch = "wasm32"))]
             let ___ = prest::dotenv();
             prest::init_tracing_subscriber();
-            let config = CRATE_CONFIG.init(manifest);
+            let config = APP_CONFIG.init(manifest);
+            prest::DB.init();
             $( 
-                prest::DB.init();  
                 $( $table::prepare_table(); )+ 
             )?    
             prest::info!("Initialized {} v{}", config.name, config.version);  
@@ -142,6 +147,12 @@ pub enum Error {
     Anyhow(#[from] anyhow::Error),
     #[error(transparent)]
     FormRejection(#[from] axum::extract::rejection::FormRejection),
+    #[cfg(host)]
+    #[error(transparent)]
+    RuSSH(#[from] russh::Error),
+    #[cfg(host)]
+    #[error(transparent)]
+    RuSFTP(#[from] russh_sftp::client::error::Error),
 }
 
 impl IntoResponse for Error {

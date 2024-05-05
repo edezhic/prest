@@ -5,8 +5,11 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 use tokio::time::sleep;
-pub use tokio_schedule::Job;
+pub use tokio_schedule::Job as RepeatableJob;
 use tokio_schedule::{every, Every};
+
+
+state!(SCHEDULE: Schedule = { Schedule { runtime: Runtime::new().unwrap(), running_tasks: 0.into() } });
 
 pub struct Schedule {
     pub runtime: Runtime,
@@ -17,11 +20,26 @@ impl Schedule {
     pub fn every(&self, period: u32) -> Every {
         every(period)
     }
+
+    pub fn once<'a, F, Fut>(&self, func: F)
+    where
+        Self: Send + 'static,
+        F: FnOnce() -> Fut + Send + 'static,
+        Fut: Future<Output = ()> + Send + 'a,
+    {
+        SCHEDULE.runtime.spawn(async move {
+            SCHEDULE.running_tasks.fetch_add(1, Ordering::SeqCst);
+            func().await;
+            let current_tasks = SCHEDULE.running_tasks.fetch_sub(1, Ordering::SeqCst);
+            SHUTDOWN
+                .scheduled_task_running
+                .store(current_tasks == 0, Ordering::SeqCst);
+        });
+    }
 }
 
-state!(SCHEDULE: Schedule = { Schedule { runtime: Runtime::new().unwrap(), running_tasks: 0.into() } });
 
-pub trait Schedulable: Job {
+pub trait Schedulable: RepeatableJob {
     /// This method returns Future that cyclic performs the job
     fn spawn<'a, F, Fut>(self, func: F)
     where
@@ -31,7 +49,7 @@ pub trait Schedulable: Job {
         <Self::TZ as TimeZone>::Offset: Send + 'a;
 }
 
-impl<T: Job> Schedulable for T {
+impl<T: RepeatableJob> Schedulable for T {
     fn spawn<'a, F, Fut>(self, mut func: F)
     where
         Self: Send + 'static,

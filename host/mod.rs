@@ -1,18 +1,24 @@
 use crate::*;
 
 mod admin;
+use self::admin::db_routes;
+
 mod state;
 
+mod ssh;
+pub use ssh::*;
+
+mod docker;
+pub use docker::*;
+
+mod analytics;
+pub use analytics::*;
+
 mod shutdown;
-use axum::middleware;
-use serde::{Deserialize, Serialize};
 pub use shutdown::*;
 
 mod schedule;
 pub use schedule::*;
-
-mod config;
-pub use config::*;
 
 #[cfg(feature = "auth")]
 mod auth;
@@ -24,36 +30,28 @@ mod https;
 
 #[cfg(feature = "traces")]
 mod traces;
+pub use traces::init_tracing_subscriber;
 #[cfg(feature = "traces")]
 use traces::*;
-pub use traces::init_tracing_subscriber;
 
 #[cfg(feature = "webview")]
 mod webview;
 
 pub use axum::response::sse::{Event as SseEvent, KeepAlive as SseKeepAlive, Sse};
+pub use directories::*;
+pub use dotenvy::dotenv;
 use std::net::SocketAddr;
 pub use tokio::{
+    io,
+    net::ToSocketAddrs,
     runtime::{Builder as RuntimeBuilder, Handle as RuntimeHandle, Runtime, RuntimeFlavor},
     sync::{Mutex, OnceCell, RwLock},
     task::block_in_place,
 };
-pub use toml::{Table as TomlTable, Value as TomlValue};
-pub use directories::*;
-pub use dotenvy::dotenv;
 pub type SseItem = Result<SseEvent, Infallible>;
+
 #[cfg(feature = "db")]
 pub(crate) use gluesql::sled_storage::SledStorage as PersistentStorage;
-
-use std::collections::HashMap;
-#[derive(Debug, Table, Serialize, Deserialize)]
-pub struct RouteStats {
-    path: String,
-    hits: i64,
-    statuses: HashMap<u16, u64>,
-}
-
-type Port = u16;
 
 /// Utility trait to use Router as the host
 pub trait HostUtils {
@@ -62,7 +60,7 @@ pub trait HostUtils {
     fn serve(self);
     fn add_utility_layers(self) -> Self;
     fn add_default_embeddings(self) -> Self;
-    fn add_route_stats(self) -> Self;
+    fn add_analytics(self) -> Self;
     fn add_tracing(self) -> Self;
     fn add_auth(self) -> Self;
     fn add_admin(self) -> Self;
@@ -76,7 +74,7 @@ impl HostUtils for Router {
             .add_auth()
             .add_admin()
             .add_tracing()
-            .add_route_stats()
+            .add_analytics()
             .add_default_embeddings()
             .add_utility_layers()
             .serve()
@@ -113,105 +111,23 @@ impl HostUtils for Router {
             })
             .unwrap();
     }
-    fn add_admin(self) -> Self {
-        let mut router = self;
-        for table in DB_SCHEMA.tables() {
-            router = router.route(table.path(), get(|| async {
-                let schema = table.schema();
-                let values = table.get_all();
-                let mut rows = vec![];
-                for row_values in values {
-                    let mut cells = vec![];
-                    let key_selector = format!("a{}", row_values[0].clone());
-                    let inputs_classname = format!(".{key_selector}");
-                    
-                    for (schema, value) in std::iter::zip(schema, row_values) {
-                        let input_type = match schema.glue_type {
-                                "BOOLEAN" => "checkbox",
-                                t if t.starts_with("UINT") || t.starts_with("INT") || t.starts_with("F") => "number",
-                                "U64" | "U8" | "F64" => "number",
-                                "TEXT" | _ => "text",
-                            
-                        };
-                
-                        let cell_class = match schema.key {
-                            true => "hidden",
-                            false => "text-center",
-                        };
-                
-                        let input_class = match input_type {
-                            "text" | "number" => "input input-bordered w-full",
-                            "checkbox" => "checkbox",
-                            _ => "",
-                        };
-
-                        let checked = match value.as_str() {
-                            "true" => true,
-                            _ => false,
-                        };
-
-                        let onchange = match input_type {
-                            "checkbox" => Some("this.value = this.checked ? 'true' : 'false'"),
-                            _ => None
-                        };
-
-                        let cell = html! {
-                            td.(cell_class) {input.(input_class).(key_selector) onchange=[(onchange)] type=(input_type) name=(schema.name) value=(value) checked[checked] {}}
-                        };
-                        cells.push(cell);
-                    }
-                    rows.push(html!(tr #(key_selector) ."relative" { 
-                        @for cell in cells {(cell)}
-                        td."flex justify-around items-center" {
-                            button hx-post=(table.path()) hx-swap="none" hx-include=(inputs_classname) type="submit" {"Save"}
-                            button hx-delete=(table.path()) hx-swap="outerHtml" hx-target=(format!("#{key_selector}")) hx-include=(inputs_classname) type="submit" {"Delete"}   
-                        }
-                    }))
-                }
-                html!(
-                    table."w-full" {
-                        @let headers = table.schema().iter().filter(|c| !c.key).map(|c| c.name);
-                        @for header in headers {th {(header)}} th{"Actions"}
-                        @for row in rows {(row)}
-                    }
-                )
-            })).route(table.path(), post(|req: Request| async {
-                table.save(req).await
-            })).route(table.path(), delete(|req: Request| async {
-                table.remove(req).await
-            }));
-        }
-        router.route("/admin", get(admin::page))
-    }
-    fn add_route_stats(self) -> Self {
-        RouteStats::migrate();
-        self.layer(middleware::from_fn(|request: Request, next: Next| async {
-            let path = match internal_req(&request) {
-                true => None,
-                false => Some(request.uri().path().to_owned()),
-            };
-
-            let response = next.run(request).await;
-
-            if let Some(path) = path {
-                let status = response.status().as_u16();
-                let mut stats = RouteStats::find_by_path(&path).unwrap_or(RouteStats {
-                    path,
-                    hits: 0,
-                    statuses: HashMap::new(),
+    fn add_admin(mut self) -> Self {
+        self = self.merge(db_routes());
+        self.route(
+            "/deploy",
+            get(|| async {
+                tokio::spawn(async {
+                    let project_path = "/Users/egordezic/Desktop/prest";
+                    let target_path = "/Users/egordezic/Desktop/prest/target";
+                    let binary_path = build_linux_binary(project_path, target_path).unwrap();
+                    remote_update(&binary_path).await.unwrap();
                 });
-                stats.hits += 1;
-                stats
-                    .statuses
-                    .entry(status)
-                    .and_modify(|v| *v += 1)
-                    .or_insert(1);
-                if let Err(e) = stats.save() {
-                    tracing::warn!("Failed to update stats: {e}");
-                }
-            }
-            response
-        }))
+            }),
+        )
+        .route("/admin", get(admin::page))
+    }
+    fn add_analytics(self) -> Self {
+        self.layer(AnalyticsLayer::init())
     }
     fn add_auth(self) -> Self {
         #[cfg(feature = "auth")]
@@ -246,6 +162,10 @@ impl HostUtils for Router {
             .layer(tower_http::limit::RequestBodyLimitLayer::new(
                 request_body_limit(),
             ));
+
+        let host_services = host_services
+            .layer(tower_http::normalize_path::NormalizePathLayer::trim_trailing_slash());
+
         self.layer(host_services)
     }
 }
@@ -272,16 +192,16 @@ fn handle_panic(err: Box<dyn std::any::Any + Send + 'static>) -> Response {
         .unwrap()
 }
 
-fn check_port() -> Port {
+fn check_port() -> u16 {
     if let Ok(v) = env::var("PORT") {
-        v.parse::<Port>().unwrap_or(80)
+        v.parse::<u16>().unwrap_or(80)
     } else {
         80
     }
 }
 
 #[allow(dead_code)]
-fn localhost(port: Port) -> String {
+fn localhost(port: u16) -> String {
     format!(
         "http://localhost{}",
         if port == 80 {
