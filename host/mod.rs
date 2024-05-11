@@ -116,15 +116,24 @@ impl HostUtils for Router {
         self.route(
             "/deploy",
             get(|| async {
-                tokio::spawn(async {
-                    let project_path = "/Users/egordezic/Desktop/prest";
-                    let target_path = "/Users/egordezic/Desktop/prest/target";
-                    let binary_path = build_linux_binary(project_path, target_path).unwrap();
-                    remote_update(&binary_path).await.unwrap();
-                });
+                let project_path = "/Users/egordezic/Desktop/prest";
+                let target_path = "/Users/egordezic/Desktop/prest/target";
+                let Ok(Ok(binary_path)) = tokio::task::spawn_blocking(move || {
+                    build_linux_binary(project_path, target_path)
+                })
+                .await else {
+                    return StatusCode::EXPECTATION_FAILED
+                };
+                if let Err(e) = remote_update(&binary_path).await {
+                    error!("Failed to update the server: {e}");
+                    StatusCode::EXPECTATION_FAILED
+                } else {
+                    StatusCode::OK
+                }
             }),
         )
         .route("/admin", get(admin::page))
+        .route("/admin/logs", get(admin::logs))
     }
     fn add_analytics(self) -> Self {
         self.layer(AnalyticsLayer::init())
@@ -194,9 +203,9 @@ fn handle_panic(err: Box<dyn std::any::Any + Send + 'static>) -> Response {
 
 fn check_port() -> u16 {
     if let Ok(v) = env::var("PORT") {
-        v.parse::<u16>().unwrap_or(80)
+        v.parse::<u16>().unwrap_or(47351)
     } else {
-        80
+        47351
     }
 }
 

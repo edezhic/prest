@@ -122,6 +122,9 @@ impl User {
             password_hash: Some(generate_hash(password)),
         }
     }
+    pub fn is_admin(&self) -> bool {
+        self.group == UserGroup::Admin
+    }
 }
 
 #[derive(Debug, Default, serde::Deserialize)]
@@ -280,8 +283,16 @@ where
             #[cfg(not(debug_assertions))]
             return Err(StatusCode::UNAUTHORIZED);
         };
-        auth_session.user.ok_or(StatusCode::UNAUTHORIZED)
-    }
+        let Some(user) = auth_session.user else {
+            return Err(StatusCode::UNAUTHORIZED);
+        };
+
+        if parts.uri.path().starts_with("/admin/") && !user.is_admin() {
+            return Err(StatusCode::UNAUTHORIZED);
+        }
+
+        Ok(user)
+    }   
 }
 
 impl AuthUser for User {

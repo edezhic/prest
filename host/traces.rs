@@ -57,6 +57,10 @@ fn make_filter() -> EnvFilter {
         .add_directive("reqwest=info".parse().unwrap())
         .add_directive("russh=info".parse().unwrap())
         .add_directive("sled=info".parse().unwrap())
+        .add_directive("pingora_proxy=info".parse().unwrap())
+        .add_directive("pingora_core=info".parse().unwrap())
+        .add_directive("pingora_pool=info".parse().unwrap())
+        .add_directive("pingora_core::server=warn".parse().unwrap())
 }
 
 pub fn init_tracing_subscriber() {

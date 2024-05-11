@@ -9,7 +9,7 @@ pub const DOCKER_CARGO_CACHE_DIR: &str = "docker_cargo_cache";
 pub fn build_linux_binary(project_path: &str, target_path: &str) -> Result<String> {
     prepare_docker_builder(target_path)?;
     let name = &APP_CONFIG.check().name;
-    if let Err(e) = std::process::Command::new("docker")
+    match std::process::Command::new("docker")
         .current_dir(project_path)
         .arg("run")
         .arg("--rm")
@@ -31,10 +31,16 @@ pub fn build_linux_binary(project_path: &str, target_path: &str) -> Result<Strin
         .stdout(std::io::stdout())
         .status()
     {
-        error!("{e}");
-        Err(Error::Anyhow(anyhow!("Failed to build the linux binary")))
-    } else {
-        Ok(format!("{target_path}/{name}/x86_64-unknown-linux-gnu/release/{name}"))
+        Ok(s) if s.code().filter(|c| *c == 0).is_some() => {
+            Ok(format!("{target_path}/{name}/x86_64-unknown-linux-gnu/release/{name}"))
+        }
+        Ok(s) => {
+            Err(Error::Anyhow(anyhow!("Failed to build the linux binary: {s}")))
+        }
+        Err(e) => {
+            error!("{e}");
+            Err(Error::Anyhow(anyhow!("Failed to start the docker builder image")))
+        }
     }
 }
 

@@ -29,14 +29,6 @@ pub async fn page() -> Markup {
         .running_tasks
         .load(std::sync::atomic::Ordering::Relaxed);
 
-    let logs = &LOG.read().unwrap();
-    let latest_logs: Vec<PreEscaped<String>> = logs
-        .lines()
-        .rev()
-        .take(100)
-        .map(|log| PreEscaped(log.to_owned()))
-        .collect();
-
     html! {(DOCTYPE) (Head::with_title("Prest Admin"))
         body."max-w-screen-sm mx-auto mt-12 flex flex-col items-center gap-y-8" {
             button hx-get="/deploy" hx-target="this" hx-swap="outerHTML" {"Deploy"}
@@ -45,8 +37,24 @@ pub async fn page() -> Markup {
             (routes_info)
             (tables)
             h2{"Latest logs"}
-            div."w-full" {@for log in latest_logs {p{(log)}}}
+            div."w-full" hx-get="/admin/logs" hx-trigger="load delay:1s" hx-target="this" hx-swap="outerHTML" {}
             (Scripts::default())
+        }
+    }
+}
+
+pub async fn logs() -> Markup {
+    let logs = &LOG.read().unwrap();
+    let latest_logs: Vec<PreEscaped<String>> = logs
+        .lines()
+        .rev()
+        .take(100)
+        .map(|log| PreEscaped(log.to_owned()))
+        .collect();
+
+    html!{
+        div."w-full" hx-get="/admin/logs" hx-trigger="load delay:1s" hx-target="this" hx-swap="outerHTML"
+            {@for log in latest_logs {p{(log)}}
         }
     }
 }
