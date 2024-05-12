@@ -12,7 +12,7 @@ fn main() {
 
 Yes. Initial motivation came from [Rust](https://www.rust-lang.org/) itself - arguably the most [reliable practical language](https://edezhic.medium.com/reliable-software-engineering-with-rust-5bb4553b5d54). It's adoption is growing rapidly, but most newcomers are getting lost in the myriads of libraries and struggle to build their first apps. So, this project is aiming to provide a batteries-included basic setup.
 
-**Prest allows building full-stack cross-platform apps for the development cost of writing HTML**. Database? Already embedded one with orm-like capabilities. Authentication? Built-in as well. UI? Everything necessary for smooth DX is included. Want an app-like experience? Add a single line in the build script and you'll get an [installable PWA](https://web.dev/articles/what-are-pwas). Deployment? Just setup server's ssh credentials and click "Deploy". Want to know how server is doing? Admin panel already provides most important stats. This is possible thanks to a bunch of amazing dependencies described in the [internals](https://prest.blog/internals).
+**Prest allows building full-stack cross-platform apps for the development cost of writing HTML**. Database? Already embedded one with orm-like capabilities. Authentication? Built-in as well. UI? Everything necessary for smooth DX is included. Want an app-like experience? Add a single line in the build script and you'll get an [installable PWA](https://web.dev/articles/what-are-pwas). Deployment? Just setup server's ssh credentials and click "Deploy". Want to know how server is doing? Admin panel already provides most important stats. Built-in https. And more. All of this is possible thanks to a bunch of amazing dependencies described in the [internals](https://prest.blog/internals).
 
 ### available features
 
@@ -21,7 +21,6 @@ The core of prest is built around the usual REST components: async http processi
 There is also a couple of optional features:
 
 + `auth` - session and user management based on passwords or openID
-+ `https` - TLS integration based on rustls that avoids openssl linking issues and redirects from http to https.
 + `lazy-embed` - to load embedded files from the filesystem even in the release mode
 + `webview` - running host functionality with a webview for client/offline-first apps. Somewhat like Electron but with much smaller and faster binaries.
 
@@ -54,8 +53,7 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ small embedded proxy to manage multiple apps on a single server, autoconnect deployed prest apps to this proxy, assign ports, and allow domain(+https? or inside apps themselves? need to sync with proxy anyway) config
-+ auto HTTPS setup based on letsencrypt (https://github.com/tokio-rs/axum/discussions/495, https://docs.rs/rustls-acme/latest/rustls_acme)
++ auto HTTPS setup based on letsencrypt (https://github.com/tokio-rs/axum/discussions/495, https://docs.rs/rustls-acme/latest/rustls_acme), integrated with the proxy
 + detect project and target paths for the deploy handler
 + admin panel design
 + update docs/blog all around

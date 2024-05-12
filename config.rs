@@ -4,6 +4,7 @@ pub struct AppConfig {
     pub name: String,
     pub version: semver::Version,
     pub persistent: bool,
+    pub domain: String,
 }
 
 pub static APP_CONFIG: std::sync::OnceLock<AppConfig> = std::sync::OnceLock::new();
@@ -35,8 +36,20 @@ impl AppConfigAccess for std::sync::OnceLock<AppConfig> {
             true
         };
 
+
+        #[cfg(debug_assertions)]
+        let domain = "localhost".to_owned();
+        #[cfg(not(debug_assertions))]
+        let domain = if let Some(Some(Some(value))) =
+            prest_configs.map(|cfgs| cfgs.get("domain").map(|v| v.as_str()))
+        {
+            value
+        } else {
+            "localhost"
+        }.to_owned();
+
         self.get_or_init(|| {
-            AppConfig { name, version, persistent }
+            AppConfig { name, version, persistent, domain }
         })
     }
 

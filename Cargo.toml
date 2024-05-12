@@ -37,7 +37,6 @@ auth = ["tower-sessions", "axum-login", "openidconnect", "password-auth", "db"]
 db = ["gluesql", "prest-db-macro"]
 embed = ["prest-embed-macro", "prest-embed-utils", "hex"]
 html = ["prest-html-macro"]
-https = ["axum-server/tls-rustls"]
 traces = ["tracing-subscriber", "tracing-web", "tower-http/trace", "axum/tracing", "ansi-to-html"]
 lazy-embed = ["embed", "prest-embed-macro/lazy-embed", "prest-embed-utils/lazy-embed"]
 webview = ["wry", "tao"]
@@ -80,7 +79,7 @@ tower-http = { version = "0.5.1", features = ["catch-panic", "compression-br", "
 dotenvy = "0.15"
 tower-livereload = "0.9.1"
 uuid = { version = "1.6", features = ["v4", "serde"] }
-axum-server = "0.6"
+axum-server = { version = "0.6", features = ["tls-rustls"] }
 gluesql = { version = "0.15", default-features = false, features = ["sled-storage", "shared-memory-storage"], optional = true }
 tracing-subscriber = { version = "0.3.18", features = ["fmt", "chrono", "env-filter"], optional = true } 
 tower-sessions = { version = "0.9", optional = true }
@@ -95,6 +94,9 @@ sled = "*"
 russh = "0.43"
 russh-keys = "*"
 russh-sftp = "2.0.0-beta.2"
+reqwest = { version = "*", default-features = false, features = ["rustls-tls"]}
+pingora = { version = "0.1", default-features = false, features = ["proxy", "boringssl"] }
+
 
 # service worker
 [target.'cfg(target_arch = "wasm32")'.dependencies]
