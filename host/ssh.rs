@@ -6,7 +6,6 @@ use semver::Version;
 use tokio::io::AsyncWriteExt;
 
 const APPS_PATH: &str = "/home";
-const PREST_APP_PREFIX: &str = "prest-";
 
 pub async fn remote_update(binary_path: &str) -> Result<()> {
     let addrs = env::var("SSH_ADDR")?;
@@ -19,8 +18,7 @@ pub async fn remote_update(binary_path: &str) -> Result<()> {
 
     info!("Initiated remote update for {name}_v{version}");
     let mut ssh = SshSession::connect(&addrs, &user, &password).await?;
-    ssh.call(&format!("pkill -f {PREST_APP_PREFIX}{name}"))
-        .await?;
+    ssh.call(&format!("pkill -f {name}")).await?;
     info!("Stopped current {name} process");
     let uploaded_binary = ssh.upload(binary_path, name, version).await?;
     info!("Uploaded the new {name} binary");
@@ -28,6 +26,7 @@ pub async fn remote_update(binary_path: &str) -> Result<()> {
         .await?;
     info!("Started new {name} process");
     let _ = ssh.close().await;
+    info!("Deployed {name} successfully");
     Ok(())
 }
 
@@ -56,7 +55,7 @@ impl SshSession {
         let binary =
             std::fs::read(path).map_err(|e| anyhow!("failed to find the built binary: {e}"))?;
 
-        let remote_filename = format!("{PREST_APP_PREFIX}{name}_v{version}");
+        let remote_filename = format!("{name}_v{version}");
         let remote_path = format!("{APPS_PATH}/{remote_filename}");
 
         let channel = self
@@ -86,7 +85,7 @@ impl SshSession {
         file.sync_all()
             .await
             .map_err(|e| anyhow!("failed to sync the remote binary: {e}"))?;
-        
+
         self.call(&format!("chmod +x {}", &remote_path))
             .await
             .map_err(|e| anyhow!("failed to make remote binary executable: {e}"))?;

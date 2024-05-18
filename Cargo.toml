@@ -74,7 +74,7 @@ ansi-to-html = { version = "0.2.1", optional = true }
 # host
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 axum = "0.7.4"
-tokio = { version = "1.25.0", features = ["rt", "rt-multi-thread", "net", "sync"] }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "net", "sync"] }
 tower-http = { version = "0.5.1", features = ["catch-panic", "compression-br", "limit", "normalize-path"] }
 dotenvy = "0.15"
 tower-livereload = "0.9.1"
@@ -94,9 +94,7 @@ sled = "*"
 russh = "0.43"
 russh-keys = "*"
 russh-sftp = "2.0.0-beta.2"
-reqwest = { version = "*", default-features = false, features = ["rustls-tls"]}
-pingora = { version = "0.1", default-features = false, features = ["proxy", "boringssl"] }
-
+rustls-acme = { version = "0.10", features = ["axum"] }
 
 # service worker
 [target.'cfg(target_arch = "wasm32")'.dependencies]

@@ -36,11 +36,10 @@ pub use futures::{
 pub use once_cell::sync::Lazy;
 pub use serde_json::{json, to_string as to_json_string};
 pub use std::{convert::Infallible, env, sync::Arc};
+pub use toml::{Table as TomlTable, Value as TomlValue};
 pub use tower::{self, BoxError, Layer, Service, ServiceBuilder};
 pub use tracing::{debug, error, info, trace, warn};
 pub use uuid::Uuid;
-pub use toml::{Table as TomlTable, Value as TomlValue};
-
 
 mod config;
 pub use config::*;
@@ -84,12 +83,12 @@ macro_rules! init {
             #[cfg(not(target_arch = "wasm32"))]
             let ___ = prest::dotenv();
             prest::init_tracing_subscriber();
-            let config = APP_CONFIG.init(manifest);
+            let config = APP_CONFIG.init(manifest, env!("CARGO_MANIFEST_DIR"));
             prest::DB.init();
-            $( 
-                $( $table::prepare_table(); )+ 
-            )?    
-            prest::info!("Initialized {} v{}", config.name, config.version);  
+            $(
+                $( $table::prepare_table(); )+
+            )?
+            prest::info!("Initialized {} v{}", config.name, config.version);
         }
     };
 }

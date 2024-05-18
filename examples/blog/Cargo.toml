@@ -10,3 +10,6 @@ toml = "0.8.8"
 
 [build-dependencies]
 prest-build = { path = "../../build/", version = "0.2" }
+
+[package.metadata]
+domain = "prest.blog"

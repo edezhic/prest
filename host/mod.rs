@@ -5,16 +5,13 @@ use self::admin::db_routes;
 
 mod state;
 
+mod server;
+
 mod ssh;
 pub use ssh::*;
 
-mod proxy;
-
 mod docker;
 pub use docker::*;
-
-mod analytics;
-pub use analytics::*;
 
 mod shutdown;
 pub use shutdown::*;
@@ -37,10 +34,8 @@ use traces::*;
 mod webview;
 
 pub use axum::response::sse::{Event as SseEvent, KeepAlive as SseKeepAlive, Sse};
-use axum_server::tls_rustls::RustlsConfig;
 pub use directories::*;
 pub use dotenvy::dotenv;
-use std::net::SocketAddr;
 pub use tokio::{
     io,
     net::ToSocketAddrs,
@@ -61,7 +56,6 @@ pub trait HostUtils {
     fn serve(self);
     fn add_utility_layers(self) -> Self;
     fn add_default_embeddings(self) -> Self;
-    fn add_analytics(self) -> Self;
     fn add_tracing(self) -> Self;
     fn add_auth(self) -> Self;
     fn add_admin(self) -> Self;
@@ -71,11 +65,9 @@ impl HostUtils for Router {
     #[cfg(not(feature = "webview"))]
     fn run(self) {
         self.route("/health", get(StatusCode::OK))
-            .route("/shutdown", get(|| async { SHUTDOWN.initiate() }))
             .add_auth()
             .add_admin()
             .add_tracing()
-            .add_analytics()
             .add_default_embeddings()
             .add_utility_layers()
             .serve()
@@ -91,72 +83,34 @@ impl HostUtils for Router {
         webview::init_webview(&localhost(&check_port())).unwrap();
     }
     fn serve(self) {
-        let proxy_port = check_port();
-        proxy::start(proxy_port);
-
-        let app_port = get_available_port();
-        let app_addr = SocketAddr::from(([0, 0, 0, 0], app_port));
-
-        // check-in with the proxy
-        let app = APP_CONFIG.check();
-
-        let tls = cfg!(not(debug_assertions));
-
         Runtime::new()
             .unwrap()
-            .block_on(async move {
-                proxy::assign(app_port, app.domain.clone(), app.name.clone())
-                    .await
-                    .unwrap();
-
-                if tls {
-                    let tls_config = RustlsConfig::from_pem_file("./cert.pem", "./key.pem").await?;
-                    axum_server::bind_rustls(app_addr, tls_config)
-                        .handle(SHUTDOWN.new_server_handle())
-                        .serve(self.into_make_service())
-                        .await
-                } else {
-                    axum_server::bind(app_addr)
-                        .handle(SHUTDOWN.new_server_handle())
-                        .serve(self.into_make_service())
-                        .await
-                }
-            })
+            .block_on(async move { server::start(self).await })
             .unwrap();
     }
+
     fn add_admin(mut self) -> Self {
         self = self.merge(db_routes());
-        self.route(
-            "/deploy",
-            get(|| async {
-                let project_path = "/Users/egordezic/Desktop/prest";
-                let target_path = "/Users/egordezic/Desktop/prest/target";
-                let Ok(Ok(binary_path)) = tokio::task::spawn_blocking(move || {
-                    build_linux_binary(project_path, target_path)
-                })
-                .await
-                else {
-                    return StatusCode::EXPECTATION_FAILED;
-                };
-                if let Err(e) = remote_update(&binary_path).await {
-                    error!("Failed to update the server: {e}");
-                    StatusCode::EXPECTATION_FAILED
-                } else {
-                    StatusCode::OK
-                }
-            }),
-        )
-        .route("/admin", get(admin::page))
-        .route("/admin/logs", get(admin::logs))
+        self.route("/admin", get(admin::page))
+            .route("/admin/deploy", get(admin::deploy))
+            .route("/admin/logs", get(admin::logs))
+            .route("/admin/analytics", get(admin::analytics))
+            .layer(admin::AnalyticsLayer::init())
     }
-    fn add_analytics(self) -> Self {
-        self.layer(AnalyticsLayer::init())
-    }
+
     fn add_auth(self) -> Self {
         #[cfg(feature = "auth")]
         {
             let (auth_layer, auth_routes) = auth::init_auth_module();
-            self.merge(auth_routes).layer(auth_layer)
+            self.merge(auth_routes).layer(auth_layer).route(
+                "/admin/shutdown",
+                get(|| async {
+                    SHUTDOWN.initiate();
+                    html! {
+                        h1 {"Shutdown has been initiated"}
+                    }
+                }),
+            )
         }
         #[cfg(not(feature = "auth"))]
         self
@@ -215,20 +169,6 @@ fn handle_panic(err: Box<dyn std::any::Any + Send + 'static>) -> Response {
         .unwrap()
 }
 
-fn check_port() -> u16 {
-    if let Ok(v) = env::var("PORT") {
-        v.parse::<u16>().unwrap_or(80)
-    } else {
-        80
-    }
-}
-
-fn get_available_port() -> u16 {
-    (8000..9000)
-        .find(|port| std::net::TcpListener::bind(("127.0.0.1", *port)).is_ok())
-        .expect("Some port in 8000..9000 range should be available")
-}
-
 #[allow(dead_code)]
 const DEFAULT_REQUEST_BODY_LIMIT: usize = 1_000_000;
 #[allow(dead_code)]
@@ -246,12 +186,20 @@ fn not_htmx_predicate<Body>(req: &Request<Body>) -> bool {
 }
 
 const INTERNAL_PATHS: [&str; 3] = ["/tower-livereload", "/default-view-transition", "/admin"];
-fn internal_req(request: &Request) -> bool {
+fn filter_request(request: &Request) -> bool {
     let path = request.uri().path();
     for internal in INTERNAL_PATHS {
         if path.starts_with(internal) {
             return true;
         }
+    }
+    false
+}
+
+fn filter_response(response: &Response) -> bool {
+    let status = response.status();
+    if [304, 404, 405].contains(&status.as_u16()) {
+        return true;
     }
     false
 }

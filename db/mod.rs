@@ -41,11 +41,9 @@ pub trait DbAccess {
 impl DbAccess for std::sync::OnceLock<Db> {
     fn init(&self) {
         let AppConfig {
-            name,
-            persistent,
-            ..
+            name, persistent, ..
         } = APP_CONFIG.check();
-        
+
         let db = if *persistent {
             #[cfg(host)]
             {

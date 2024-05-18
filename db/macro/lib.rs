@@ -301,7 +301,7 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
 
     let schema_name = ident(&format!("{}Schema", struct_name.to_string()));
     let path = format!("/admin/table/{}", table_name_str);
-            
+
     let table_schema_clone = table_schema.clone();
 
     let cells_renders = columns.iter().map(|col| {
@@ -313,9 +313,8 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
             ..
         } = col;
 
-        let preprocessing = (*custom_type || *list || *optional).then(|| {
-            quote!(let #name_ident = to_json_string(&#name_ident).unwrap();)
-        });
+        let preprocessing = (*custom_type || *list || *optional)
+            .then(|| quote!(let #name_ident = to_json_string(&#name_ident).unwrap();));
 
         quote! {
             #preprocessing

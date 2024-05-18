@@ -4,18 +4,19 @@ pub struct AppConfig {
     pub name: String,
     pub version: semver::Version,
     pub persistent: bool,
-    pub domain: String,
+    pub domain: Option<String>,
+    pub manifest_dir: String,
 }
 
 pub static APP_CONFIG: std::sync::OnceLock<AppConfig> = std::sync::OnceLock::new();
 
 pub trait AppConfigAccess {
-    fn init(&self, manifest: &'static str) -> &AppConfig;
+    fn init(&self, manifest: &'static str, manifest_dir: &'static str) -> &AppConfig;
     fn check(&self) -> &AppConfig;
 }
 
 impl AppConfigAccess for std::sync::OnceLock<AppConfig> {
-    fn init(&self, manifest: &str) -> &AppConfig {
+    fn init(&self, manifest: &str, manifest_dir: &str) -> &AppConfig {
         let parsed = manifest.parse::<prest::TomlTable>().unwrap();
         let name = parsed["package"]["name"]
             .as_str()
@@ -27,29 +28,29 @@ impl AppConfigAccess for std::sync::OnceLock<AppConfig> {
             .unwrap_or("0.0.0")
             .parse::<semver::Version>()
             .unwrap();
-        let prest_configs = parsed.get("prest");
+        let metadata = parsed.get("package").map(|t| t.get("metadata")).flatten();
         let persistent = if let Some(Some(Some(value))) =
-            prest_configs.map(|cfgs| cfgs.get("persistent").map(|v| v.as_bool()))
+            metadata.map(|cfgs| cfgs.get("persistent").map(|v| v.as_bool()))
         {
             value
         } else {
             true
         };
 
-
-        #[cfg(debug_assertions)]
-        let domain = "localhost".to_owned();
-        #[cfg(not(debug_assertions))]
         let domain = if let Some(Some(Some(value))) =
-            prest_configs.map(|cfgs| cfgs.get("domain").map(|v| v.as_str()))
+            metadata.map(|cfgs| cfgs.get("domain").map(|v| v.as_str()))
         {
-            value
+            Some(value.to_owned())
         } else {
-            "localhost"
-        }.to_owned();
+            None
+        };
 
-        self.get_or_init(|| {
-            AppConfig { name, version, persistent, domain }
+        self.get_or_init(|| AppConfig {
+            name,
+            version,
+            persistent,
+            domain,
+            manifest_dir: manifest_dir.to_owned(),
         })
     }
 

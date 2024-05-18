@@ -22,10 +22,16 @@ pub struct Logger;
 impl std::io::Write for Logger {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         let Ok(log) = std::str::from_utf8(buf) else {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Not UTF-8 log"));
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Not UTF-8 log",
+            ));
         };
         let Ok(log) = ansi_to_html::convert(log) else {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Not ANSI log"));
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Not ANSI log",
+            ));
         };
         LOG.write().unwrap().push_str(&log);
         Ok(buf.len())
@@ -68,14 +74,14 @@ pub fn init_tracing_subscriber() {
         .with_timer(ChronoUtc::new("%k:%M:%S".to_owned()))
         .map_writer(move |_| Logger)
         .with_filter(make_filter());
-    
+
     let subscriber = tracing_subscriber::registry().with(admin_layer);
 
     //#[cfg(debug_assertions)]
     let shell_layer = fmt::layer()
         .with_timer(ChronoUtc::new("%k:%M:%S".to_owned()))
         .with_filter(make_filter());
-    
+
     //#[cfg(debug_assertions)]
     let subscriber = subscriber.with(shell_layer);
 
@@ -94,17 +100,23 @@ pub fn trace_layer() -> TraceLayer<
         .on_eos(())
         .on_body_chunk(())
         .on_request(())
-        .on_response(|resp: &Response, latency: std::time::Duration, span: &Span| {
-            let millis = latency.as_secs_f64() * 1000.0;
-            let status = resp.status();
-            if let Some(metadata) = span.metadata() {
-                match *metadata.level() {
-                    Level::DEBUG => tracing::debug!("'{status}' in {millis:.1}ms"),
-                    Level::TRACE => tracing::trace!("'{status}' in {millis:.1}ms"),
-                    _ => {}
+        .on_response(
+            |resp: &Response, latency: std::time::Duration, span: &Span| {
+                let millis = latency.as_secs_f64() * 1000.0;
+                let status = resp.status();
+                if let Some(metadata) = span.metadata() {
+                    let mut level = *metadata.level();
+                    if super::filter_response(resp) {
+                        level = Level::TRACE;
+                    }
+                    match level {
+                        Level::DEBUG => tracing::debug!("'{status}' in {millis:.1}ms"),
+                        Level::TRACE => tracing::trace!("'{status}' in {millis:.1}ms"),
+                        _ => {}
+                    }
                 }
-            }
-        })
+            },
+        )
         .make_span_with(|request: &Request| {
             let method = request.method().as_str();
             let uri = request.uri();
@@ -115,7 +127,7 @@ pub fn trace_layer() -> TraceLayer<
                 uri.to_string()
             };
 
-            if super::internal_req(request) {
+            if super::filter_request(request) {
                 return tracing::trace_span!("->", method, uri);
             }
 
@@ -130,4 +142,3 @@ pub fn trace_layer() -> TraceLayer<
         });
     layer
 }
-

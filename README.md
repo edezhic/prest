@@ -46,23 +46,20 @@ Prest tutorials are designed to start from basics and then add more and more fea
 3. [Auth](https://prest.blog/todo-pwa-auth) = 2 + username+password and Google auth, ~110 LoC
 4. [Sync](https://prest.blog/todo-pwa-auth-sync) = 3 + synchronization between clients, ~160 LoC
 
-There are also todo examples with different databases - postgres through [seaorm](https://prest.blog/postgres-seaorm) or [diesel](https://prest.blog/postgres-diesel), sqlite through [sqlx](https://prest.blog/sqlite-sqlx) or [turbosql](https://prest.blog/sqlite-turbosql), [mongo](https://prest.blog/mongo-driver), [redis](https://prest.blog/redis-driver). Also, there is a couple of examples that showcase how one might use prest with uncommon for web development tech: [web scraper](https://prest.blog/scraper), [Large Language Model](https://prest.blog/llm-mistral) and a [blockchain Smart Contract](https://prest.blog/smart-contract).
+There are also todo examples with alternative databases - postgres through [seaorm](https://prest.blog/postgres-seaorm) or [diesel](https://prest.blog/postgres-diesel), sqlite through [sqlx](https://prest.blog/sqlite-sqlx) or [turbosql](https://prest.blog/sqlite-turbosql), [mongo](https://prest.blog/mongo-driver), [redis](https://prest.blog/redis-driver). Also, there is a couple of examples that showcase how one might use prest with uncommon for web development tech: [web scraper](https://prest.blog/scraper), [Large Language Model](https://prest.blog/llm-mistral) and a [blockchain Smart Contract](https://prest.blog/smart-contract).
 
 To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/). I also recommend setting up the [rust-analyzer](https://rust-analyzer.github.io/) for your favourite IDE right away. To build & start any example from the cloned prest repo use `cargo run -p EXAMPLE-NAME`. Or just copy the selected example's code from the tutorials into local files and `cargo run` it. Some examples require additional setup and credentials which are mentioned in their docs.
 
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ auto HTTPS setup based on letsencrypt (https://github.com/tokio-rs/axum/discussions/495, https://docs.rs/rustls-acme/latest/rustls_acme), integrated with the proxy
-+ detect project and target paths for the deploy handler
-+ admin panel design
-+ update docs/blog all around
-+ allow setting templates for different non-200 response codes?
++ db editor upgrades & deploy process UI
++ update docs all around
++ allow setting templates for different non-200 response codes? Or just htmx-based handling?
 + adapt maud for usage with tailwind and htmx?
 + add something storybook-like
 + i18n - https://github.com/longbridgeapp/rust-i18n
 + sql escaping
 + rewrite scraping example
 + rewrite blockchain example
-+ emails https://github.com/stalwartlabs/mail-server
-
++ debug SW wasm issues, improve default manifest

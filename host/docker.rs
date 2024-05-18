@@ -6,16 +6,40 @@ pub static BUILDER_DOCKERFILE: &str = include_str!("Dockerfile");
 pub const DOCKER_BUILDER_IMAGE: &str = "prest-builder";
 pub const DOCKER_CARGO_CACHE_DIR: &str = "docker_cargo_cache";
 
-pub fn build_linux_binary(project_path: &str, target_path: &str) -> Result<String> {
-    prepare_docker_builder(target_path)?;
+pub fn build_linux_binary() -> Result<String> {
     let name = &APP_CONFIG.check().name;
+    let mut workspace_path = APP_CONFIG.check().manifest_dir.to_owned();
+
+    // checking higher-level workspace path required for local dependencies
+    let mut pb = std::path::PathBuf::from(&workspace_path);
+    while pb.pop() {
+        let mut potential_manifest = pb.clone();
+        potential_manifest.push("Cargo.toml");
+        if let Ok(manifest) = std::fs::read_to_string(&potential_manifest) {
+            if manifest.contains("[workspace]") && manifest.contains(name) {
+                let Some(path) = pb.to_str() else {
+                    break;
+                };
+                workspace_path = path.to_owned();
+            }
+        }
+    }
+
+    let target_path = format!("{workspace_path}/target");
+
+    prepare_docker_builder(&target_path)?;
+
+    info!("Starting release build for deployment");
     match std::process::Command::new("docker")
-        .current_dir(project_path)
+        .current_dir(workspace_path)
         .arg("run")
         .arg("--rm")
         .args(["--volume", &format!(".:/usr/src/")])
         .args(["--workdir", &format!("/usr/src/")])
-        .args(["-e", &format!("CARGO_HOME=/usr/src/target/{DOCKER_CARGO_CACHE_DIR}")])
+        .args([
+            "-e",
+            &format!("CARGO_HOME=/usr/src/target/{DOCKER_CARGO_CACHE_DIR}"),
+        ])
         .arg("prest-builder")
         .args([
             "cargo",
@@ -31,15 +55,17 @@ pub fn build_linux_binary(project_path: &str, target_path: &str) -> Result<Strin
         .stdout(std::io::stdout())
         .status()
     {
-        Ok(s) if s.code().filter(|c| *c == 0).is_some() => {
-            Ok(format!("{target_path}/{name}/x86_64-unknown-linux-gnu/release/{name}"))
-        }
-        Ok(s) => {
-            Err(Error::Anyhow(anyhow!("Failed to build the linux binary: {s}")))
-        }
+        Ok(s) if s.code().filter(|c| *c == 0).is_some() => Ok(format!(
+            "{target_path}/{name}/x86_64-unknown-linux-gnu/release/{name}"
+        )),
+        Ok(s) => Err(Error::Anyhow(anyhow!(
+            "Failed to build the linux binary: {s}"
+        ))),
         Err(e) => {
             error!("{e}");
-            Err(Error::Anyhow(anyhow!("Failed to start the docker builder image")))
+            Err(Error::Anyhow(anyhow!(
+                "Failed to start the docker builder image"
+            )))
         }
     }
 }

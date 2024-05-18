@@ -8,7 +8,6 @@ use tokio::time::sleep;
 pub use tokio_schedule::Job as RepeatableJob;
 use tokio_schedule::{every, Every};
 
-
 state!(SCHEDULE: Schedule = { Schedule { runtime: Runtime::new().unwrap(), running_tasks: 0.into() } });
 
 pub struct Schedule {
@@ -37,7 +36,6 @@ impl Schedule {
         });
     }
 }
-
 
 pub trait Schedulable: RepeatableJob {
     /// This method returns Future that cyclic performs the job

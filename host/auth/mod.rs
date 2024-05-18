@@ -10,13 +10,13 @@ use axum_login::{
 };
 pub use openidconnect::{CsrfToken as OAuthCSRF, Nonce as OAuthNonce};
 use password_auth::{generate_hash, verify_password};
+use serde::{Deserialize, Serialize};
 pub use tower_sessions::Session;
 use tower_sessions::{
     session::{Id, Record},
     session_store::{Error, Result},
     Expiry, SessionManagerLayer, SessionStore,
 };
-use serde::{Deserialize, Serialize};
 
 pub type UserId = Uuid;
 pub type AuthLayer = AuthManagerLayer<Db, Db>;
@@ -292,7 +292,7 @@ where
         }
 
         Ok(user)
-    }   
+    }
 }
 
 impl AuthUser for User {
