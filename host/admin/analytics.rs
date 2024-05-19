@@ -39,13 +39,13 @@ pub async fn analytics() -> impl IntoResponse {
 
     html! {
         h2{"Routes stats"}
-        p{"Total hits: "(total_path_hits)}
+        p{b{"Total path hits: "(total_path_hits)}}
         table."w-full" {
             @for route in path_stats {
                 tr {
-                    td."w-1/3"{(route.0)}
-                    td."w-1/3"{(route.1)}
-                    td."w-1/3"{
+                    td."w-1/2"{(route.0)}
+                    td."w-1/4"{(route.1)}
+                    td."w-1/4"{
                         @for (status, hits) in route.2 {
                             (status)"("(hits)")"
                         }
@@ -57,9 +57,9 @@ pub async fn analytics() -> impl IntoResponse {
         table."w-full" {
             @for route in asset_stats {
                 tr {
-                    td."w-1/3"{(route.0)}
-                    td."w-1/3"{(route.1)}
-                    td."w-1/3"{
+                    td."w-1/2"{(route.0)}
+                    td."w-1/4"{(route.1)}
+                    td."w-1/4"{
                         @for (status, hits) in route.2 {
                             (status)"("(hits)")"
                         }

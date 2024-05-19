@@ -1,7 +1,7 @@
 use crate::*;
 
 mod admin;
-use self::admin::db_routes;
+pub use admin::*;
 
 mod state;
 
@@ -102,15 +102,9 @@ impl HostUtils for Router {
         #[cfg(feature = "auth")]
         {
             let (auth_layer, auth_routes) = auth::init_auth_module();
-            self.merge(auth_routes).layer(auth_layer).route(
-                "/admin/shutdown",
-                get(|| async {
-                    SHUTDOWN.initiate();
-                    html! {
-                        h1 {"Shutdown has been initiated"}
-                    }
-                }),
-            )
+            self.merge(auth_routes)
+                .layer(auth_layer)
+                .route("/admin/shutdown", get(admin::shutdown))
         }
         #[cfg(not(feature = "auth"))]
         self
@@ -123,7 +117,7 @@ impl HostUtils for Router {
     }
     fn add_default_embeddings(self) -> Self {
         #[cfg(feature = "embed")]
-        return self.embed(DefaultAssets); // TODO: what to do about these?
+        return self.embed(DefaultAssets); // what to do about these?
         #[cfg(not(feature = "embed"))]
         self
     }

@@ -53,7 +53,6 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ db editor upgrades & deploy process UI
 + update docs all around
 + allow setting templates for different non-200 response codes? Or just htmx-based handling?
 + adapt maud for usage with tailwind and htmx?

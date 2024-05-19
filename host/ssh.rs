@@ -7,29 +7,6 @@ use tokio::io::AsyncWriteExt;
 
 const APPS_PATH: &str = "/home";
 
-pub async fn remote_update(binary_path: &str) -> Result<()> {
-    let addrs = env::var("SSH_ADDR")?;
-    let user = env::var("SSH_USER")?;
-    let password = env::var("SSH_PASSWORD")?;
-
-    let cfg = APP_CONFIG.check();
-    let name = &cfg.name;
-    let version = &cfg.version;
-
-    info!("Initiated remote update for {name}_v{version}");
-    let mut ssh = SshSession::connect(&addrs, &user, &password).await?;
-    ssh.call(&format!("pkill -f {name}")).await?;
-    info!("Stopped current {name} process");
-    let uploaded_binary = ssh.upload(binary_path, name, version).await?;
-    info!("Uploaded the new {name} binary");
-    ssh.call(&format!("DEPLOYED=true {uploaded_binary}"))
-        .await?;
-    info!("Started new {name} process");
-    let _ = ssh.close().await;
-    info!("Deployed {name} successfully");
-    Ok(())
-}
-
 impl SshSession {
     pub async fn connect(addrs: &str, user: &str, password: &str) -> Result<Self> {
         let config = client::Config {
@@ -115,7 +92,7 @@ impl SshSession {
         Ok(())
     }
 
-    async fn close(&mut self) -> Result<()> {
+    pub async fn close(&mut self) -> Result<()> {
         self.session
             .disconnect(Disconnect::ByApplication, "", "English")
             .await?;
@@ -123,7 +100,7 @@ impl SshSession {
     }
 }
 
-struct SshSession {
+pub struct SshSession {
     session: client::Handle<Client>,
 }
 
