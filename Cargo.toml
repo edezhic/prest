@@ -89,9 +89,9 @@ wry = { version = "0.35", optional = true }
 tao = { version = "0.24", default-features = false, features = [ "rwh_05" ], optional = true }
 tokio_schedule = "0.3.1"
 directories = "5.0"
-sled = "*"
+sled = "0.34"
 russh = "0.43"
-russh-keys = "*"
+russh-keys = "0.43"
 russh-sftp = "2.0.0-beta.2"
 rustls-acme = { version = "0.10", features = ["axum"] }
 
