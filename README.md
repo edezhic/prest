@@ -1,43 +1,168 @@
-**P**rogressive **REST**ful framework that _makes application development simple again_. Beware that its still alpha and recommended only for personal projects, as well as rust web development training. Tutorials are available in the [blog](https://prest.blog/) which is also built with prest. Quick peek into prest's hello world:
+**P**rogressive **REST**ful framework that _makes application development simple again_. Even if you are not familiar with Rust yet you might be interested because it's designed to be as beginner-friendly as possible - **prest allows building full-stack cross-platform apps for the development cost of writing HTML**. Tutorials are available in the [blog](https://prest.blog/) which is also built with prest. Beware that its still alpha and recommended only for pet projects and training because many breaking changes are expected. If you'd like where this is going, please leave a star on the github!
+
+It ain't easy to compete with Laravel, Rails, Nextjs and many others, but I always wanted a framework which enables simplicity in common development needs and allows **any** customizations/optimizations without switching languages. [Rust](https://www.rust-lang.org/) provides ways to build servers, clients, AIs, blockchains, OS kernels and whatever else you might need, while also being arguably the most [reliable practical language](https://edezhic.medium.com/reliable-software-engineering-with-rust-5bb4553b5d54). Thanks to a lot of [amazing dependencies](https://prest.blog/internals) under the hood prest already provides a whole bunch of features:
+
+**Easy start** - create a default rust project, add `prest` dependency, bulk `use` everything from it, invoke `init!` macro and add your app's logic. No massive boilerplate projects, no custom required CLI tools.
 
 ```rust
 use prest::*;
 fn main() {
     init!();
-    route("/", get("Hello world")).run()
+    ...
 }
 ```
 
-### yet another framework?
+**Server** - high-performance, concurrent, intuitively routed. Includes powerful middleware api, simple extractors to get information handlers need from requests and flexible return types. Just `run` your router and everything else will be configured automatically.
 
-Yes. Initial motivation came from [Rust](https://www.rust-lang.org/) itself - arguably the most [reliable practical language](https://edezhic.medium.com/reliable-software-engineering-with-rust-5bb4553b5d54). It's adoption is growing rapidly, but most newcomers are getting lost in the myriads of libraries and struggle to build their first apps. So, this project is aiming to provide a batteries-included basic setup.
+```rust
+route("/", get("Hello world")).run()
+```
 
-**Prest allows building full-stack cross-platform apps for the development cost of writing HTML**. Database? Already embedded one with orm-like capabilities. Authentication? Built-in as well. UI? Everything necessary for smooth DX is included. Want an app-like experience? Add a single line in the build script and you'll get an [installable PWA](https://web.dev/articles/what-are-pwas). Deployment? Just setup server's ssh credentials and click "Deploy". Want to know how server is doing? Admin panel already provides most important stats. Built-in https. And more. All of this is possible thanks to a bunch of amazing dependencies described in the [internals](https://prest.blog/internals).
+**UI** - `html!` macro for rust'y templating, easy inline styling with tailwind and daisyui, simple client-server interactions with htmx. Smooth UX with very little JS:
 
-### available features
+```rust
+html!{ 
+    nav."navbar" {
+        input."input input-bordered w-full" name="search" 
+            hx-post="/search" hx-target="#search-results" {} 
+    }
+    ...
+    main {
+        div#"#search-results" {"Response will be placed here!"}
+    }
+}
+```
 
-The core of prest is built around the usual REST components: async http processing with router, middleware, handlers, state and other utilities. Default features include: embedded sql `db` with query builder and orm-like helpers, macros to easily `embed` any files, `html` macro for rust'y templating, `traces` for extensive and convenient logging. All of the above can be compiled both for the server side and into the client's service worker to achieve powerful progressive enchancement and reuse code.
+**Database** - embedded SQL DB that works without running separate services. Auto-derived schema based on usual rust structs with query builder and helper functions. Just add it into the `init!` macro to make sure it's initialized.
 
-There is also a couple of optional features:
+```rust
+#[derive(Table, serde::Deserialize)]
+struct Todo {
+    id: Uuid,
+    task: String,
+    done: bool,
+}
+...
+init!(tables Todo/*, OtherTable, ... */)
+...
+Todo::find_all()
+Todo::find_by_task("Buy milk")
+Todo::select().filter(col("done").eq(true)).order_by("task").values()
+todo.save()
+todo.update_task("Buy milk and bread")
+todo.check_task("Buy milk and bread")
+todo.remove()
+```
 
-+ `auth` - session and user management based on passwords or openID
-+ `lazy-embed` - to load embedded files from the filesystem even in the release mode
-+ `webview` - running host functionality with a webview for client/offline-first apps. Somewhat like Electron but with much smaller and faster binaries.
+Only requires derived `serde`'s `Deserialize` to enable DB editor in the...
 
-PWA build process is just a few lines of code thanks to the `prest-build` utility crate that also has a couple of optional features to bundle other sources with your app:
+**Admin panel** - collects filtered stats for requests/responses, logs, and provides read/write GUI to all initialized tables. While blog intentionally exposes access to it for demo purposes, by default all built-in and apps routes starting with `/admin` are protected by...
 
-+ `sass` - SASS/SCSS transpilation and bundling 
-+ `typescript` - same for TypeScript/JS
+**Auth** - session and user management based on passwords and OAuth/openID. Persisted in the built-in DB, can be initiated by leading users to the predefined routes, and can retrieve current auth/user info using an extractor:
 
-Rust ecosystem has plenty of crates for all kinds of tasks and some of them are showcased in prest's examples. You can also disable any of these features (except core) to speed up compilation or to replace with other tools.
+```rust
+html!{ 
+    // for username/password flow
+    form method="POST" action=(LOGIN_ROUTE) { ... }
+    // for oauth flow
+    a href=(GOOGLE_LOGIN_ROUTE) {"Login with Google"}
+}
+...
+route("/authorized-only", get(|user: User| async {"Hello world"}))
+route("/optional", get(|auth: Auth| async {"auth.user is Option<User>"}))
+```
 
-### closer look
+To enable it you'll need the `auth` feature of prest:
 
-short code snippets using features above
+```toml
+prest = { version = "0.3", features = ["auth"] }
+```
+
+Note that currently without this feature panel will be public, so you can take a look in the [blog's](https://prest.blog/admin).
+
+**Deployment** - prest supports 1 click build-upload-start deploy pipeline based on docker for cross-platform compilation, and comes with automatically configured TLS based on LetsEncrypt. To make it work you'll need to specify the domain in the `Cargo.toml` and provide credentials:
+
+```toml
+[package.metadata]
+domain = "prest.blog"
+```
+```sh
+# add when starting app locally in the shell or in the .env file
+SSH_ADDR=123.232.111.222
+SSH_USER=root
+SSH_PASSWORD=verystrongpassword
+```
+
+And just click the `Deploy` button in admin panel! It's quite likely that you'll want to provide more native-app-like experience for users so...
+
+**[PWA](https://web.dev/articles/what-are-pwas)** - you can build some of your server and UI code into a WASM-based Service Worker and compose a Progressive Web Application so that your users can install it and use some routes offline. To make it work you'll need to separate host-only from shared host+client code and initialize shared routes in the SW, add `wasm-bindgen` and `prest-build` dependencies, add a lil build script and embed the compiled assets into the host:
+
+```rust
+#[wasm_bindgen(start)]
+pub fn main() {
+    shared_routes().handle_fetch_events()
+}
+```
+
+```toml
+...
+wasm-bindgen = "0.2"
+[build-dependencies]
+prest-build = "0.3"
+```
+
+```rust
+use prest_build::*;
+fn main() {
+    build_pwa(PWAOptions::default()).unwrap();
+}
+```
+
+```rust
+embed_build_output_as!(BuiltAssets);
+...
+router.embed(BuiltAssets)
+```
+
+By default it will only run full PWA build in the `--release` mode to avoid slowing down usual development, but you can use `PWA=debug` env variable to enforce full builds. If PWA experience is not enough for you there is another available option...
+
+**Native** - running host functionality with a webview for offline-first apps. Somewhat like Electron but with much smaller and faster binaries. Based on the same libraries as Tauri but for rust-first apps. To build for desktops just enable webview feature like this:
+
+```toml
+prest = { version = "0.3", features = ["webview"] }
+```
+
+But for mobile platforms you'll need to do [some work](https://github.com/tauri-apps/wry/blob/dev/MOBILE.md) as of now.
+
+**Build utils** - besides PWA `prest-build` includes a couple of optional features - `sass` and `typescript` which allow transpilation and bundling for typescript/js and sass/scss respectfully:
+
+```rust
+// paths relative to the build script
+bundle_sass("path to main css/scss/sass file")
+bundle_ts("path to main ts/js file")
+```
+
+And their compiled versions can be embedded with `embed_build_output_as!` just like PWA assets. Also, there is a similar and more flexible macro `embed_as!` which can be used with arbitrary folders and files, and this macro is designed to read files from the drive as needed in debug builds to avoid slowing down compilation, but in release builds it will embed their contents into the binary and you'll get 1 file with your whole app in it for convenience and faster reading. These macros generate rust structures which provide access for files' contents and metadata like blog is processing to render docs:
+
+```rust
+embed_as!(ExamplesDocs from "../" only "*.md");
+embed_as!(ExamplesCode from "../" except "*.md");
+```
+
+or they can be easily embedded into the router with `.embed(StructName)`.
+
+There is also a rust-based cron alternative for background tasks spawned as easy as:
+
+```rust 
+RT.every(5).seconds().spawn(|| async { do_smth().await })
+RT.every(1).day().at(hour, minute, second).spawn(...) 
+```
+
+Logging with `trace!`, `debug!`, `info!`, `warn!` and `error!` macros, graceful shutdown mechanism, and many other utils.
 
 ### getting started
 
-Further docs assume that you're familiar with rust. If you aren't yet check out [The Rust Book](https://doc.rust-lang.org/book/) - definitely the best guide with interactive examples (available in dozens of languages!). Also, I strongly recommend skimming through the first three chapters of the [async book](https://rust-lang.github.io/async-book/) to get an overall understanding how concurrency works in rust. 
+If you aren't familiar with rust yet I strongly recommend to check out [The Rust Book](https://doc.rust-lang.org/book/) - definitely the best guide with interactive examples available in dozens of languages! Also, I suggest skimming through the first three chapters of the [async book](https://rust-lang.github.io/async-book/) to get an overall understanding how concurrency works in rust. 
 
 Prest tutorials are designed to start from basics and then add more and more features on top:
 
@@ -53,12 +178,19 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ update docs all around
++ write more detailed logs in a file and an explorer for it
++ comments in the blog? Need more interactivity
 + allow setting templates for different non-200 response codes? Or just htmx-based handling?
 + adapt maud for usage with tailwind and htmx?
 + add something storybook-like
-+ i18n - https://github.com/longbridgeapp/rust-i18n
+* rewrite scraping and blockchain examples
 + sql escaping
-+ rewrite scraping example
-+ rewrite blockchain example
 + debug SW wasm issues, improve default manifest
+
+There are also longer term things which will be needed or nice to have before the release of prest:
+* await stable releases of most important dependencies like axum and sled 
+* parallel frontend and cranelift backend of the rust compiler for faster builds
+* stabilization and support of async iterator and other fundamental concurrent std apis
+* more optional configs all around for flexibility
+* find a way to include/re-export into the prest to avoid need for other deps 
+* wider range of new examples like [i18n](https://github.com/longbridgeapp/rust-i18n), highly interactive UIs, native mobile builds, webgpu-based modern language model, and others

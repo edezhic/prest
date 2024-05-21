@@ -4,7 +4,7 @@ Simple CRUD app with a database, partial rendering and decent styles. Like any r
 
 Besides prest you might notice another dependency - `serde`. It is the most popular **ser**ialization and **de**serialization library in the rust ecosystem and the most widely supported. Its used in almost all examples and I want to find a way to re-export `derive` macros without forcing users to use additional attributes, but for now they are imported from serde directly.
 
-Now it's time for some rust. As of now prest is designed to be imported in bulk:
+Now it's time to get rusty. As of now prest is designed to be imported in bulk:
 
 {src/main.rs:1}
 
@@ -39,7 +39,7 @@ Alright, now we have all the components for our service so let's move on to the 
 
 {src/main.rs:37-52}
 
-The first lines invokes the derived `migrate` function of the `Table` trait which will create the `Todos` table with columns matching struct fields if it doesn't exist yet.
+The first lines invokes the `init` macro with the only table we defined so it will setup basic prest configs and make sure there is a table in the database prepared for our todos.
 
 Then goes the definition of the router from just a single route `/` but with closure-based handlers for 4 methods: `get`, `put`, `patch` and `delete`.
 

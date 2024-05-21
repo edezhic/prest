@@ -69,6 +69,7 @@ fn make_filter() -> EnvFilter {
         .add_directive("pingora_core::server=warn".parse().unwrap())
 }
 
+/// Initializes log collection
 pub fn init_tracing_subscriber() {
     let admin_layer = fmt::layer()
         .with_timer(ChronoUtc::new("%k:%M:%S".to_owned()))

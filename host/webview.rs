@@ -9,7 +9,7 @@ use tao::{
 };
 use wry::WebViewBuilder;
 
-pub fn init_webview(url: &str) -> Result<()> {
+pub fn init_webview(url: &str) -> Result {
     let size: LogicalSize<f64> = LogicalSize::from((1280., 720.));
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()

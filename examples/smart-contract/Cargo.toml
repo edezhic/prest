@@ -7,4 +7,4 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = "0.2"
+prest = "0.3"

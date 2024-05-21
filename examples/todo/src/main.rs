@@ -1,23 +1,5 @@
 use prest::*;
 
-fn main() {
-    init!(tables Todo);
-    route(
-        "/",
-        get(|| async { html!(@for todo in Todo::find_all() {(todo)}) })
-            .put(|Form(todo): Form<Todo>| async move { todo.save().unwrap().render() })
-            .patch(|Form(mut todo): Form<Todo>| async move {
-                todo.update_done(!todo.done).unwrap().render()
-            })
-            .delete(|Form(todo): Form<Todo>| async move {
-                todo.remove().unwrap();
-            }),
-    )
-    .route("/connect", get(|| async move {}))
-    .wrap_non_htmx(into_page)
-    .run();
-}
-
 #[derive(Debug, Table, Default, serde::Serialize, serde::Deserialize)]
 struct Todo {
     #[serde(default = "Uuid::new_v4")]
@@ -50,4 +32,21 @@ async fn into_page(content: Markup) -> Markup {
             (Scripts::default())
         }
     }}
+}
+
+fn main() {
+    init!(tables Todo);
+    route(
+        "/",
+        get(|| async { html!(@for todo in Todo::find_all() {(todo)}) })
+            .put(|Form(todo): Form<Todo>| async move { todo.save().unwrap().render() })
+            .patch(|Form(mut todo): Form<Todo>| async move {
+                todo.update_done(!todo.done).unwrap().render()
+            })
+            .delete(|Form(todo): Form<Todo>| async move {
+                todo.remove().unwrap();
+            }),
+    )
+    .wrap_non_htmx(into_page)
+    .run();
 }

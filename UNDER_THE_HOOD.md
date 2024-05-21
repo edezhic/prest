@@ -48,6 +48,6 @@ User + session management is powered by [axum-login](https://github.com/maxcount
 
 While I've mentioned a whole bunch of libraries already, the list of dependencies that powers prest and makes it all possible is much longer so a huge thanks to everyone involved in their development:
 
-{Cargo.toml:45-94}
+{Cargo.toml:47-109}
 
 Besides them there are `prest-build` dependencies: [SWC](https://swc.rs/) that powers typescript/js bundling, [grass](https://github.com/connorskees/grass) that powers SASS/SCSS processing, [webmanifest](https://github.com/mild-times/webmanifest) that generates PWA manifests and [toml](https://github.com/toml-rs/toml) which allows simple deserialization of configs.

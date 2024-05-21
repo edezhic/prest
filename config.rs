@@ -1,5 +1,6 @@
 use crate::*;
 
+/// Holds basic information about the app
 pub struct AppConfig {
     pub name: String,
     pub version: semver::Version,
@@ -8,8 +9,10 @@ pub struct AppConfig {
     pub manifest_dir: String,
 }
 
+/// Holds initialized [`AppConfig`]
 pub static APP_CONFIG: std::sync::OnceLock<AppConfig> = std::sync::OnceLock::new();
 
+/// Interface for the [`APP_CONFIG`]
 pub trait AppConfigAccess {
     fn init(&self, manifest: &'static str, manifest_dir: &'static str) -> &AppConfig;
     fn check(&self) -> &AppConfig;
@@ -55,6 +58,7 @@ impl AppConfigAccess for std::sync::OnceLock<AppConfig> {
     }
 
     fn check(&self) -> &AppConfig {
-        self.get().expect("config should be initialized first")
+        self.get()
+            .expect("config should be initialized first. Did you forget to run init! macro?")
     }
 }

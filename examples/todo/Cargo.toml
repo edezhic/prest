@@ -3,5 +3,5 @@ name = "todo"
 edition = "2021"
 
 [dependencies]
-prest = { path = "../../", version = "0.2" }
+prest = "0.3"
 serde = { version = "1", features = ["derive"] }

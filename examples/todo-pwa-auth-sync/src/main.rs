@@ -85,7 +85,7 @@ async fn todos_subscribe(auth: Auth) -> Sse<impl Stream<Item = SseItem>> {
     Sse::new(stream.map(Ok)).keep_alive(SseKeepAlive::default())
 }
 
-async fn add(user: User, Form(mut todo): Form<Todo>) -> Result<()> {
+async fn add(user: User, Form(mut todo): Form<Todo>) -> Result {
     todo.owner = user.id;
     todo.save()?;
     BROADCAST
@@ -99,7 +99,7 @@ async fn add(user: User, Form(mut todo): Form<Todo>) -> Result<()> {
     Ok(())
 }
 
-async fn toggle(user: User, Form(mut todo): Form<Todo>) -> Result<()> {
+async fn toggle(user: User, Form(mut todo): Form<Todo>) -> Result {
     if !todo.check_owner(user.id)? {
         return Err(Error::Unauthorized);
     }
@@ -114,7 +114,7 @@ async fn toggle(user: User, Form(mut todo): Form<Todo>) -> Result<()> {
         .map_err(|e| anyhow!("{e}"))?;
     Ok(())
 }
-async fn delete(user: User, Form(todo): Form<Todo>) -> Result<()> {
+async fn delete(user: User, Form(todo): Form<Todo>) -> Result {
     if !todo.check_owner(user.id)? {
         return Err(Error::Unauthorized);
     }

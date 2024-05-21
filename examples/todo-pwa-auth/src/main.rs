@@ -58,7 +58,7 @@ async fn toggle(user: User, Form(mut todo): Form<Todo>) -> Result<Markup> {
     Ok(todo.update_done(!todo.done)?.render())
 }
 
-async fn delete(user: User, Form(todo): Form<Todo>) -> Result<()> {
+async fn delete(user: User, Form(todo): Form<Todo>) -> Result {
     if !todo.check_owner(user.id)? {
         return Err(Error::Unauthorized);
     }

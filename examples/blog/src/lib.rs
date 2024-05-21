@@ -95,9 +95,6 @@ code .table {
     display: inherit;
     font-size: inherit;
 }
-p:has(> code):has(+ pre) {
-    margin: 16px 0 4px 24px !important;
-}
 "#,
 );
 

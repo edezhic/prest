@@ -1,11 +1,11 @@
 [package]
 name = "prest"
 description = "Progressive RESTful framework"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 resolver = "2" 
 license = "MIT OR Apache-2.0"
-homepage = "https://github.com/edezhic/prest"
+homepage = "https://prest.blog"
 repository = "https://github.com/edezhic/prest"
 keywords = ["fullstack", "progressive", "RESTful", "PWA"]
 categories = ["development-tools", "wasm", "web-programming"]
@@ -48,7 +48,7 @@ garde = ["axum-valid/full_garde"]
 prest-html-macro = { path = "html/macro", version = "0.1.0", optional = true }
 prest-embed-macro = { path = "embed/macro", version = "0.1.0", optional = true }
 prest-embed-utils = { path = "embed/utils", version = "0.1.0", optional = true }
-prest-db-macro = { path = "db/macro", version = "0.1.0", optional = true }
+prest-db-macro = { path = "db/macro", version = "0.2.0", optional = true }
 
 anyhow = "1.0.77"
 thiserror = "1.0.56"
@@ -69,7 +69,6 @@ axum-valid = { version = "0.14", default-features = false, features = ["form", "
 toml = "0.8.8"
 semver = "1.0"
 ansi-to-html = { version = "0.2.1", optional = true }
-
 
 # host
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

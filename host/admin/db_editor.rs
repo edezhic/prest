@@ -1,6 +1,6 @@
 use crate::*;
 
-pub fn db_routes() -> Router {
+pub(crate) fn db_routes() -> Router {
     let mut router = Router::new();
     for table in DB_SCHEMA.tables() {
         router = router.route(table.path(), get(|| async {

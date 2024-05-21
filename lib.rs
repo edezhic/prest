@@ -26,7 +26,7 @@ pub use axum::{
 pub use axum_htmx::{
     HxBoosted, HxCurrentUrl, HxEvent, HxHistoryRestoreRequest, HxLocation, HxPrompt, HxPushUrl,
     HxRedirect, HxRefresh, HxReplaceUrl, HxRequest, HxReselect, HxResponseTrigger, HxReswap,
-    HxRetarget, HxTarget, HxTrigger, HxTriggerName,
+    HxRetarget, HxTarget, HxTrigger, HxTriggerName, SwapOption,
 };
 pub use axum_valid::*;
 pub use futures::{
@@ -75,6 +75,7 @@ pub use service_worker::*;
 
 // --- GENERAL UTILS ---
 
+/// Starting point for prest apps that performs basic setup
 #[macro_export]
 macro_rules! init {
     ($(tables $($table:ident),+)?) => {
@@ -88,6 +89,7 @@ macro_rules! init {
             $(
                 $( $table::prepare_table(); )+
             )?
+            let _ = *prest::RT;
             prest::info!("Initialized {} v{}", config.name, config.version);
         }
     };
@@ -104,6 +106,7 @@ pub fn route<S: Clone + Send + Sync + 'static>(
 /// Default javascript code that registers a service worker from `/sw.js`
 pub const REGISTER_SW_SNIPPET: &str =
     "if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', {type: 'module'});";
+/// Returns whether PWA will be built with current configs
 pub fn is_pwa() -> bool {
     #[cfg(sw)]
     return true;
@@ -114,10 +117,12 @@ pub fn is_pwa() -> bool {
     }
 }
 
-// Error
-pub type Result<T, E = Error> = std::result::Result<T, E>;
+/// Basic Result alias with [`enum@prest::Error`]`
+pub type Result<T = (), E = Error> = std::result::Result<T, E>;
 
 use thiserror::Error;
+
+/// Error type used across prest codebase
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Internal")]

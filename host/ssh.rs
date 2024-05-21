@@ -74,7 +74,7 @@ impl SshSession {
         Ok(remote_path)
     }
 
-    pub async fn call(&mut self, command: &str) -> Result<()> {
+    pub async fn call(&mut self, command: &str) -> Result {
         let mut channel = self.session.channel_open_session().await?;
         channel.exec(true, command).await?;
 
@@ -92,7 +92,7 @@ impl SshSession {
         Ok(())
     }
 
-    pub async fn close(&mut self) -> Result<()> {
+    pub async fn close(&mut self) -> Result {
         self.session
             .disconnect(Disconnect::ByApplication, "", "English")
             .await?;
@@ -100,7 +100,7 @@ impl SshSession {
     }
 }
 
-pub struct SshSession {
+pub(crate) struct SshSession {
     session: client::Handle<Client>,
 }
 

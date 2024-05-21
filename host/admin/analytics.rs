@@ -4,7 +4,7 @@ use crate::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub async fn analytics() -> impl IntoResponse {
+pub(crate) async fn analytics() -> impl IntoResponse {
     let routes_stats = RouteStats::find_all();
     let (path_stats, asset_stats): (Vec<RouteStats>, Vec<RouteStats>) =
         routes_stats.into_iter().partition(|r| {
@@ -70,6 +70,7 @@ pub async fn analytics() -> impl IntoResponse {
     }
 }
 
+/// Describes collected stats for some path
 #[derive(Debug, Table, Serialize, Deserialize)]
 pub struct RouteStats {
     pub path: String,
@@ -141,40 +142,45 @@ where
         let future = self.inner.call(request);
         Box::pin(async move {
             let response = future.await?;
+            let status = response.status().as_u16();
 
             if let Some(path) = path {
-                let status = response.status().as_u16();
-                if let Some(mut stats) = RouteStats::find_by_path(&path) {
-                    stats.hits += 1;
-                    stats
-                        .statuses
-                        .entry(status)
-                        .and_modify(|v| *v += 1)
-                        .or_insert(1);
-                    if let Err(e) = stats.save() {
-                        warn!("Failed to update stats: {e}");
-                    }
-                } else {
-                    if !filter_response(&response) {
-                        let mut stats = RouteStats {
-                            path,
-                            hits: 0,
-                            statuses: HashMap::new(),
-                        };
-                        stats.hits += 1;
-                        stats
-                            .statuses
-                            .entry(status)
-                            .and_modify(|v| *v += 1)
-                            .or_insert(1);
-                        if let Err(e) = stats.save() {
-                            warn!("Failed to update stats: {e}");
-                        }
-                    }
-                }
+                let filtered = filter_response(&response);
+                tokio::task::spawn_blocking(move || record_response(path, status, filtered));
             }
 
             Ok(response)
         })
+    }
+}
+
+fn record_response(path: String, status: u16, filtered: bool) {
+    if let Some(mut stats) = RouteStats::find_by_path(&path) {
+        stats.hits += 1;
+        stats
+            .statuses
+            .entry(status)
+            .and_modify(|v| *v += 1)
+            .or_insert(1);
+        if let Err(e) = stats.save() {
+            warn!("Failed to update stats: {e}");
+        }
+    } else {
+        if !filtered {
+            let mut stats = RouteStats {
+                path,
+                hits: 0,
+                statuses: HashMap::new(),
+            };
+            stats.hits += 1;
+            stats
+                .statuses
+                .entry(status)
+                .and_modify(|v| *v += 1)
+                .or_insert(1);
+            if let Err(e) = stats.save() {
+                warn!("Failed to update stats: {e}");
+            }
+        }
     }
 }

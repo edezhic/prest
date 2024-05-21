@@ -8,10 +8,10 @@ mod state;
 mod server;
 
 mod ssh;
-pub use ssh::*;
+pub(crate) use ssh::*;
 
 mod docker;
-pub use docker::*;
+pub(crate) use docker::*;
 
 mod shutdown;
 pub use shutdown::*;
@@ -44,10 +44,19 @@ pub use tokio::{
     task::block_in_place,
 };
 
+/// Alias for Server Sent Events event
 pub type SseItem = Result<SseEvent, Infallible>;
 
 #[cfg(feature = "db")]
 pub(crate) use gluesql::sled_storage::SledStorage as PersistentStorage;
+
+use std::sync::atomic::AtomicUsize;
+pub struct PrestRuntime {
+    pub inner: Runtime,
+    pub running_scheduled_tasks: AtomicUsize,
+}
+
+state!(RT: PrestRuntime = { PrestRuntime { inner: Runtime::new().unwrap(), running_scheduled_tasks: 0.into() } });
 
 /// Utility trait to use Router as the host
 pub trait HostUtils {
@@ -83,8 +92,7 @@ impl HostUtils for Router {
         webview::init_webview(&localhost(&check_port())).unwrap();
     }
     fn serve(self) {
-        Runtime::new()
-            .unwrap()
+        RT.inner
             .block_on(async move { server::start(self).await })
             .unwrap();
     }

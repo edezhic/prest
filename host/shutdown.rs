@@ -6,6 +6,7 @@ use crate::*;
 
 state!(SHUTDOWN: Shutdown = { Shutdown::default() });
 
+/// Interface for graceful shutdowns
 #[derive(Debug, Default)]
 pub struct Shutdown {
     pub initiated: AtomicBool,

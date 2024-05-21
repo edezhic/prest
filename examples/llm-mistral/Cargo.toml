@@ -7,7 +7,7 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = "0.2"
+prest = "0.3"
 serde = { version = "1", features = ["derive"] }
 
 hf-hub = "0.3"

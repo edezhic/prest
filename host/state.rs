@@ -1,3 +1,4 @@
+/// Macro that simplifies lazy globals by reducing boilerplate, allowing `?` operator and async init
 #[macro_export]
 macro_rules! state {
     ($struct_name:ident: $type:ty = $init:block) => {

@@ -72,7 +72,7 @@ pub struct Mistral {
 }
 
 impl Mistral {
-    pub fn prompt(&mut self, text: &str) -> Result<()> {
+    pub fn prompt(&mut self, text: &str) -> Result {
         self.history += text;
         self.tokens.append(&mut self.encode(text)?);
         self.processed = self.tokens.len();

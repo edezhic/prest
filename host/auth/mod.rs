@@ -74,8 +74,8 @@ pub fn init_auth_module() -> (AuthLayer, Router) {
     let mut session_layer = SessionManagerLayer::new(DB.cloned())
         .with_name("prest_session")
         .with_same_site(tower_sessions::cookie::SameSite::Lax)
-        .with_expiry(Expiry::OnInactivity(time::Duration::days(7)));
-    if let Ok(domain) = env::var("DOMAIN") {
+        .with_expiry(Expiry::OnInactivity(time::Duration::days(30)));
+    if let Some(domain) = APP_CONFIG.check().domain.clone() {
         session_layer = session_layer.with_domain(domain);
     }
     let layer = AuthManagerLayerBuilder::new(DB.cloned(), session_layer).build();

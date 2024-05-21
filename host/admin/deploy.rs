@@ -1,7 +1,7 @@
 use crate::*;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub enum DeploymentState {
+pub(crate) enum DeploymentState {
     Idle,
     Building,
     Connecting,
@@ -11,18 +11,20 @@ pub enum DeploymentState {
     Already,
 }
 
-state!(DEPLOY: std::sync::RwLock<DeploymentState> = { 
+pub(crate) static DEPLOY: Lazy<std::sync::RwLock<DeploymentState>> = Lazy::new(|| {
     std::sync::RwLock::new(match env::var("DEPLOYED").is_ok() {
         true => DeploymentState::Already,
         false => DeploymentState::Idle,
     })
 });
 
-pub trait DeploymentUtils {
+/// Interface for the [`DEPLOY`]
+pub(crate) trait DeploymentUtils {
     fn state(&self) -> DeploymentState;
     fn set(&self, new_state: DeploymentState);
     fn button(&self) -> PreEscaped<String>;
     fn already(&self) -> bool;
+    #[allow(dead_code)]
     fn ready(&self) -> bool;
 }
 
@@ -37,7 +39,11 @@ impl DeploymentUtils for std::sync::RwLock<DeploymentState> {
         DeploymentState::Already == *self.read().unwrap()
     }
     fn ready(&self) -> bool {
-        !self.already() && matches!(self.state(), DeploymentState::Idle | DeploymentState::Success | DeploymentState::Failure)
+        !self.already()
+            && matches!(
+                self.state(),
+                DeploymentState::Idle | DeploymentState::Success | DeploymentState::Failure
+            )
     }
     fn button(&self) -> PreEscaped<String> {
         let state = *self.read().unwrap();
@@ -52,12 +58,15 @@ impl DeploymentUtils for std::sync::RwLock<DeploymentState> {
                 return html!();
             }
         };
-        let running = matches!(state, DeploymentState::Building | DeploymentState::Connecting | DeploymentState::Uploading);
+        let running = matches!(
+            state,
+            DeploymentState::Building | DeploymentState::Connecting | DeploymentState::Uploading
+        );
         let trigger = match running {
             true => "load delay:1s",
             false => "click",
         };
-    
+
         html!(
             button."btn btn-ghost" hx-get="/admin/deploy" hx-target="this" hx-swap="outerHTML" hx-trigger=(trigger) disabled[running]
                 {(msg) @if running {span."loading loading-dots loading-xs"{}}}
@@ -65,13 +74,13 @@ impl DeploymentUtils for std::sync::RwLock<DeploymentState> {
     }
 }
 
-pub async fn deploy() -> impl IntoResponse {
+pub(crate) async fn deploy() -> impl IntoResponse {
     match DEPLOY.state() {
         DeploymentState::Already => return html!(),
         DeploymentState::Idle => {
             info!("Initiated deployment");
             DEPLOY.set(DeploymentState::Building);
-            SCHEDULE.once(|| async {
+            RT.once(async {
                 if let Ok(Ok(binary_path)) = tokio::task::spawn_blocking(build_linux_binary).await {
                     if let Err(e) = remote_update(&binary_path).await {
                         DEPLOY.set(DeploymentState::Failure);
@@ -89,7 +98,7 @@ pub async fn deploy() -> impl IntoResponse {
     DEPLOY.button()
 }
 
-pub async fn remote_update(binary_path: &str) -> Result<()> {
+pub(crate) async fn remote_update(binary_path: &str) -> Result {
     let addrs = env::var("SSH_ADDR")?;
     let user = env::var("SSH_USER")?;
     let password = env::var("SSH_PASSWORD")?;

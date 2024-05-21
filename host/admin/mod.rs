@@ -2,37 +2,39 @@ mod analytics;
 pub use analytics::*;
 
 mod db_editor;
-pub use db_editor::*;
+pub(crate) use db_editor::*;
 
 mod deploy;
-pub use deploy::*;
+pub(crate) use deploy::*;
 
 use crate::{host::LOG, *};
 
-pub async fn page() -> Markup {
+pub(crate) async fn page() -> impl IntoResponse {
     let tables = html! {
         @if DB_SCHEMA.tables().len() > 0 {
             h2{"DB explorer"}
+        } @else {
+            h3{"No initialized tables"}
         }
         @for table in DB_SCHEMA.tables() {
             h3 {(table.name())}
             div."loader" hx-get=(table.path()) hx-trigger="load" hx-swap="outerHTML" hx-target="this" {}
         }
     };
-    let schedule_running_tasks = SCHEDULE
-        .running_tasks
+    let running_scheduled_tasks = RT
+        .running_scheduled_tasks
         .load(std::sync::atomic::Ordering::Relaxed);
 
-    let schedule_msg = match schedule_running_tasks {
+    let schedule_msg = match running_scheduled_tasks {
         0 => "".to_owned(),
         n => format!("schedule is running {n} tasks"),
     };
 
-    html! {(DOCTYPE) (Head::with_title("Prest Admin"))
+    let content = html! {(DOCTYPE) (Head::with_title("Prest Admin"))
         body."max-w-screen-md lg:max-w-screen-lg container md:mx-auto" {
             nav."navbar bg-base-200 shadow-lg rounded-box my-4"{
                 ."navbar-start md:gap-2" {
-                    a."btn btn-ghost" href="/" {"Back home"}
+                    a."btn btn-ghost" href="/" hx-boost="false" {"Back home"}
                     (DEPLOY.button())
                 }
                 ."navbar-center" {(schedule_msg)}
@@ -61,10 +63,18 @@ pub async fn page() -> Markup {
             }
             (Scripts::default())
         }
-    }
+    };
+
+    (
+        (
+            HxRetarget::from("body"),
+            HxReswap::from(SwapOption::OuterHtml),
+        ),
+        content,
+    )
 }
 
-pub async fn logs() -> Markup {
+pub(crate) async fn logs() -> Markup {
     let logs = &LOG.read().unwrap();
     let latest_logs: Vec<PreEscaped<String>> = logs
         .lines()
@@ -81,7 +91,7 @@ pub async fn logs() -> Markup {
 }
 
 #[allow(dead_code)]
-pub async fn shutdown() -> impl IntoResponse {
+pub(crate) async fn shutdown() -> impl IntoResponse {
     SHUTDOWN.initiate();
     html! {
         h1 {"Shutdown has been initiated"}

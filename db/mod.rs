@@ -22,6 +22,7 @@ use gluesql::{
 
 type GResult<T> = std::result::Result<T, GlueError>;
 
+/// Storage of the embedded database
 #[derive(Clone, Debug)]
 pub enum Db {
     Memory(MemoryStorage),
@@ -29,8 +30,10 @@ pub enum Db {
 }
 use Db::*;
 
+/// Container for the [`Db`]
 pub static DB: std::sync::OnceLock<Db> = std::sync::OnceLock::new();
 
+/// Interface for the [`DB`]
 pub trait DbAccess {
     fn init(&self);
     fn cloned(&self) -> Db;
@@ -57,14 +60,14 @@ impl DbAccess for std::sync::OnceLock<Db> {
                     .flush_every_ms(Some(1000));
 
                 let storage = PersistentStorage::try_from(config).unwrap();
-                Db::Persistent(storage)
+                Persistent(storage)
             }
             #[cfg(sw)]
             {
-                Db::Persistent(MemoryStorage::new())
+                Persistent(MemoryStorage::new())
             }
         } else {
-            Db::Memory(MemoryStorage::new())
+            Memory(MemoryStorage::new())
         };
 
         self.get_or_init(|| db);
@@ -95,6 +98,7 @@ impl DbAccess for std::sync::OnceLock<Db> {
     }
 }
 
+/// Describes [`Table`]-derived column schema
 #[derive(Debug, Clone, Copy)]
 pub struct ColumnSchema {
     pub name: &'static str,
@@ -107,8 +111,10 @@ pub struct ColumnSchema {
     pub custom_type: bool,
 }
 
+/// Describes [`Table`]-derived columns schema
 pub type ColumnsSchema = &'static [ColumnSchema];
 
+/// Describes [`Table`]-derived table schema
 #[derive(Debug, Clone)]
 
 pub struct TableSchema {
@@ -116,6 +122,7 @@ pub struct TableSchema {
     pub columns: ColumnsSchema,
 }
 
+/// Describes a collection of [`Table`]-derived schemas
 pub struct DbSchema(pub std::sync::RwLock<Vec<&'static dyn TableSchemaTrait>>);
 impl DbSchema {
     fn init() -> Self {
@@ -128,24 +135,28 @@ impl DbSchema {
         self.0.read().unwrap().clone()
     }
 }
+
 state!(DB_SCHEMA: DbSchema = { DbSchema::init() });
 
+/// Derived interface to access schemas of derived [`Table`]s
 #[async_trait]
 pub trait TableSchemaTrait: Sync {
     fn name(&self) -> &'static str;
     fn schema(&self) -> ColumnsSchema;
     fn path(&self) -> &'static str;
     fn get_all(&self) -> Vec<Vec<String>>;
-    async fn save(&self, req: Request) -> Result<()>;
-    async fn remove(&self, req: Request) -> Result<()>;
+    async fn save(&self, req: Request) -> Result;
+    async fn remove(&self, req: Request) -> Result;
 }
 
-pub trait Executable {
+/// Simplified interface for queries to run with [`DB`]
+pub trait DbExecutable {
     fn exec(self) -> Result<Payload>;
     fn rows(self) -> Result<Vec<Vec<DbValue>>>;
+    fn values<T: Table>(self) -> Result<Vec<T>>;
 }
 
-impl<Q: BuildSQL> Executable for Q {
+impl<Q: BuildSQL> DbExecutable for Q {
     fn exec(self) -> Result<Payload> {
         let statement = self.build()?;
         // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1265
@@ -166,8 +177,14 @@ impl<Q: BuildSQL> Executable for Q {
             Err(e) => return Err(anyhow!("query execution failed with: {e:?}").into()),
         }
     }
+
+    fn values<T: Table>(self) -> Result<Vec<T>> {
+        let rows = self.rows()?;
+        Ok(rows.into_iter().map(T::from_row).collect::<Vec<T>>())
+    }
 }
 
+/// Derived interface to interact with structs as tables of their values
 pub trait Table: Sized {
     const TABLE_NAME: &'static str;
     const TABLE_SCHEMA: ColumnsSchema;
@@ -213,7 +230,7 @@ pub trait Table: Sized {
         Self::from_rows(Self::select().rows().unwrap())
     }
 
-    fn insert_self(&self) -> Result<()> {
+    fn insert_self(&self) -> Result {
         Self::insert().values(vec![self.into_row()]).exec()?;
         Ok(())
     }
@@ -230,7 +247,7 @@ pub trait Table: Sized {
         Self::update().filter(Self::key_filter(key))
     }
 
-    fn delete_by_key(key: &Self::Key) -> Result<()> {
+    fn delete_by_key(key: &Self::Key) -> Result {
         let payload = Self::delete().filter(Self::key_filter(key)).exec()?;
         match payload {
             Payload::Delete(_) => Ok(()),
@@ -238,7 +255,7 @@ pub trait Table: Sized {
         }
     }
 
-    fn remove(&self) -> Result<()> {
+    fn remove(&self) -> Result {
         Self::delete_by_key(&self.get_key())
     }
 }
@@ -463,11 +480,11 @@ impl IndexMut for Db {
 
 type ObjectName = String;
 use std::collections::HashMap;
-pub type MetaIter = Box<dyn Iterator<Item = GResult<(ObjectName, HashMap<String, DbValue>)>>>;
+type _MetaIter = Box<dyn Iterator<Item = GResult<(ObjectName, HashMap<String, DbValue>)>>>;
 
 #[async_trait(?Send)]
 impl Metadata for Db {
-    async fn scan_table_meta(&self) -> GResult<MetaIter> {
+    async fn scan_table_meta(&self) -> GResult<_MetaIter> {
         Ok(Box::new(std::iter::empty()))
     }
 }
