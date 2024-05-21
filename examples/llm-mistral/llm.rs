@@ -9,11 +9,11 @@ use hf_hub::{api::sync::Api, Repo};
 use prest::*;
 use tokenizers::Tokenizer;
 
-pub fn init() -> Result<Mistral> {
+pub fn init() -> AnyhowResult<Mistral> {
     init_with_opts(Default::default())
 }
 
-pub fn init_with_opts(cfg: MistralConfig) -> Result<Mistral> {
+pub fn init_with_opts(cfg: MistralConfig) -> AnyhowResult<Mistral> {
     let start = std::time::Instant::now();
     info!("started initializing the model...");
     let repo = Repo::model("lmz/candle-mistral".to_owned());
@@ -24,7 +24,7 @@ pub fn init_with_opts(cfg: MistralConfig) -> Result<Mistral> {
     let logits_processor = LogitsProcessor::new(cfg.seed, cfg.temperature, cfg.top_p);
     let weights_filename = repo_api.get("model-q4k.gguf")?;
     let mistral_cfg = QMistralCfg::config_7b_v0_1(true);
-    let weights = VarBuilder::from_gguf(&weights_filename)?;
+    let weights = VarBuilder::from_gguf(&weights_filename, &Device::Cpu)?;
     let model = QMistral::new(&mistral_cfg, weights)?;
     info!("initialized the model in {:?}", start.elapsed());
     Ok(Mistral {
@@ -85,7 +85,7 @@ impl Mistral {
         self.try_decode();
         return next_token != self.eos_token;
     }
-    fn predict(&mut self) -> Result<u32> {
+    fn predict(&mut self) -> AnyhowResult<u32> {
         let Mistral {
             tokens,
             current_ctx,
@@ -100,11 +100,11 @@ impl Mistral {
         let next_token = self.logits_processor.sample(&logits)?;
         Ok(next_token)
     }
-    fn encode(&self, input: &str) -> Result<Vec<u32>> {
+    fn encode(&self, input: &str) -> AnyhowResult<Vec<u32>> {
         Ok(self
             .tokenizer
             .encode(input, true)
-            .map_err(Error::msg)?
+            .unwrap()
             .get_ids()
             .to_vec())
     }

@@ -3,6 +3,6 @@ name = "mongo-driver"
 edition = "2021"
 
 [dependencies]
-prest = "0.3"
+prest = "0.3.1"
 serde = { version = "1", features = ["derive"] }
 mongodb = { version = "2.7.0", features = ["bson-uuid-1"] }

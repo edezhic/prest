@@ -35,7 +35,7 @@ struct Story {
 }
 
 #[tokio::main]
-async fn scrape(target: Target) -> Result<()> {
+async fn scrape(target: Target) -> AnyhowResult<()> {
     let mut stories = vec![];
     let response = fetch(&target.url).await?.text().await?;
     let document = Html::parse_document(&response);
