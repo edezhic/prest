@@ -4,7 +4,7 @@
 // for macro-generated code inside prest itself
 pub(crate) use crate as prest;
 
-pub use anyhow::{anyhow, bail};
+pub use anyhow::{anyhow, bail, Result as AnyhowResult};
 pub use async_trait::async_trait;
 pub use axum::{
     self,

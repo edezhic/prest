@@ -3,7 +3,7 @@
 macro_rules! state {
     ($struct_name:ident: $type:ty = $init:block) => {
         pub static $struct_name: prest::Lazy<$type> = prest::Lazy::new(|| {
-            fn init() -> Result<$type> {
+            fn init() -> prest::AnyhowResult<$type> {
                 let v = { $init };
                 Ok(v)
             }
@@ -12,7 +12,7 @@ macro_rules! state {
     };
     ($struct_name:ident: $type:ty = async $init:block) => {
         pub static $struct_name: prest::Lazy<$type> = prest::Lazy::new(|| {
-            async fn init() -> Result<$type> {
+            async fn init() -> prest::AnyhowResult<$type> {
                 let v = { $init };
                 Ok(v)
             }
