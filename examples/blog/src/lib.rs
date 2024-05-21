@@ -34,7 +34,7 @@ async fn page(content: Markup) -> Markup {
                                 b.classList.replace('badge-warning', s)" 
                             {
                             #"sw-badge" ."indicator-item badge badge-warning"{}
-                            ."font-bold" {"PWA"}
+                            ."font-bold" {"SW"}
                         }
                     }
                     ."btn btn-ghost btn-circle" tabindex="0" role="button" {
