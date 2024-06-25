@@ -62,7 +62,7 @@ async fn page(content: Markup) -> Markup {
                     }
                 }
             }
-            main."view-transition" $"opacity-80 mx-auto p-4 gap-3 flex flex-col text-sm lg:text-base leading-loose"
+            main $"opacity-80 mx-auto p-4 gap-3 flex flex-col text-sm lg:text-base leading-loose"
                 hx-history-elt hx-on--before-swap="document.activeElement.blur()"
                 hx-on--after-swap=(format!("Prism.highlightAll(); {LINKS_JS}"))
                 {(content)}

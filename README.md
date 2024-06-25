@@ -18,12 +18,12 @@ fn main() {
 route("/", get("Hello world")).run()
 ```
 
-**UI** - `html!` macro for rust'y templating, easy inline styling with tailwind and daisyui, simple client-server interactions with htmx. Smooth UX with very little JS:
+**UI** - `html!` macro for rust'y templating, easy inline styling with tailwind classes, simple client-server interactions with htmx. Smooth UX with very little JS:
 
 ```rust
 html!{ 
-    nav."navbar" {
-        input."input input-bordered w-full" name="search" 
+    nav."w-full bg-gray-900 rounded-full" {
+        input $"mx-auto text-xs lg:text-md" name="search" 
             hx-post="/search" hx-target="#search-results" {} 
     }
     ...
@@ -181,7 +181,8 @@ This is a hobby project and plans change on the fly, but there are things I'd li
 + write more detailed logs in a file and an explorer for it
 + comments in the blog? Need more interactivity
 + allow setting templates for different non-200 response codes? Or just htmx-based handling?
-+ adapt maud for usage with tailwind and htmx?
++ adapt maud for usage with htmx?
++ update examples' styles, describe tailwind classes usage in docs
 + add something storybook-like
 * rewrite scraping and blockchain examples
 + sql escaping
