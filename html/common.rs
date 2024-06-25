@@ -1,5 +1,9 @@
 use crate::*;
 
+static DEFAULT_CSS: PreEscaped<&str> = PreEscaped(
+    r#"*{transition: all 100ms}@keyframes fade-in {from {opacity: 0;transform: translateX(90px);}}@keyframes fade-out {to {opacity: 0;transform: translateX(-90px);}}::view-transition-old(slide-it) {animation: 300ms cubic-bezier(0.4, 0, 1, 1) both fade-out;}::view-transition-new(slide-it) {animation: 420ms cubic-bezier(0, 0, 0.2, 1) 90ms both fade-in;}[hx-history-elt] {view-transition-name: slide-it;}*, ::before, ::after {box-sizing: border-box;border-width: 0;border-style: solid;border-color: currentColor;}::before, ::after {--tw-content: '';}html {line-height: 1.5;-webkit-text-size-adjust: 100%;-moz-tab-size: 4;tab-size: 4;font-family: 'fontFamily.sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";}body {margin: 0;line-height: inherit;}hr {height: 0;color: inherit;border-top-width: 1px;}abbr:where([title]) {text-decoration: underline dotted;}h1, h2, h3, h4, h5, h6 {font-size: inherit;font-weight: inherit;}a {color: inherit;text-decoration: inherit;}b, strong {font-weight: bolder;}code, kbd, samp, pre {font-family: 'fontFamily.mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size: 1em;}small {font-size: 80%;}sub, sup {font-size: 75%;line-height: 0;position: relative;vertical-align: baseline;}sub {bottom: -0.25em;}sup {top: -0.5em;}table {text-indent: 0;border-color: inherit;border-collapse: collapse;}button, input, optgroup, select, textarea {font-family: inherit;font-size: 100%;font-weight: inherit;line-height: inherit;color: inherit;margin: 0;padding: 0;}button, select {text-transform: none;}button, [type='button'], [type='reset'], [type='submit'] {-webkit-appearance: button;background-color: transparent;background-image: none;}:-moz-focusring {outline: auto;}:-moz-ui-invalid {box-shadow: none;}progress {vertical-align: baseline;}::-webkit-inner-spin-button, ::-webkit-outer-spin-button {height: auto;}[type='search'] {-webkit-appearance: textfield;outline-offset: -2px;}::-webkit-search-decoration {-webkit-appearance: none;}::-webkit-file-upload-button {-webkit-appearance: button;font: inherit;}summary {display: list-item;}blockquote, dl, dd, h1, h2, h3, h4, h5, h6, hr, figure, p, pre {margin: 0;}fieldset {margin: 0;padding: 0;}legend {padding: 0;}ol, ul, menu {list-style: none;margin: 0;padding: 0;}textarea {resize: vertical;}input::placeholder, textarea::placeholder {opacity: 1;color: #9ca3af;}button, [role="button"] {cursor: pointer;}:disabled {cursor: default;}img, svg, video, canvas, audio, iframe, embed, object {display: block;vertical-align: middle;}img, video {max-width: 100%;height: auto;}[hidden] {display: none;}"#,
+);
+
 /// Renders into a `<head>` tag with builder-like interface
 pub struct Head<'a> {
     title: &'a str,
@@ -58,7 +62,7 @@ impl<'a> Default for Head<'a> {
             viewport: Some("width=device-width, initial-scale=1.0"),
             webmanifest,
             styles: None,
-            stylesheets: Some(vec!["/default-view-transition.css"]),
+            stylesheets: None,
             favicon: None,
             theme_color: None,
             other: None,
@@ -75,9 +79,8 @@ impl<'a> Render for Head<'a> {
                 @if let Some(href) = self.webmanifest { link rel="manifest" href=(href) {} }
                 @if let Some(viewport) = self.viewport { meta name="viewport" content=(viewport); }
                 @if let Some(color) = self.theme_color { meta name="theme-color" content=(color); }
-                script src="https://cdn.tailwindcss.com?plugins=typography" {}
-                link href="https://cdn.jsdelivr.net/npm/daisyui@4.5.0/dist/full.min.css" rel="stylesheet"{}
                 @if let Some(stylesheets) = &self.stylesheets { @for stylesheet in stylesheets {link href={(stylesheet)} rel="stylesheet"{}}}
+                style {(DEFAULT_CSS)}
                 @if let Some(styles) = &self.styles { @for style in styles { style {(style)}}}
                 @if let Some(markup) = &self.other {(markup)}
             }
@@ -89,6 +92,7 @@ impl<'a> Render for Head<'a> {
 pub struct Scripts<'a> {
     pub others: Option<Vec<&'a str>>,
     pub inlines: Option<Vec<&'a str>>,
+    pub stylesheets: Option<Vec<&'a str>>,
 }
 
 impl<'a> Default for Scripts<'a> {
@@ -96,6 +100,7 @@ impl<'a> Default for Scripts<'a> {
         Self {
             others: None,
             inlines: None,
+            stylesheets: None,
         }
     }
 }
@@ -117,17 +122,27 @@ impl<'a> Scripts<'a> {
         }
         self
     }
+    /// Add stylesheet link to the [`Scripts`]
+    pub fn css(mut self, path: &'a str) -> Self {
+        if let Some(stylesheets) = &mut self.stylesheets {
+            stylesheets.push(path)
+        } else {
+            self.stylesheets = Some(vec![path]);
+        }
+        self
+    }
 }
 
 impl<'a> Render for Scripts<'a> {
     fn render(&self) -> Markup {
         #[cfg(debug_assertions)]
-        let htmx_src = "https://unpkg.com/htmx.org@1.9.10/dist/htmx.js";
+        let htmx_src = "https://unpkg.com/htmx.org@2.0.0/dist/htmx.js";
         #[cfg(not(debug_assertions))]
-        let htmx_src = "https://unpkg.com/htmx.org@1.9.10";
+        let htmx_src = "https://unpkg.com/htmx.org@2.0.0/dist/htmx.min.js.gz";
 
         html!(
             @if is_pwa() { script {(REGISTER_SW_SNIPPET)} }
+            @if let Some(stylesheets) = &self.stylesheets { @for stylesheet in stylesheets {link href={(stylesheet)} rel="stylesheet"{}}}
             script src=(htmx_src) defer crossorigin {}
             script src="https://unpkg.com/htmx.org/dist/ext/sse.js" defer crossorigin {}
             @if let Some(srcs) = &self.others { @for src in srcs {

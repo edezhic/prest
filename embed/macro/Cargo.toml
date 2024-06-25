@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "fork of embed macro from rust-embed"
 license = "MIT OR Apache-2.0"
+authors = ["pyros2097 <pyros2097@gmail.com>", "Egor Dezhic <edezhic@gmail.com>"]
 
 [lib]
 path = "lib.rs"

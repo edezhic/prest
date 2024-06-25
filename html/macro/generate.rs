@@ -2,7 +2,7 @@ use proc_macro2::{Delimiter, Group, Ident, Literal, Span, TokenStream, TokenTree
 use proc_macro_error::SpanRange;
 use quote::quote;
 
-use crate::{ast::*, escape};
+use crate::{ast::*, escape, tailwind};
 
 pub fn generate(markups: Vec<Markup>, output_ident: TokenTree) -> TokenStream {
     let mut build = Builder::new(output_ident.clone());
@@ -107,10 +107,28 @@ impl Generator {
     }
 
     fn element(&self, name: TokenStream, attrs: Vec<Attr>, body: ElementBody, build: &mut Builder) {
+        use rand::Rng;
+        let styles_id: u64 = rand::thread_rng().gen();
+        let styles_id = format!("id{}", hex::encode(styles_id.to_be_bytes()));
+        let scoped_styles = scoped_styles(&styles_id, &attrs);
+        if let Some(scoped_styles) = &scoped_styles {
+            if name.to_string() != "html" {
+                build.push_str("<style>");
+                build.push_str(scoped_styles);
+                build.push_str("</style>");
+            }
+        }
         build.push_str("<");
         self.name(name.clone(), build);
-        self.attrs(attrs, build);
+        self.attrs(&styles_id, attrs, build);
         build.push_str(">");
+        if let Some(scoped_styles) = scoped_styles {
+            if name.to_string() == "html" {
+                build.push_str("<style>");
+                build.push_str(&scoped_styles);
+                build.push_str("</style>");
+            }
+        }
         if let ElementBody::Block { block } = body {
             self.markups(block.markups, build);
             build.push_str("</");
@@ -123,8 +141,10 @@ impl Generator {
         build.push_escaped(&name_to_string(name));
     }
 
-    fn attrs(&self, attrs: Vec<Attr>, build: &mut Builder) {
-        for NamedAttr { name, attr_type } in desugar_attrs(attrs) {
+    fn attrs(&self, styles_id: &str, attrs: Vec<Attr>, build: &mut Builder) {
+        let attrs = desugar_attrs(styles_id, attrs);
+        //if attrs.iter().find(|a| a.name.to_string() == "style")
+        for NamedAttr { name, attr_type } in attrs {
             match attr_type {
                 AttrType::Normal { value } => {
                     build.push_str(" ");
@@ -170,11 +190,39 @@ impl Generator {
 
 ////////////////////////////////////////////////////////
 
-fn desugar_attrs(attrs: Vec<Attr>) -> Vec<NamedAttr> {
+fn scoped_styles(styles_id: &str, attrs: &Vec<Attr>) -> Option<String> {
+    let mut style_classes = vec![];
+
+    for attr in attrs {
+        if let Attr::Style { content, .. } = attr {
+            style_classes.push(content.to_owned())
+        }
+    }
+
+    let (_, scoped) = if !style_classes.is_empty() {
+        let styles_string = style_classes
+            .join(" ")
+            .strip_prefix('"')
+            .unwrap()
+            .strip_suffix('"')
+            .unwrap()
+            .to_owned();
+
+        tailwind::compile(&styles_string, styles_id)
+    } else {
+        (None, None)
+    };
+
+    scoped
+}
+
+fn desugar_attrs(styles_id: &str, attrs: Vec<Attr>) -> Vec<NamedAttr> {
     let mut classes_static = vec![];
     let mut classes_toggled = vec![];
     let mut ids = vec![];
     let mut named_attrs = vec![];
+    let mut style_classes = vec![];
+
     for attr in attrs {
         match attr {
             Attr::Class {
@@ -188,12 +236,91 @@ fn desugar_attrs(attrs: Vec<Attr>) -> Vec<NamedAttr> {
                 ..
             } => classes_static.push(name),
             Attr::Id { name, .. } => ids.push(name),
+            Attr::Style { content, .. } => style_classes.push(content),
             Attr::Named { named_attr } => named_attrs.push(named_attr),
         }
     }
+
+    let (inline, scoped) = if !style_classes.is_empty() {
+        let styles_string = style_classes
+            .join(" ")
+            .strip_prefix('"')
+            .unwrap()
+            .strip_suffix('"')
+            .unwrap()
+            .to_owned();
+
+        tailwind::compile(&styles_string, &styles_id)
+    } else {
+        (None, None)
+    };
+
+    if let Some(_) = scoped {
+        ids.push(Markup::Literal {
+            content: styles_id.to_owned(),
+            span: SpanRange::call_site(),
+        })
+    }
+
+    let styles = if let Some(styles) = inline {
+        if let Some(pos) = named_attrs
+            .iter()
+            .position(|a| a.name.to_string() == "style")
+        {
+            let span = named_attrs[pos]
+                .attr_type
+                .span()
+                .unwrap_or(SpanRange::call_site());
+
+            let style_attr = match &named_attrs[pos].attr_type {
+                AttrType::Normal { value } => value.clone(),
+                AttrType::Optional { toggler } => Markup::Splice {
+                    expr: toggler.cond.clone(),
+                    outer_span: toggler.cond_span,
+                },
+                AttrType::Empty { .. } => panic!("Empty style attr is not supported"),
+            };
+
+            named_attrs[pos] = NamedAttr {
+                name: TokenStream::from(TokenTree::Ident(Ident::new("style", Span::call_site()))),
+                attr_type: AttrType::Normal {
+                    value: Markup::Block(Block {
+                        markups: vec![
+                            Markup::Literal {
+                                content: styles,
+                                span,
+                            },
+                            style_attr,
+                        ],
+                        outer_span: span,
+                    }),
+                },
+            };
+            None
+        } else {
+            Some(NamedAttr {
+                name: TokenStream::from(TokenTree::Ident(Ident::new("style", Span::call_site()))),
+                attr_type: AttrType::Normal {
+                    value: Markup::Literal {
+                        content: styles,
+                        span: SpanRange::call_site(),
+                    },
+                },
+            })
+        }
+    } else {
+        None
+    };
+
     let classes = desugar_classes_or_ids("class", classes_static, classes_toggled);
     let ids = desugar_classes_or_ids("id", ids, vec![]);
-    classes.into_iter().chain(ids).chain(named_attrs).collect()
+
+    classes
+        .into_iter()
+        .chain(ids)
+        .chain(named_attrs)
+        .chain(styles)
+        .collect()
 }
 
 fn desugar_classes_or_ids(

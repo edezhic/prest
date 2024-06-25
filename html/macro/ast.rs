@@ -2,7 +2,7 @@ use proc_macro2::{TokenStream, TokenTree};
 use proc_macro_error::SpanRange;
 use syn::Lit;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Markup {
     /// Used as a placeholder value on parse error.
     ParseError {
@@ -66,8 +66,12 @@ impl Markup {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Attr {
+    Style {
+        hash_span: SpanRange,
+        content: String,
+    },
     Class {
         dot_span: SpanRange,
         name: Markup,
@@ -85,6 +89,7 @@ pub enum Attr {
 impl Attr {
     pub fn span(&self) -> SpanRange {
         match *self {
+            Attr::Style { hash_span, .. } => hash_span,
             Attr::Class {
                 dot_span,
                 ref name,
@@ -110,7 +115,7 @@ impl Attr {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ElementBody {
     Void { semi_span: SpanRange },
     Block { block: Block },
@@ -125,7 +130,7 @@ impl ElementBody {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Block {
     pub markups: Vec<Markup>,
     pub outer_span: SpanRange,
@@ -137,7 +142,7 @@ impl Block {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Special {
     pub at_span: SpanRange,
     pub head: TokenStream,
@@ -151,7 +156,7 @@ impl Special {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NamedAttr {
     pub name: TokenStream,
     pub attr_type: AttrType,
@@ -168,7 +173,7 @@ impl NamedAttr {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum AttrType {
     Normal { value: Markup },
     Optional { toggler: Toggler },
@@ -176,7 +181,7 @@ pub enum AttrType {
 }
 
 impl AttrType {
-    fn span(&self) -> Option<SpanRange> {
+    pub fn span(&self) -> Option<SpanRange> {
         match *self {
             AttrType::Normal { ref value } => Some(value.span()),
             AttrType::Optional { ref toggler } => Some(toggler.span()),
@@ -185,7 +190,7 @@ impl AttrType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Toggler {
     pub cond: TokenStream,
     pub cond_span: SpanRange,
@@ -197,7 +202,7 @@ impl Toggler {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MatchArm {
     pub head: TokenStream,
     pub body: Block,

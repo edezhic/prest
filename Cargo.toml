@@ -7,6 +7,7 @@ resolver = "2"
 license = "MIT OR Apache-2.0"
 homepage = "https://prest.blog"
 repository = "https://github.com/edezhic/prest"
+authors = ["Egor Dezhic <edezhic@gmail.com>"]
 keywords = ["fullstack", "progressive", "RESTful", "PWA"]
 categories = ["development-tools", "wasm", "web-programming"]
 
@@ -17,18 +18,18 @@ path = "./lib.rs"
 members = [
     "build", 
     "db/macro", 
-    "html/macro", 
+    "html/macro",
     "embed/macro", 
     "embed/utils", 
-    "examples/databases/*", 
+    #"examples/databases/*", 
     "examples/blog", 
-    "examples/llm-mistral", 
-    "examples/scraper", 
-    "examples/smart-contract", 
-    "examples/todo", 
-    "examples/todo-pwa", 
-    "examples/todo-pwa-auth",
-    "examples/todo-pwa-auth-sync"
+    #"examples/llm-mistral", 
+    #"examples/scraper", 
+    #"examples/smart-contract", 
+    #"examples/todo", 
+    #"examples/todo-pwa", 
+    #"examples/todo-pwa-auth",
+    #"examples/todo-pwa-auth-sync"
 ]
 
 [features]
@@ -45,7 +46,7 @@ validify = ["axum-valid/full_validify"]
 garde = ["axum-valid/full_garde"]
 
 [dependencies]
-prest-html-macro = { path = "html/macro", version = "0.1.0", optional = true }
+prest-html-macro = { path = "html/macro", version = "0.2.0", optional = true }
 prest-embed-macro = { path = "embed/macro", version = "0.1.0", optional = true }
 prest-embed-utils = { path = "embed/utils", version = "0.1.0", optional = true }
 prest-db-macro = { path = "db/macro", version = "0.2.0", optional = true }

@@ -9,6 +9,7 @@ mod ast;
 mod escape;
 mod generate;
 mod parse;
+mod tailwind;
 
 use proc_macro2::{Ident, Span, TokenStream, TokenTree};
 use proc_macro_error::proc_macro_error;

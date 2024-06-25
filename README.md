@@ -28,7 +28,7 @@ html!{
     }
     ...
     main {
-        div#"#search-results" {"Response will be placed here!"}
+        div#"search-results" {"Response will be placed here!"}
     }
 }
 ```

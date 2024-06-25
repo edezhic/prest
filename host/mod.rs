@@ -64,7 +64,7 @@ pub trait HostUtils {
     fn run(self);
     fn serve(self);
     fn add_utility_layers(self) -> Self;
-    fn add_default_embeddings(self) -> Self;
+    fn add_default_favicon(self) -> Self;
     fn add_tracing(self) -> Self;
     fn add_auth(self) -> Self;
     fn add_admin(self) -> Self;
@@ -77,18 +77,13 @@ impl HostUtils for Router {
             .add_auth()
             .add_admin()
             .add_tracing()
-            .add_default_embeddings()
+            .add_default_favicon()
             .add_utility_layers()
             .serve()
     }
     #[cfg(feature = "webview")]
     fn run(self) {
-        std::thread::spawn(|| {
-            self.read_env()
-                .add_tracing()
-                .add_default_embeddings()
-                .serve()
-        });
+        std::thread::spawn(|| self.read_env().add_tracing().add_default_favicon().serve());
         webview::init_webview(&localhost(&check_port())).unwrap();
     }
     fn serve(self) {
@@ -123,11 +118,21 @@ impl HostUtils for Router {
         #[cfg(not(feature = "traces"))]
         self
     }
-    fn add_default_embeddings(self) -> Self {
-        #[cfg(feature = "embed")]
-        return self.embed(DefaultAssets); // what to do about these?
-        #[cfg(not(feature = "embed"))]
-        self
+    fn add_default_favicon(mut self) -> Self {
+        let current_resp = RT
+            .inner
+            .block_on(async {
+                self.call(Request::get("/favicon.ico").body(Body::empty()).unwrap())
+                    .await
+            })
+            .unwrap();
+        if current_resp.status() == 404 {
+            self.route("/favicon.ico", get(|| async {
+                ([(header::CACHE_CONTROL, "max-age=360000, stale-while-revalidate=8640000, stale-if-error=60480000")], Body::from(FAVICON))
+            }))
+        } else {
+            self
+        }
     }
     fn add_utility_layers(self) -> Self {
         use tower_http::catch_panic::CatchPanicLayer;

@@ -52,9 +52,6 @@ pub use db::*;
 mod embed;
 #[cfg(feature = "embed")]
 pub use embed::*;
-#[cfg(feature = "embed")]
-embed_as!(DefaultAssets from "assets");
-
 #[cfg(feature = "html")]
 mod html;
 #[cfg(feature = "html")]
@@ -62,6 +59,8 @@ pub use html::*;
 #[cfg(feature = "html")]
 /// Default doctype for HTML
 pub const DOCTYPE: PreEscaped<&'static str> = PreEscaped("<!DOCTYPE html>");
+/// Default favicon
+pub static FAVICON: &[u8] = include_bytes!("favicon.ico");
 
 #[cfg(host)]
 mod host;

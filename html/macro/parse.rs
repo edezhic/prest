@@ -168,7 +168,9 @@ impl Parser {
                 self.element(name)
             }
             // Div element shorthand
-            TokenTree::Punct(ref punct) if punct.as_char() == '.' || punct.as_char() == '#' => {
+            TokenTree::Punct(ref punct)
+                if punct.as_char() == '.' || punct.as_char() == '#' || punct.as_char() == '$' =>
+            {
                 let name = TokenTree::Ident(Ident::new("div", punct.span()));
                 self.element(name.into())
             }
@@ -635,6 +637,19 @@ impl Parser {
                             name,
                         });
                     }
+                    // tailwind classes
+                    Some(TokenTree::Punct(ref punct)) if punct.as_char() == '$' => {
+                        self.advance();
+                        let Some(TokenTree::Literal(l)) = self.peek() else {
+                            abort_call_site!("Styles must be literal strings");
+                        };
+                        let content = l.to_string();
+                        self.advance();
+                        attrs.push(ast::Attr::Style {
+                            hash_span: SpanRange::single_span(punct.span()),
+                            content,
+                        });
+                    }
                     // If it's not a valid attribute, backtrack and bail out
                     _ => break,
                 }
@@ -653,6 +668,7 @@ impl Parser {
                     has_class = true;
                     "class".to_string()
                 }
+                ast::Attr::Style { .. } => "style".to_owned(),
                 ast::Attr::Id { .. } => "id".to_string(),
                 ast::Attr::Named { named_attr } => named_attr
                     .name
@@ -666,7 +682,7 @@ impl Parser {
         }
 
         for (name, spans) in attr_map {
-            if spans.len() > 1 {
+            if spans.len() > 1 && name != "style" {
                 let mut spans = spans.into_iter();
                 let first_span = spans.next().expect("spans should be non-empty");
                 abort!(first_span, "duplicate attribute `{}`", name);

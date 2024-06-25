@@ -1,19 +1,26 @@
 [package]
 name = "prest-html-macro"
-version = "0.1.0"
-authors = ["Chris Wong <lambda.fairy@gmail.com>"]
+version = "0.2.0"
+authors = ["Chris Wong <lambda.fairy@gmail.com>", "Egor Dezhic <edezhic@gmail.com>"]
 license = "MIT/Apache-2.0"
 documentation = "https://docs.rs/maud_macros/"
 homepage = "https://maud.lambda.xyz/"
 repository = "https://github.com/lambda-fairy/maud"
 description = "Compile-time HTML templates."
 edition = "2021"
+keywords = ["maud", "prest", "tailwind"]
+
+#[workspace]
 
 [dependencies]
 syn = "2"
 quote = "1.0.7"
 proc-macro2 = "1.0.23"
 proc-macro-error = { version = "1.0.0", default-features = false }
+lazy_static = "1.4.0"
+rand = "0.8"
+hex = "0.4"
+regex = "*"
 
 [lib]
 path = "lib.rs"
