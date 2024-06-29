@@ -1,6 +1,8 @@
-**P**rogressive **REST**ful framework that _makes application development simple again_. Even if you are not familiar with Rust yet you might be interested because it's designed to be as beginner-friendly as possible - **prest allows building full-stack cross-platform apps for the development cost of writing HTML**. Tutorials are available in the [blog](https://prest.blog/) which is also built with prest. Beware that its still alpha and recommended only for pet projects and training because many breaking changes are expected. If you'd like where this is going, please leave a star on the github!
+# prest
 
-It ain't easy to compete with Laravel, Rails, Nextjs and many others, but I always wanted a framework which enables simplicity in common development needs and allows **any** customizations/optimizations without switching languages. [Rust](https://www.rust-lang.org/) provides ways to build servers, clients, AIs, blockchains, OS kernels and whatever else you might need, while also being arguably the most [reliable practical language](https://edezhic.medium.com/reliable-software-engineering-with-rust-5bb4553b5d54). Thanks to a lot of [amazing dependencies](https://prest.blog/internals) under the hood prest already provides a whole bunch of features:
+**P**rogressive **REST**ful framework that _makes application development simple again_. Even if you are not familiar with Rust yet you might be interested because it's designed to be as beginner-friendly as possible - **prest allows building full-stack cross-platform apps for the development cost of writing HTML**. Tutorials are available in the [blog](https://prest.blog/) which is also built with prest. Beware that its still alpha and recommended only for pet projects and training because many breaking changes are expected. 
+
+It ain't easy to compete with Laravel, Rails, Nextjs and many others, but I always wanted a framework which enables simplicity in common development needs and allows **any** customizations/optimizations without switching languages. Rust provides ways to build servers, clients, AIs, blockchains, OS kernels and whatever else you might need, while also being arguably the most [reliable practical language](https://prest.blog/rust). Thanks to a lot of [amazing dependencies](https://prest.blog/internals) under the hood prest already provides a whole bunch of features:
 
 **Easy start** - create a default rust project, add `prest` dependency, bulk `use` everything from it, invoke `init!` macro and add your app's logic. No massive boilerplate projects, no custom required CLI tools.
 
@@ -22,7 +24,7 @@ route("/", get("Hello world")).run()
 
 ```rust
 html!{ 
-    nav."w-full bg-gray-900 rounded-full" {
+    nav $"w-full bg-gray-900 rounded-full" {
         input $"mx-auto text-xs lg:text-md" name="search" 
             hx-post="/search" hx-target="#search-results" {} 
     }
@@ -180,7 +182,6 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
 + write more detailed logs in a file and an explorer for it
 + comments in the blog? Need more interactivity
-+ allow setting templates for different non-200 response codes? Or just htmx-based handling?
 + adapt maud for usage with htmx?
 + update examples' styles, describe tailwind classes usage in docs
 + add something storybook-like

@@ -1,10 +1,12 @@
 use prest::*;
 
 mod content;
-use content::{ExampleCategory::*, EXAMPLES, INTERNALS, PREST_VERSION, README};
+use content::{ExampleCategory::*, EXAMPLES, INTERNALS, PREST_VERSION, README, RUST};
 
 pub fn routes() -> Router {
-    let mut router = route("/", get(README.clone())).route("/internals", get(INTERNALS.clone()));
+    let mut router = route("/", get(README.clone()))
+        .route("/internals", get(INTERNALS.clone()))
+        .route("/rust", get(RUST.clone()));
     for readme in EXAMPLES.iter() {
         router = router.route(&readme.url, get(readme.content.as_str()));
     }
