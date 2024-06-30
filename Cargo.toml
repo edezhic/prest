@@ -97,6 +97,7 @@ russh = "0.43"
 russh-keys = "0.43"
 russh-sftp = "2.0.0-beta.2"
 rustls-acme = { version = "0.10", features = ["axum"] }
+rev_buf_reader = "0.3.0"
 
 # service worker
 [target.'cfg(target_arch = "wasm32")'.dependencies]

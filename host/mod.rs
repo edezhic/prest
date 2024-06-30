@@ -97,6 +97,7 @@ impl HostUtils for Router {
         self.route("/admin", get(admin::page))
             .route("/admin/deploy", get(admin::deploy))
             .route("/admin/logs", get(admin::logs))
+            .route("/admin/debug_logs", get(admin::debug_logs))
             .route("/admin/analytics", get(admin::analytics))
             .layer(admin::AnalyticsLayer::init())
     }

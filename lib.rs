@@ -33,7 +33,7 @@ pub use axum_htmx::{
 };
 pub use axum_valid::*;
 pub use futures::{
-    executor::block_on,
+    executor::block_on as await_fut,
     stream::{self, Stream, StreamExt, TryStreamExt},
 };
 pub use once_cell::sync::Lazy;

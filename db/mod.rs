@@ -81,7 +81,7 @@ impl DbAccess for std::sync::OnceLock<Db> {
 
     fn query(&self, query: &str) -> Result<Vec<Payload>> {
         // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1265
-        let payload = block_on(Glue::new(DB.cloned()).execute(query))?;
+        let payload = await_fut(Glue::new(DB.cloned()).execute(query))?;
         Ok(payload)
     }
 
@@ -160,7 +160,7 @@ impl<Q: BuildSQL> DbExecutable for Q {
     fn exec(self) -> Result<Payload> {
         let statement = self.build()?;
         // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1265
-        let payload = block_on(Glue::new(DB.cloned()).execute_stmt(&statement))?;
+        let payload = await_fut(Glue::new(DB.cloned()).execute_stmt(&statement))?;
         Ok(payload)
     }
 

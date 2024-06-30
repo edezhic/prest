@@ -180,13 +180,11 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ write more detailed logs in a file and an explorer for it
-+ comments in the blog? Need more interactivity
-+ adapt maud for usage with htmx?
-+ update examples' styles, describe tailwind classes usage in docs
-+ add something storybook-like
-* rewrite scraping and blockchain examples
-+ sql escaping
++ adapt maud for usage with htmx? Maybe also alpine or w/e for interactivity
++ update admin and examples' styles, describe tailwind classes usage in docs
++ add something storybook-like?
++ rewrite scraping and blockchain examples
++ sql escaping?
 + debug SW wasm issues, improve default manifest
 
 There are also longer term things which will be needed or nice to have before the release of prest:

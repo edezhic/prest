@@ -6,6 +6,7 @@ pub(crate) use db_editor::*;
 
 mod deploy;
 pub(crate) use deploy::*;
+use host::DEBUG_LOG;
 
 use crate::{host::LOG, *};
 
@@ -56,7 +57,9 @@ pub(crate) async fn page() -> impl IntoResponse {
                 span hx-get="/admin/analytics" hx-trigger="load delay:0.1s" hx-target="this" hx-swap="outerHTML" {}
                 (tables)
                 h2{"Latest logs"}
-                div."w-full" hx-get="/admin/logs" hx-trigger="load delay:1s" hx-target="this" hx-swap="outerHTML" {}
+                div."w-full" hx-get="/admin/logs" hx-trigger="load delay:0.1s" hx-target="this" hx-swap="outerHTML" {}
+                h2{"Debug logs"}
+                div."w-full" hx-get="/admin/debug_logs" hx-trigger="load delay:1s" hx-target="this" hx-swap="outerHTML" {}
             }
             ."menu menu-horizontal w-full items-center justify-center bg-base-200 rounded-box mb-4 mx-auto" {
                 ."font-mono" {"powered by prest"}
@@ -75,17 +78,25 @@ pub(crate) async fn page() -> impl IntoResponse {
 }
 
 pub(crate) async fn logs() -> Markup {
-    let logs = &LOG.read().unwrap();
-    let latest_logs: Vec<PreEscaped<String>> = logs
-        .lines()
-        .rev()
-        .take(100)
-        .map(|log| PreEscaped(log.to_owned()))
+    let logs: Vec<_> = LOG.read_last_lines(100).into_iter()
+        .map(|log| PreEscaped(log))
         .collect();
 
     html! {
         div."w-full" hx-get="/admin/logs" hx-trigger="load delay:1s" hx-target="this" hx-swap="outerHTML"
-            {@for log in latest_logs {p style="margin:0 !important"{(log)}}
+            {@for log in logs {p style="margin:0 !important"{(log)}}
+        }
+    }
+}
+
+pub(crate) async fn debug_logs() -> Markup {
+    let logs: Vec<_> = DEBUG_LOG.read_last_lines(1000).into_iter()
+        .map(|log| PreEscaped(log))
+        .collect();
+
+    html! {
+        div."w-full" hx-get="/admin/debug_logs" hx-trigger="load delay:1s" hx-target="this" hx-swap="outerHTML"
+            {@for log in logs {p style="margin:0 !important"{(log)}}
         }
     }
 }
