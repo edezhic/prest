@@ -4,7 +4,7 @@ mod llm;
 
 state!(LLM: Mutex<llm::Mistral> = { Mutex::new(llm::init()?) });
 
-#[derive(serde::Deserialize)]
+#[derive(Deserialize)]
 struct Prompt {
     pub content: String,
 }

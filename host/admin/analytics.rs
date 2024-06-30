@@ -1,7 +1,6 @@
 use crate::host::{filter_request, filter_response};
 use crate::*;
 
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub(crate) async fn analytics() -> impl IntoResponse {

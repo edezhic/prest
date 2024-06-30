@@ -27,7 +27,7 @@ pub struct Example {
     pub category: ExampleCategory,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Serialize)]
 pub enum ExampleCategory {
     Blog,
     Database,

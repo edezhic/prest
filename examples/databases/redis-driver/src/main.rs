@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 state!(CLIENT: Client = { Client::open("redis://127.0.0.1")? });
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Todo {
     #[serde(default)]
     pub task: String,
@@ -12,7 +12,7 @@ pub struct Todo {
     pub done: bool,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Deserialize)]
 pub struct TodoForm {
     #[serde(default)]
     pub uuid: String,
@@ -53,7 +53,7 @@ fn get_todos() -> Vec<(String, Todo)> {
     let map: HashMap<String, String> = con.hgetall("todos").unwrap();
     map.into_iter()
         .map(|(uuid, todo)| {
-            let todo = serde_json::from_str::<Todo>(&todo).unwrap();
+            let todo = from_json_str::<Todo>(&todo).unwrap();
             (uuid, todo)
         })
         .collect()
@@ -65,7 +65,7 @@ fn add_todo(task: String) {
     con.hset_nx(
         "todos",
         uuid,
-        serde_json::to_string(&Todo { task, done: false }).unwrap(),
+        to_json_string(&Todo { task, done: false }).unwrap(),
     )
     .unwrap()
 }
@@ -73,9 +73,9 @@ fn add_todo(task: String) {
 fn toggle_todo(uuid: String, done: bool) {
     let mut con = CLIENT.get_connection().unwrap();
     let todo: String = con.hget("todos", &uuid).unwrap();
-    let mut todo: Todo = serde_json::from_str(&todo).unwrap();
+    let mut todo: Todo = from_json_str(&todo).unwrap();
     todo.done = !done;
-    con.hset("todos", uuid, serde_json::to_string(&todo).unwrap())
+    con.hset("todos", uuid, to_json_string(&todo).unwrap())
         .unwrap()
 }
 

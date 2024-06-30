@@ -12,7 +12,7 @@ state!(TODOS: Collection<Todo> = async {
     db.collection::<Todo>("todos")
 });
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Todo {
     #[serde(default)]
     pub uuid: Uuid,

@@ -7,7 +7,7 @@ state!(DB: SqlitePool = async {
     conn
 });
 
-#[derive(Debug, FromRow, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, FromRow, Serialize, Deserialize)]
 struct Todo {
     #[serde(default = "new_uuid")]
     pub uuid: String,

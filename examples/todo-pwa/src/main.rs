@@ -3,7 +3,7 @@ use todo_pwa::{into_page, shared_routes};
 
 embed_build_output_as!(BuiltAssets);
 
-#[derive(Table, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Table, Default, Serialize, Deserialize)]
 #[serde(default)]
 struct Todo {
     #[serde(default = "Uuid::new_v4")]

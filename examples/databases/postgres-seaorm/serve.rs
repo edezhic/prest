@@ -13,18 +13,18 @@ state!(DB: DatabaseConnection = async {
     db
 });
 
-#[derive(serde::Deserialize)]
+#[derive(Deserialize)]
 struct NewTodo {
     task: String,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Deserialize)]
 struct ToggleTodo {
     uuid: Uuid,
     done: bool,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Deserialize)]
 struct DeleteTodo {
     uuid: Uuid,
 }

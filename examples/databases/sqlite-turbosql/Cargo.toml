@@ -4,5 +4,4 @@ edition = "2021"
 
 [dependencies]
 prest = "0.3"
-serde = { version = "1", features = ["derive"] }
 turbosql = "0.9"

@@ -12,7 +12,7 @@ use ::syn::{
 /// Generates schema and helper functions to use struct as a table in the embedded database
 #[proc_macro_derive(Table, attributes(key_column, unique_column))]
 pub fn table_derive(input: TokenStream) -> TokenStream {
-    let ast = parse_macro_input!(input as _);
+    let ast = parse_macro_input!(input as DeriveInput);
     TokenStream::from(impl_table(ast))
 }
 

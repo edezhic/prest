@@ -8,5 +8,4 @@ path = "./serve.rs"
 
 [dependencies]
 prest = "0.3"
-serde = { version = "1", features = ["derive"] }
 sqlx = { version = "0.7", features = [ "runtime-tokio", "tls-rustls", "sqlite", "macros" ] }

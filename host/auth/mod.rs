@@ -10,7 +10,6 @@ use axum_login::{
 };
 pub use openidconnect::{CsrfToken as OAuthCSRF, Nonce as OAuthNonce};
 use password_auth::{generate_hash, verify_password};
-use serde::{Deserialize, Serialize};
 pub use tower_sessions::Session;
 use tower_sessions::{
     session::{Id, Record},
@@ -50,7 +49,7 @@ pub enum Credentials {
 }
 
 pub type OAuthQuery = Query<OAuthQueryParams>;
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct OAuthQueryParams {
     pub code: OAuthCode,
     pub state: OAuthCSRF,
@@ -127,7 +126,7 @@ impl User {
     }
 }
 
-#[derive(Debug, Default, serde::Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 struct AuthForm {
     username: Option<String>,
     email: Option<String>,
@@ -194,7 +193,7 @@ async fn login(mut auth: Auth, Form(form): Form<AuthForm>) -> impl IntoResponse 
     }
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 struct NextUrl {
     next: Option<String>,
 }
@@ -430,7 +429,7 @@ pub struct SessionRow {
 impl SessionStore for Db {
     async fn save(&self, record: &Record) -> Result<()> {
         let id = record.id.0;
-        let record = match serde_json::to_string(record) {
+        let record = match to_json_string(record) {
             Ok(s) => s,
             Err(e) => return Err(Error::Encode(format!("{e}"))),
         };
@@ -445,7 +444,7 @@ impl SessionStore for Db {
         let Some(session_row) = search else {
             return Ok(None);
         };
-        match serde_json::from_str(&session_row.record) {
+        match from_json_str(&session_row.record) {
             Ok(record) => Ok(Some(record)),
             Err(e) => Err(Error::Decode(format!("Session load error: {e}"))),
         }

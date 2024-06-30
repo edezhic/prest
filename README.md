@@ -38,7 +38,7 @@ html!{
 **Database** - embedded SQL DB that works without running separate services. Auto-derived schema based on usual rust structs with query builder and helper functions. Just add it into the `init!` macro to make sure it's initialized.
 
 ```rust
-#[derive(Table, serde::Deserialize)]
+#[derive(Table, Deserialize)]
 struct Todo {
     id: Uuid,
     task: String,
@@ -56,7 +56,7 @@ todo.check_task("Buy milk and bread")
 todo.remove()
 ```
 
-Only requires derived `serde`'s `Deserialize` to enable DB editor in the...
+As of now `Table` also requires derived `Deserialize` to enable DB editor in the...
 
 **Admin panel** - collects filtered stats for requests/responses, logs, and provides read/write GUI to all initialized tables. While blog intentionally exposes access to it for demo purposes, by default all built-in and apps routes starting with `/admin` are protected by...
 

@@ -12,7 +12,7 @@ struct BroadcastMsg {
     pub data: Option<Todo>,
 }
 
-#[derive(Table, Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Table, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 struct Todo {
     #[serde(default = "Uuid::new_v4")]

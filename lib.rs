@@ -4,6 +4,9 @@
 // for macro-generated code inside prest itself
 pub(crate) use crate as prest;
 
+pub use serde;
+pub use serde_derive::{Deserialize, Serialize};
+
 pub use anyhow::{anyhow, bail, Result as AnyhowResult};
 pub use async_trait::async_trait;
 pub use axum::{
@@ -34,7 +37,7 @@ pub use futures::{
     stream::{self, Stream, StreamExt, TryStreamExt},
 };
 pub use once_cell::sync::Lazy;
-pub use serde_json::{json, to_string as to_json_string};
+pub use serde_json::{json, to_string as to_json_string, from_str as from_json_str};
 pub use std::{convert::Infallible, env, sync::Arc};
 pub use toml::{Table as TomlTable, Value as TomlValue};
 pub use tower::{self, BoxError, Layer, Service, ServiceBuilder};

@@ -1,10 +1,8 @@
-Simple CRUD app with a database, partial rendering and decent styles. Like any rust crate it all starts with the manifest:
+Simple CRUD app with a database, partial rendering and decent styles. Every rust crate starts with the `toml` manifest:
 
 {Cargo.toml}
 
-Besides prest you might notice another dependency - `serde`. It is the most popular **ser**ialization and **de**serialization library in the rust ecosystem and the most widely supported. Its used in almost all examples and I want to find a way to re-export `derive` macros without forcing users to use additional attributes, but for now they are imported from serde directly.
-
-Now it's time to get rusty. As of now prest is designed to be imported in bulk:
+It contains core metadata of the package that cargo needs to build it properly. With this tiny config we can move on to writing rust. As of now prest is designed to be imported in bulk:
 
 {src/main.rs:1}
 

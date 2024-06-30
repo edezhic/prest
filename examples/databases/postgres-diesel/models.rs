@@ -1,7 +1,7 @@
 use diesel::{pg::Pg, prelude::*};
-use prest::Uuid;
+use prest::{Uuid, Serialize, Deserialize};
 
-#[derive(Queryable, Selectable, Insertable, serde::Serialize, serde::Deserialize)]
+#[derive(Queryable, Selectable, Insertable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::todos)]
 #[diesel(check_for_backend(Pg))]
 pub struct Todo {

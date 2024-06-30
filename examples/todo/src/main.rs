@@ -1,6 +1,6 @@
 use prest::*;
 
-#[derive(Debug, Table, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Table, Default, Serialize, Deserialize)]
 struct Todo {
     #[serde(default = "Uuid::new_v4")]
     pub id: Uuid,

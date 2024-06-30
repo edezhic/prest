@@ -1,7 +1,7 @@
 use prest::*;
 use turbosql::{execute, select, Turbosql};
 
-#[derive(Default, Turbosql, serde::Serialize, serde::Deserialize)]
+#[derive(Default, Turbosql, Serialize, Deserialize)]
 struct Todo {
     pub rowid: Option<i64>,
     pub task: Option<String>,
