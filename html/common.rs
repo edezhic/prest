@@ -93,6 +93,7 @@ pub struct Scripts<'a> {
     pub others: Option<Vec<&'a str>>,
     pub inlines: Option<Vec<&'a str>>,
     pub stylesheets: Option<Vec<&'a str>>,
+    pub hyperscripts: Option<Vec<&'a str>>,
 }
 
 impl<'a> Default for Scripts<'a> {
@@ -101,11 +102,13 @@ impl<'a> Default for Scripts<'a> {
             others: None,
             inlines: None,
             stylesheets: None,
+            hyperscripts: None,
         }
     }
 }
 
 impl<'a> Scripts<'a> {
+    /// Add script src to the [`Scripts`]
     pub fn include(mut self, path: &'a str) -> Self {
         if let Some(srcs) = &mut self.others {
             srcs.push(path)
@@ -114,6 +117,7 @@ impl<'a> Scripts<'a> {
         }
         self
     }
+    /// Add inline js to the [`Scripts`]
     pub fn inline(mut self, script: &'a str) -> Self {
         if let Some(scripts) = &mut self.inlines {
             scripts.push(script)
@@ -131,6 +135,15 @@ impl<'a> Scripts<'a> {
         }
         self
     }
+    /// Add inline hyperscipt to the [`Scripts`]
+    pub fn hyperscript(mut self, script: &'a str) -> Self {
+        if let Some(scripts) = &mut self.hyperscripts {
+            scripts.push(script)
+        } else {
+            self.hyperscripts = Some(vec![script])
+        }
+        self
+    }
 }
 
 impl<'a> Render for Scripts<'a> {
@@ -144,12 +157,16 @@ impl<'a> Render for Scripts<'a> {
             @if is_pwa() { script {(REGISTER_SW_SNIPPET)} }
             @if let Some(stylesheets) = &self.stylesheets { @for stylesheet in stylesheets {link href={(stylesheet)} rel="stylesheet"{}}}
             script src=(htmx_src) defer crossorigin {}
-            script src="https://unpkg.com/htmx.org/dist/ext/sse.js" defer crossorigin {}
+            script src="https://unpkg.com/htmx-ext-sse@2.2.0/sse.js" defer crossorigin {}
+            script src="https://unpkg.com/hyperscript.org@0.9.12" defer crossorigin {}
             @if let Some(srcs) = &self.others { @for src in srcs {
                 script src={(src)} defer crossorigin {}
             }}
             @if let Some(scripts) = &self.inlines { @for script in scripts {
                 script {(PreEscaped(script))}
+            }}
+            @if let Some(scripts) = &self.hyperscripts { @for script in scripts {
+                script type="text/hyperscript" {(PreEscaped(script))}
             }}
         )
     }

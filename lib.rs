@@ -119,6 +119,13 @@ pub fn is_pwa() -> bool {
     }
 }
 
+#[macro_export]
+macro_rules! include_html {
+    ($path: tt) => {
+        PreEscaped(include_str!($path))
+    };
+}
+
 /// Basic Result alias with [`enum@prest::Error`]`
 pub type Result<T = (), E = Error> = std::result::Result<T, E>;
 

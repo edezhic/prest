@@ -180,7 +180,6 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ adapt maud for usage with htmx? Maybe also alpine or w/e for interactivity
 + update admin and examples' styles, describe tailwind classes usage in docs
 + add something storybook-like?
 + rewrite scraping and blockchain examples

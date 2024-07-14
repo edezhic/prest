@@ -19,6 +19,7 @@ state!(PREST_VERSION: String = {
 embed_as!(ExamplesDocs from "../" only "*.md");
 embed_as!(ExamplesCode from "../" except "*.md");
 
+#[allow(dead_code)]
 pub struct Example {
     pub path: String,
     pub url: String,

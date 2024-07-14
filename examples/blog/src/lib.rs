@@ -18,17 +18,19 @@ async fn page(content: Markup) -> Markup {
     let todos = EXAMPLES.iter().filter(|r| r.category == Todo);
     let others = EXAMPLES.iter().filter(|r| r.category == Other);
 
-    html!((DOCTYPE) html $"bg-gray-800 font-sans text-[#bbc4d4]" {
-        (Head::with_title("Prest Blog").style(STYLES))
+    html!((DOCTYPE) html $"bg-stone-800 font-sans text-[#bbc4d4]" _="on click remove .open from #menu" {
+        (Head::with_title("Prest Blog"))
 
         body $"max-w-screen-md lg:max-w-screen-lg md:mx-auto"
             hx-boost="true" hx-swap="innerHTML transition:true show:window:top" hx-target="main" {
-            nav $"bg-gray-900 my-4 p-5 shadow-lg rounded-full grid grid-cols-3 items-center" {
-                $"flex gap-4" {
-                    a $"hover:text-white mr-4" href="https://docs.rs/prest" target="_blank" {(PreEscaped(include_str!("../icons/docs.svg")))}
-                    a $"hover:text-white" href="https://github.com/edezhic/prest" target="_blank" {(PreEscaped(include_str!("../icons/github.svg")))}
+            nav $"bg-stone-900 my-4 p-5 shadow-lg rounded-full grid grid-cols-3 items-center" {
+                $"flex gap-6" {
+                    a $"hover:text-white" href="https://github.com/edezhic/prest" {(include_html!("../icons/github.svg"))}
+                    a $"hover:text-white" href="https://docs.rs/prest" {(include_html!("../icons/docs.svg"))}
                 }
+
                 a $"font-bold text-center hover:text-white" href="/" {"PREST"}
+
                 $"flex justify-end" {
                     @if is_pwa() {
                         $"mr-4" hx-get="/sw/health" hx-target="this" hx-trigger="load delay:3s" hx-swap="none"
@@ -36,76 +38,72 @@ async fn page(content: Markup) -> Markup {
                                 const b = document.querySelector('#sw-badge'); 
                                 const s = event.detail.successful ? 'badge-success' : 'badge-error'; 
                                 b.classList.replace('badge-warning', s)" 
-                            {
+                            { // replace with smth else
                             #"sw-badge" {}
                             $"font-bold" {"SW"}
                         }
                     }
-                    div tabindex="0" role="button" $"hover:text-white" {
+
+                    $"hover:text-white" _="on click add .open to #menu halt" {
                         svg $"h-5 w-5 scale-[-1,1]" fill="none" viewBox="0 0 24 24" stroke="currentColor" {
                             path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" {}
                         }
                     }
-                    ul $"bg-gray-900 mt-3 z-10 p-2 shadow-xl rounded-full w-52 hidden" tabindex="0" {
-                        li { a href="/internals" {"internals"}}
-                        li{ h2 {"tutorials"}
-                            ul{@for r in todos {
-                                li { a href={(r.url)} {(r.label)}}
-                        }}}
-                        li{ h2 {"databases"}
-                            ul{@for r in dbs {
-                                li { a href={(r.url)} {(r.label)}}
-                        }}}
-                        li{ h2 {"others"}
-                            ul{@for r in others {
-                                li { a href={(r.url)} {(r.label)}}
-                        }}}
-                        li { a href="/about" {"about"}}
+
+                    #"menu" $"absolute bg-stone-950 z-10 top-8 px-4 truncate shadow-xl rounded-xl w-52" {
+                        style {"#menu { max-height: 0px } #menu.open { max-height: 1000px } 
+                                #menu a { display: flex; align-items: center; padding: 0.25rem 0 0.25rem 0.5rem; border-radius: 1rem; }
+                                #menu a:hover { background-color: #292524 }"}
+                        $"py-4 flex flex-col gap-2 text-xs" {
+                            a href="/rust" {"about rust"}
+                            a href="/internals" {"internals"}
+                            a href="/about" {"about blog"}
+                            $"font-bold text-sm pt-2" {"tutorials"}
+                            @for r in todos { a href={(r.url)} {(r.label)}}
+                            $"font-bold text-sm pt-2" {"databases"}
+                            @for r in dbs { a href={(r.url)} {(r.label)}}
+                            $"font-bold text-sm pt-2" {"others"}
+                            @for r in others { a href={(r.url)} {(r.label)}}
+                        }
                     }
                 }
             }
+
+            style {r#"
+                main a { text-decoration: underline } 
+                main h3 { font-size: 2em } 
+                main ul { list-style: circle }
+                code { font-size: 13px !important }
+                "#}
+
             main $"opacity-80 mx-auto p-4 gap-3 flex flex-col text-sm lg:text-base leading-loose"
-                hx-history-elt hx-on--before-swap="document.activeElement.blur()"
-                hx-on--after-swap=(format!("Prism.highlightAll(); {LINKS_JS}"))
+                hx-history-elt _="on load or htmx:afterSwap call format_content()"
                 {(content)}
-            style{""}
-            script {(PreEscaped(LINKS_JS))}
-            $"flex items-center justify-evenly p-4 w-full bg-gray-900 rounded-full mb-4 mx-auto text-xs lg:text-base" {
+
+            $"flex items-center justify-evenly p-4 w-full bg-stone-900 rounded-full mb-4 mx-auto text-xs lg:text-base" {
                 $"font-mono" {"v"(*PREST_VERSION)}
-                $"" {"made by Egor Dezhic"}
+                $"text-sm" {"made by Egor Dezhic"}
                 $"flex gap-3"{
-                    a href="https://twitter.com/eDezhic" target="_blank" {(PreEscaped(include_str!("../icons/twitter.svg")))}
-                    a href="https://edezhic.medium.com" target="_blank" {(PreEscaped(include_str!("../icons/medium.svg")))}
-                    a href="mailto:edezhic@gmail.com" target="_blank" {(PreEscaped(include_str!("../icons/email.svg")))}
+                    a href="https://twitter.com/eDezhic" {(include_html!("../icons/twitter.svg"))}
+                    a href="mailto:edezhic@gmail.com" {(include_html!("../icons/email.svg"))}
                 }
             }
+
             (Scripts::default()
                 .css("https://unpkg.com/prismjs@1.29.0/themes/prism-tomorrow.min.css")
                 .include("https://unpkg.com/prismjs@1.29.0/components/prism-core.min.js")
                 .include("https://unpkg.com/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js")
+                .hyperscript("
+                    def format_content()
+                        call Prism.highlightAll()
+                        for a in <a /> in <body />
+                            if not (a.href contains 'prest.') and not (a.href contains 'localhost')
+                                set @target of a to '_blank'
+                ")
             )
         }
     })
 }
-
-const LINKS_JS: &str = "document.querySelectorAll('main a').forEach(el => !el.href.includes('prest') && !el.href.includes('localhost') && el.setAttribute('target', '_blank'))";
-const STYLES: PreEscaped<&str> = PreEscaped(
-    r#"
-main a { text-decoration: underline } 
-main h3 { font-size: 2em } 
-main ul { list-style: circle }
-code { font-size: 12px !important }
-@media screen and (min-width: 1024px) {
-    code {
-        font-size: 15px !important;
-    }
-}
-code .table {
-    display: inherit;
-    font-size: inherit;
-}
-"#,
-);
 
 #[cfg(sw)]
 #[wasm_bindgen(start)]
