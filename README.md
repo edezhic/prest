@@ -1,6 +1,6 @@
 # prest
 
-**P**rogressive **REST**ful framework that _makes application development simple again_. Even if you are not familiar with Rust yet you might be interested because it's designed to be as beginner-friendly as possible - **prest allows building full-stack cross-platform apps for the development cost of writing HTML**. Tutorials are available in the [blog](https://prest.blog/) which is also built with prest. Beware that its still alpha and recommended only for pet projects and training because many breaking changes are expected. 
+**P**rogressive **REST**ful framework that _makes application development simple again_. Even if you are not familiar with Rust yet you might be interested because it's designed to be as beginner-friendly as possible - **prest allows building full-stack cross-platform apps for the development cost of writing HTML**. Tutorials are available in the [blog](https://prest.blog/) which is also built with prest. Beware that its still alpha so can be recommended only for pet projects and training because many breaking changes are expected. 
 
 It ain't easy to compete with Laravel, Rails, Nextjs and many others, but I always wanted a framework which enables simplicity in common development needs and allows **any** customizations/optimizations without switching languages. Rust provides ways to build servers, clients, AIs, blockchains, OS kernels and whatever else you might need, while also being arguably the most [reliable practical language](https://prest.blog/rust). Thanks to a lot of [amazing dependencies](https://prest.blog/internals) under the hood prest already provides a whole bunch of features:
 
@@ -179,15 +179,15 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ add something storybook-like?
-+ rewrite scraping and blockchain examples
++ more interactive example, maybe comments in the blog or w/e
++ upgrade scraping and blockchain examples, maybe also the llm example
 + sql escaping?
-+ debug SW wasm issues, improve default manifest
 
 There are also longer term things which will be needed or nice to have before the release of prest:
 * await stable releases of most important dependencies like axum and sled 
 * parallel frontend and cranelift backend of the rust compiler for faster builds
 * stabilization and support of async iterator and other fundamental concurrent std apis
 * more optional configs all around for flexibility
-* find a way to include/re-export into the prest to avoid need for other deps 
+* find a way to include/re-export wasm-bindgen into the prest to avoid need for other deps 
+* better Service Worker DX in Rust
 * wider range of new examples like [i18n](https://github.com/longbridgeapp/rust-i18n), highly interactive UIs, native mobile builds, webgpu-based modern language model, and others
