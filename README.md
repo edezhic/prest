@@ -180,6 +180,7 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
 + more interactive example, maybe comments in the blog or w/e
++ some built-in UI components/styles for spinners and other common pieces
 + upgrade scraping and blockchain examples, maybe also the llm example
 + sql escaping?
 

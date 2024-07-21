@@ -38,7 +38,7 @@ pub(crate) async fn analytics() -> impl IntoResponse {
 
     html! {
         $"font-bold text-lg" {"Routes stats (total hits: "(total_path_hits)"*)"}
-        $"italic text-xs" {"*only counts hits to the server, static pages are served by Service Worker and aren't reflected here"}
+        $"italic text-xs" {"*only counts requests to the server, static pages like blog's are served primarily by the Service Worker and aren't reflected here"}
         table $"w-full text-sm" {
             @for route in path_stats {
                 tr {
