@@ -1,6 +1,6 @@
 In the [previous example](https://prest.blog/todo-pwa-auth) we've added auth to the [todo PWA](https://prest.blog/todo-pwa). In this one we'll make all the todos public and provide real-time updates to the clients about every change in them. We'll add a new dependency here - [async-broadcast](https://docs.rs/async-broadcast/latest/async_broadcast/) which provides a simple mechanism to share changes with multiple streams:
 
-{Cargo.toml:9}
+{Cargo.toml:8}
 
 Besides this manifest remains the same as well as build script and library so their contents are at the bottom.
 
