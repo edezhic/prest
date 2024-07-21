@@ -37,14 +37,14 @@ pub(crate) async fn analytics() -> impl IntoResponse {
         .collect();
 
     html! {
-        h2{"Routes stats"}
-        p{b{"Total path hits: "(total_path_hits)}}
-        table."w-full" {
+        $"font-bold text-lg" {"Routes stats (total hits: "(total_path_hits)"*)"}
+        $"italic text-xs" {"*only counts hits to the server, static pages are served by Service Worker and aren't reflected here"}
+        table $"w-full text-sm" {
             @for route in path_stats {
                 tr {
-                    td."w-1/2"{(route.0)}
-                    td."w-1/4"{(route.1)}
-                    td."w-1/4"{
+                    td $"w-1/2"{(route.0)}
+                    td $"w-1/4"{(route.1)}
+                    td $"w-1/4"{
                         @for (status, hits) in route.2 {
                             (status)"("(hits)")"
                         }
@@ -52,13 +52,13 @@ pub(crate) async fn analytics() -> impl IntoResponse {
                 }
             }
         }
-        h3{"Assets"}
-        table."w-full" {
+        $"font-bold text-lg" {"Assets"}
+        table $"w-full text-sm" {
             @for route in asset_stats {
                 tr {
-                    td."w-1/2"{(route.0)}
-                    td."w-1/4"{(route.1)}
-                    td."w-1/4"{
+                    td $"w-1/2"{(route.0)}
+                    td $"w-1/4"{(route.1)}
+                    td $"w-1/4"{
                         @for (status, hits) in route.2 {
                             (status)"("(hits)")"
                         }

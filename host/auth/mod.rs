@@ -93,7 +93,7 @@ pub fn init_auth_module() -> (AuthLayer, Router) {
 impl User {
     pub fn from_email(email: String) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id: Uuid::now_v7(),
             permissions: vec![],
             group: UserGroup::Visitor,
             username: None,
@@ -103,7 +103,7 @@ impl User {
     }
     pub fn from_username_password(username: String, password: String) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id: Uuid::now_v7(),
             permissions: vec![],
             group: UserGroup::Visitor,
             username: Some(username),
@@ -113,7 +113,7 @@ impl User {
     }
     pub fn from_email_password(email: String, password: String) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id: Uuid::now_v7(),
             permissions: vec![],
             group: UserGroup::Visitor,
             username: None,

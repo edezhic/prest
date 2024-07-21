@@ -7,7 +7,7 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = "0.3"
+prest = { path = "../../", version = "0.4" }
 
 hf-hub = "0.3"
 tokenizers = "0.15"

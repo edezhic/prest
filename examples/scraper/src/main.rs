@@ -25,7 +25,7 @@ fn main() {
 
 async fn homepage() -> Markup {
     html!(html {(Head::with_title("With scraping"))
-        body {h1{"Check out terminal for scraping results!"}}
+        body { $"text-xl" {"Check out terminal for scraping results!"}}
     })
 }
 

@@ -17,6 +17,7 @@ pub struct PWAOptions<'a> {
     pub start: String,
     pub display: DisplayMode,
     pub icons: Vec<Icon<'a>>,
+    pub debug_pwa: bool,
 }
 impl Default for PWAOptions<'_> {
     fn default() -> Self {
@@ -40,7 +41,15 @@ impl Default for PWAOptions<'_> {
             start: "/".to_owned(),
             display: DisplayMode::Standalone,
             icons: vec![Icon::new("logo.png", "512x512")],
+            debug_pwa: false,
         }
+    }
+}
+
+impl PWAOptions<'_> {
+    pub fn debug_pwa(mut self) -> Self {
+        self.debug_pwa = true;
+        self
     }
 }
 
@@ -51,7 +60,7 @@ static LOGO: &[u8] = include_bytes!("default-logo.png");
 static LISTENER_TEMPLATE: &str = "self.addEventListener('NAME', event => LISTENER);\n";
 
 pub fn build_pwa(opts: PWAOptions) -> Result<()> {
-    if env::var("SELF_PWA_BUILD").is_ok() || !is_pwa() {
+    if env::var("SELF_PWA_BUILD").is_ok() || (!opts.debug_pwa && !is_pwa()) {
         return Ok(());
     }
     let start = Instant::now();

@@ -55,14 +55,13 @@ async fn page() -> Markup {
         });
         false
     };
-    html!( html data-theme="dark" {
-        (Head::with_title("With Mistral LLM"))
-        body."max-w-screen-sm mx-auto mt-8" {
+    html!( html { (Head::with_title("With Mistral LLM"))
+        body $"max-w-screen-sm mx-auto mt-8" {
             @if ready {
                 div {(history(false).await)}
             } @else {
                 div hx-get="/" hx-target="body" hx-trigger="load delay:1s"{}
-                span."loading loading-dots loading-lg"{}
+                span {"loading..."}
             }
             (Scripts::default())
         }
@@ -80,16 +79,16 @@ async fn history(in_progress: bool) -> Markup {
         (PreEscaped(content))
         @if in_progress {
             ins hx-get="/more" hx-target="div" hx-trigger="load"{}
-            span."loading loading-dots loading-sm"{}
+            span {"loading..."}
             br{}
-            button."btn btn-ghost" hx-get="/" hx-target="body" {"Pause"}
+            button hx-get="/" hx-target="body" {"Pause"}
         }
         @else {
             form hx-post="/prompt" hx-target="div"  {
-                input."input" type="text" name="content" placeholder="Prompt" required {}
-                button."btn btn-outline btn-primary" type="submit" {(btn)}
+                input type="text" name="content" placeholder="Prompt" required {}
+                button type="submit" {(btn)}
             }
         }
-        button."btn btn-ghost" hx-get="/reset" hx-target="body" {"Reset"}
+        button hx-get="/reset" hx-target="body" {"Reset"}
     )
 }

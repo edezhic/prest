@@ -36,24 +36,23 @@ impl Render for Todo {
         let task = self.task.clone().unwrap();
         let done = self.done.clone().unwrap();
         html! {
-            ."flex  items-center" hx-target="this" hx-swap="outerHTML" hx-vals=(json!({ "rowid": rowid, "task": task, "done": done})) {
-                input."toggle toggle-primary" type="checkbox" hx-patch="/" checked[done] {}
-                label."ml-4 text-lg" {(task)}
-                button."btn btn-ghost ml-auto" hx-delete="/" {"Delete"}
+            $"flex items-center" hx-target="this" hx-swap="outerHTML" hx-vals=(json!({ "rowid": rowid, "task": task, "done": done})) {
+                input type="checkbox" hx-patch="/" checked[done] {}
+                label $"ml-4 text-lg" {(task)}
+                button $"ml-auto" hx-delete="/" {"Delete"}
             }
         }
     }
 }
 
 async fn page(content: Markup) -> Markup {
-    html! { html data-theme="dark" {
-        (Head::with_title("With Turbosql SQLite"))
-        body."max-w-screen-sm mx-auto mt-12" {
-            form."flex gap-4 justify-center" hx-put="/" hx-target="div" hx-on--after-request="this.reset()" {
-                input."input input-bordered input-primary" type="text" name="task" {}
-                button."btn btn-outline btn-primary" type="submit" {"Add"}
+    html! { html { (Head::with_title("With Turbosql SQLite"))
+        body $"max-w-screen-sm mx-auto mt-12" {
+            form $"flex gap-4 justify-center" hx-put="/" hx-target="#list" hx-swap="beforeend" hx-on--after-request="this.reset()" {
+                input $"border rounded-md" type="text" name="task" {}
+                button type="submit" {"Add"}
             }
-            ."w-full" {(content)}
+            #"list" $"w-full" {(content)}
             (Scripts::default())
         }
     }}

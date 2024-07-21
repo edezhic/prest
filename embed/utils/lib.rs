@@ -8,7 +8,7 @@ use std::{fs, io};
 
 /// Utility used for debug and lazy embeddings
 #[doc(hidden)]
-#[cfg_attr(all(debug_assertions, not(feature = "lazy-embed")), allow(unused))]
+#[cfg_attr(debug_assertions, allow(unused))]
 pub struct FileEntry {
     pub rel_path: String,
     pub full_canonical_path: String,
@@ -50,7 +50,7 @@ pub fn is_path_included(rel_path: &str, includes: &[&str], excludes: &[&str]) ->
 
 /// Utility that finds files to embed
 #[doc(hidden)]
-#[cfg_attr(all(debug_assertions, not(feature = "lazy-embed")), allow(unused))]
+#[cfg_attr(debug_assertions, allow(unused))]
 pub fn get_files<'patterns>(
     folder_path: String,
     includes: &'patterns [&str],

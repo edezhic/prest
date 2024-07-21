@@ -3,4 +3,4 @@ name = "todo"
 edition = "2021"
 
 [dependencies]
-prest = { path = "../../", version = "0.3.1"}
+prest = { path = "../../", version = "0.4" }

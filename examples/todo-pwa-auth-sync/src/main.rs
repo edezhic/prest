@@ -12,10 +12,10 @@ struct BroadcastMsg {
     pub data: Option<Todo>,
 }
 
-#[derive(Table, Clone, Default, Serialize, Deserialize)]
+#[derive(Table, Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 struct Todo {
-    #[serde(default = "Uuid::new_v4")]
+    #[serde(default = "Uuid::now_v7")]
     pub id: Uuid,
     #[serde(default)]
     pub owner: Uuid,
@@ -34,16 +34,16 @@ fn main() {
 }
 
 impl Todo {
-    fn render(&self, user: &Option<User>) -> Markup {
+    fn render_for(&self, user: &Option<User>) -> Markup {
         let owned = match user {
             Some(user) => user.id == self.owner,
             None => false,
         };
         html! {
-            ."flex items-center" sse-swap=(self.id) hx-swap="outerHTML" hx-vals=(json!(self)) {
-                input."toggle toggle-primary" type="checkbox" hx-patch="/todos" disabled[!owned] checked[self.done] {}
-                label."ml-4 text-lg" {(self.task)}
-                button."btn btn-ghost ml-auto"  hx-delete="/todos" disabled[!owned] {"Delete"}
+            $"flex items-center" sse-swap=(self.id) hx-swap="outerHTML" hx-vals=(json!(self)) {
+                input type="checkbox" hx-patch="/todos" disabled[!owned] checked[self.done] {}
+                label $"ml-4 text-lg" {(self.task)}
+                button $"ml-auto" hx-delete="/todos" disabled[!owned] {"Delete"}
             }
         }
     }
@@ -53,23 +53,23 @@ async fn todos(auth: Auth) -> Markup {
     html!(
         @if auth.user.is_some() {
             form hx-put="/todos" hx-swap="none" hx-on--after-request="this.reset()" {
-                input."input input-bordered input-primary" type="text" name="task" {}
-                button."btn btn-outline btn-primary ml-4" type="submit" {"Add"}
+                input $"border rounded-md" type="text" name="task" {}
+                button $"ml-4" type="submit" {"Add"}
             }
         } @else {
             @if *WITH_GOOGLE_AUTH {
-                a."btn btn-ghost" href=(GOOGLE_LOGIN_ROUTE) {"Login with Google"}
-                ."divider" {"OR"}
+                a $"p-4 border rounded-md" href=(GOOGLE_LOGIN_ROUTE) {"Login with Google"}
+                div {"OR"}
             }
-            form."flex flex-col gap-4 items-center" method="POST" action=(LOGIN_ROUTE) {
-                input."input input-bordered input-primary" type="text" name="username" placeholder="username" {}
-                input."input input-bordered input-primary" type="password" name="password" placeholder="password" {}
+            form $"flex flex-col gap-4 items-center" method="POST" action=(LOGIN_ROUTE) {
+                input $"border rounded-md mx-4" type="text" name="username" placeholder="username" {}
+                input $"border rounded-md mx-4" type="password" name="password" placeholder="password" {}
                 input type="hidden" name="signup" value="true" {}
-                button."btn btn-outline btn-primary ml-4" type="submit" {"Sign in / Sign up"}
+                button $"ml-4" type="submit" {"Sign in / Sign up"}
             }
         }
-        #"todos" ."w-full" hx-ext="sse" sse-connect="/todos/subscribe" sse-swap="add" hx-swap="beforeend" {
-            @for item in Todo::find_all() {(item.render(&auth.user))}
+        #"todos" $"w-full" hx-ext="sse" sse-connect="/todos/subscribe" sse-swap="add" hx-swap="beforeend" {
+            @for item in Todo::find_all() {(item.render_for(&auth.user))}
         }
     )
 }
@@ -77,7 +77,7 @@ async fn todos(auth: Auth) -> Markup {
 async fn todos_subscribe(auth: Auth) -> Sse<impl Stream<Item = SseItem>> {
     let stream = BROADCAST.1.new_receiver().map(move |msg| {
         let data = match msg.data {
-            Some(todo) => todo.render(&auth.user).0,
+            Some(todo) => todo.render_for(&auth.user).0,
             None => "".to_owned(),
         };
         SseEvent::default().event(msg.event.as_str()).data(data)
@@ -114,7 +114,7 @@ async fn toggle(user: User, Form(mut todo): Form<Todo>) -> Result {
         .map_err(|e| anyhow!("{e}"))?;
     Ok(())
 }
-async fn delete(user: User, Form(todo): Form<Todo>) -> Result {
+async fn delete(user: User, Query(todo): Query<Todo>) -> Result {
     if !todo.check_owner(user.id)? {
         return Err(Error::Unauthorized);
     }

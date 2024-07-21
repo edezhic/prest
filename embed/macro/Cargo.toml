@@ -17,6 +17,3 @@ quote = "1"
 proc-macro2 = "1"
 walkdir = "2.3.1"
 shellexpand = "3"
-
-[features]
-lazy-embed = []

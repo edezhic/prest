@@ -18,7 +18,7 @@ struct Todo {
 }
 
 fn new_uuid() -> String {
-    Uuid::new_v4().to_string()
+    Uuid::now_v7().to_string()
 }
 
 fn main() {
@@ -68,24 +68,23 @@ async fn delete_todo(Form(todo): Form<Todo>) {
 impl Render for Todo {
     fn render(&self) -> Markup {
         html! {
-            ."flex  items-center" hx-target="this" hx-swap="outerHTML" hx-vals=(json!(self)) {
-                input."toggle toggle-primary" type="checkbox" hx-patch="/" checked[self.done] {}
-                label."ml-4 text-lg" {(self.task)}
-                button."btn btn-ghost ml-auto" hx-delete="/" {"Delete"}
+            $"flex items-center" hx-target="this" hx-swap="outerHTML" hx-vals=(json!(self)) {
+                input type="checkbox" hx-patch="/" checked[self.done] {}
+                label $"ml-4 text-lg" {(self.task)}
+                button $"ml-auto" hx-delete="/" {"Delete"}
             }
         }
     }
 }
 
 async fn page(content: Markup) -> Markup {
-    html! { html data-theme="dark" {
-        (Head::with_title("With SQLx SQLite"))
-        body."max-w-screen-sm mx-auto mt-12" {
-            form."flex gap-4 justify-center" hx-put="/" hx-target="div" hx-swap="beforeend" hx-on--after-request="this.reset()" {
-                input."input input-bordered input-primary" type="text" name="task" {}
-                button."btn btn-outline btn-primary" type="submit" {"Add"}
+    html! { html { (Head::with_title("With SQLx SQLite"))
+        body $"max-w-screen-sm mx-auto mt-12" {
+            form $"flex gap-4 justify-center" hx-put="/" hx-target="#list" hx-swap="beforeend" hx-on--after-request="this.reset()" {
+                input $"border rounded-md" type="text" name="task" {}
+                button type="submit" {"Add"}
             }
-            ."w-full" {(content)}
+            #"list" $"w-full" {(content)}
             (Scripts::default())
         }
     }}

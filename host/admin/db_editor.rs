@@ -48,14 +48,14 @@ pub(crate) fn db_routes() -> Router {
                 }
                 rows.push(html!(tr #(key_selector) ."relative" { 
                     @for cell in cells {(cell)}
-                    td."flex justify-around items-center" {
+                    td $"flex justify-around items-center" {
                         button hx-post=(table.path()) hx-swap="none" hx-include=(inputs_classname) type="submit" {"Save"}
                         button hx-delete=(table.path()) hx-swap="outerHtml" hx-target=(format!("#{key_selector}")) hx-include=(inputs_classname) type="submit" {"Delete"}   
                     }
                 }))
             }
             html!(
-                table."w-full" {
+                table $"w-full" {
                     @let headers = table.schema().iter().filter(|c| !c.key).map(|c| c.name);
                     @for header in headers {th {(header)}} th{"Actions"}
                     @for row in rows {(row)}

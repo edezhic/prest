@@ -33,15 +33,11 @@ async fn page(content: Markup) -> Markup {
 
                 $"flex justify-end" {
                     @if is_pwa() {
-                        $"mr-4" hx-get="/sw/health" hx-target="this" hx-trigger="load delay:3s" hx-swap="none"
-                            hx-on--after-request="
-                                const b = document.querySelector('#sw-badge'); 
-                                const s = event.detail.successful ? 'badge-success' : 'badge-error'; 
-                                b.classList.replace('badge-warning', s)" 
-                            { // replace with smth else
-                            #"sw-badge" {}
-                            $"font-bold" {"SW"}
-                        }
+                        #"sw-badge" $"mr-6 font-bold text-sm" hx-get="/sw/health" hx-target="this" hx-trigger="every 3s delay:3s" hx-swap="none" 
+                        _="on htmx:afterRequest
+                            if event.detail.successful set #sw-badge.style.color to '#059669'
+                            else set #sw-badge.style.color to '#991b1b'"
+                        {"SW"}
                     }
 
                     $"hover:text-white" _="on click add .open to #menu halt" {
@@ -51,9 +47,11 @@ async fn page(content: Markup) -> Markup {
                     }
 
                     #"menu" $"absolute bg-stone-950 z-10 top-8 px-4 truncate shadow-xl rounded-xl w-52" {
-                        style {"#menu { max-height: 0px } #menu.open { max-height: 1000px } 
-                                #menu a { display: flex; align-items: center; padding: 0.25rem 0 0.25rem 0.5rem; border-radius: 1rem; }
-                                #menu a:hover { background-color: #292524 }"}
+                        style {"
+                            #menu { max-height: 0px } #menu.open { max-height: 1000px } 
+                            #menu a { display: flex; align-items: center; padding: 0.25rem 0 0.25rem 0.5rem; border-radius: 1rem; }
+                            #menu a:hover { background-color: #292524 }
+                        "}
                         $"py-4 flex flex-col gap-2 text-xs" {
                             a href="/rust" {"about rust"}
                             a href="/internals" {"internals"}
@@ -72,7 +70,7 @@ async fn page(content: Markup) -> Markup {
             style {r#"
                 main a { text-decoration: underline } 
                 main h3 { font-size: 2em } 
-                main ul { list-style: circle }
+                main ul, main ol { list-style: circle }
                 code { font-size: 13px !important }
                 "#}
 

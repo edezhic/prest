@@ -1,7 +1,7 @@
 [package]
 name = "prest"
 description = "Progressive RESTful framework"
-version = "0.3.1"
+version = "0.4.0"
 edition = "2021"
 resolver = "2" 
 license = "MIT OR Apache-2.0"
@@ -22,15 +22,15 @@ members = [
     "embed/macro", 
     "embed/utils", 
     "serde_derive_fork",
-    #"examples/databases/*", 
+    "examples/databases/*", 
     "examples/blog", 
-    #"examples/llm-mistral", 
-    #"examples/scraper", 
-    #"examples/smart-contract", 
+    "examples/llm-mistral", 
+    "examples/scraper", 
+    "examples/smart-contract", 
     "examples/todo", 
-    #"examples/todo-pwa", 
-    #"examples/todo-pwa-auth",
-    #"examples/todo-pwa-auth-sync"
+    "examples/todo-pwa", 
+    "examples/todo-pwa-auth",
+    "examples/todo-pwa-auth-sync"
 ]
 
 [features]
@@ -40,7 +40,6 @@ db = ["gluesql", "prest-db-macro"]
 embed = ["prest-embed-macro", "prest-embed-utils", "hex"]
 html = ["prest-html-macro"]
 traces = ["tracing-subscriber", "tracing-web", "tower-http/trace", "axum/tracing", "ansi-to-html"]
-lazy-embed = ["embed", "prest-embed-macro/lazy-embed", "prest-embed-utils/lazy-embed"]
 webview = ["wry", "tao"]
 validator = ["axum-valid/full_validator"]
 validify = ["axum-valid/full_validify"]
@@ -80,7 +79,7 @@ tokio = { version = "1", features = ["rt", "rt-multi-thread", "net", "sync"] }
 tower-http = { version = "0.5.1", features = ["catch-panic", "compression-br", "limit", "normalize-path"] }
 dotenvy = "0.15"
 tower-livereload = "0.9.1"
-uuid = { version = "1.6", features = ["v4", "serde"] }
+uuid = { version = "1.6", features = ["v4", "v7", "serde"] }
 axum-server = { version = "0.6", features = ["tls-rustls"] }
 gluesql = { version = "0.15", default-features = false, features = ["sled-storage", "shared-memory-storage"], optional = true }
 tracing-subscriber = { version = "0.3.18", features = ["fmt", "chrono", "env-filter"], optional = true } 

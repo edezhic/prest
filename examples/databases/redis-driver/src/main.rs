@@ -61,7 +61,7 @@ fn get_todos() -> Vec<(String, Todo)> {
 
 fn add_todo(task: String) {
     let mut con = CLIENT.get_connection().unwrap();
-    let uuid = uuid::Uuid::new_v4().to_string();
+    let uuid = Uuid::now_v7().to_string();
     con.hset_nx(
         "todos",
         uuid,
@@ -98,22 +98,21 @@ fn render_item(uuid: String, todo: Todo) -> Markup {
             }
             form hx-delete="/" style="margin-bottom: 0px;" {
                 input type="hidden" name="uuid" value={(uuid)} {}
-                input."secondary outline" type="submit" value="Delete" style="margin-bottom: 0px;" {}
+                input type="submit" value="Delete" style="margin-bottom: 0px;" {}
             }
         }
     )
 }
 
 async fn page(content: Markup) -> Markup {
-    html! { html data-theme="dark" {
-        (Head::with_title("With Redis"))
-        body."container" hx-target="div" style="margin-top: 16px;" {
+    html! { html { (Head::with_title("With Redis"))
+        body $"container" hx-target="div" style="margin-top: 16px;" {
             form hx-put="/" hx-on--after-request="this.reset()" {
                 label for="task" {"Task description:"}
                 input type="text" name="task" {}
                 button type="submit" {"Add"}
             }
-            ."w-full" {(content)}
+            $"w-full" {(content)}
             (Scripts::default())
         }
     }}

@@ -68,7 +68,7 @@ impl DeploymentUtils for std::sync::RwLock<DeploymentState> {
         };
 
         html!(
-            button."btn btn-ghost" hx-get="/admin/deploy" hx-target="this" hx-swap="outerHTML" hx-trigger=(trigger) disabled[running]
+            button hx-get="/admin/deploy" hx-target="this" hx-swap="outerHTML" hx-trigger=(trigger) disabled[running]
                 {(msg) @if running {span."loading loading-dots loading-xs"{}}}
         )
     }

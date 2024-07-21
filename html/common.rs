@@ -151,7 +151,7 @@ impl<'a> Render for Scripts<'a> {
         #[cfg(debug_assertions)]
         let htmx_src = "https://unpkg.com/htmx.org@2.0.0/dist/htmx.js";
         #[cfg(not(debug_assertions))]
-        let htmx_src = "https://unpkg.com/htmx.org@2.0.0/dist/htmx.min.js.gz";
+        let htmx_src = "https://unpkg.com/htmx.org@2.0.0/dist/htmx.min.js";
 
         html!(
             @if is_pwa() { script {(REGISTER_SW_SNIPPET)} }

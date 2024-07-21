@@ -13,6 +13,3 @@ walkdir = "2.3.1"
 sha2 = "0.10.5"
 mime_guess = "2.0.4"
 globset = "0.4.8"
-
-[features]
-lazy-embed = []

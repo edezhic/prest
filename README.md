@@ -20,7 +20,7 @@ fn main() {
 route("/", get("Hello world")).run()
 ```
 
-**UI** - `html!` macro for rust'y templating, easy inline styling with tailwind classes, simple client-server interactions with htmx. Smooth UX with very little JS:
+**UI** - `html!` macro for rust'y templating, easy inline styling with built-in [tailwind](https://tailwindcss.com) classes, simple client-server interactions with [htmx](https://htmx.org), unlimited flexibility with [hyperscript](https://hyperscript.org). Smooth UX without separate front-end stacks:
 
 ```rust
 html!{ 
@@ -77,7 +77,7 @@ route("/optional", get(|auth: Auth| async {"auth.user is Option<User>"}))
 To enable it you'll need the `auth` feature of prest:
 
 ```toml
-prest = { version = "0.3", features = ["auth"] }
+prest = { version = "0.4", features = ["auth"] }
 ```
 
 Note that currently without this feature panel will be public, so you can take a look in the [blog's](https://prest.blog/admin).
@@ -131,7 +131,7 @@ By default it will only run full PWA build in the `--release` mode to avoid slow
 **Native** - running host functionality with a webview for offline-first apps. Somewhat like Electron but with much smaller and faster binaries. Based on the same libraries as Tauri but for rust-first apps. To build for desktops just enable webview feature like this:
 
 ```toml
-prest = { version = "0.3", features = ["webview"] }
+prest = { version = "0.4", features = ["webview"] }
 ```
 
 But for mobile platforms you'll need to do [some work](https://github.com/tauri-apps/wry/blob/dev/MOBILE.md) as of now.
@@ -180,7 +180,6 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ update admin and examples' styles, describe tailwind classes usage in docs
 + add something storybook-like?
 + rewrite scraping and blockchain examples
 + sql escaping?

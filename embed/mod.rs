@@ -104,12 +104,12 @@ macro_rules! embed_as {
 #[doc(hidden)]
 pub enum __Filenames {
     /// Release builds use a named iterator type, which can be stack-allocated.
-    #[cfg(any(not(debug_assertions), feature = "lazy-embed"))]
+    #[cfg(any(not(debug_assertions), target_arch = "wasm32"))]
     Embedded(std::slice::Iter<'static, &'static str>),
 
     /// The debug iterator type is currently unnameable and still needs to be
     /// boxed.
-    #[cfg(all(debug_assertions, not(feature = "lazy-embed")))]
+    #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
     Dynamic(Box<dyn Iterator<Item = Cow<'static, str>>>),
 }
 
@@ -117,10 +117,10 @@ impl Iterator for __Filenames {
     type Item = Cow<'static, str>;
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            #[cfg(any(not(debug_assertions), feature = "lazy-embed"))]
+            #[cfg(any(not(debug_assertions), target_arch = "wasm32"))]
             __Filenames::Embedded(names) => names.next().map(|x| Cow::from(*x)),
 
-            #[cfg(all(debug_assertions, not(feature = "lazy-embed")))]
+            #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
             __Filenames::Dynamic(boxed) => boxed.next(),
         }
     }

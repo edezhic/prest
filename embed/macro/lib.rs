@@ -49,14 +49,8 @@ fn embedded(
 
     let array_len = list_values.len();
 
-    // If lazy-embed is on, unconditionally include the code below. Otherwise,
-    // make it conditional on cfg(not(debug_assertions)).
-    let not_debug_attr = if cfg!(feature = "lazy-embed") {
-        quote! {}
-    } else {
-        quote! { #[cfg(not(debug_assertions))]}
-    };
-
+    let not_debug_attr = quote! { #[cfg(any(not(debug_assertions), target_arch = "wasm32"))]};
+    
     let handle_prefix = if let Some(prefix) = prefix {
         quote! {
           let file_path = file_path.strip_prefix(#prefix)?;
@@ -144,7 +138,7 @@ fn dynamic(
         .expect("absolute folder path must be valid unicode");
 
     quote! {
-        #[cfg(debug_assertions)]
+        #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
         impl #ident {
             /// Get an embedded file and its metadata.
             pub fn get(file_path: &str) -> Option<prest::EmbeddedFile> {
@@ -182,7 +176,7 @@ fn dynamic(
             }
         }
 
-        #[cfg(debug_assertions)]
+        #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
         impl prest::Embed for #ident {
           fn get(file_path: &str) -> Option<prest::EmbeddedFile> {
             #ident::get(file_path)
@@ -211,9 +205,6 @@ fn generate_assets(
         &includes,
         &excludes,
     );
-    if cfg!(feature = "lazy-embed") {
-        return embedded_impl;
-    }
     let embedded_impl = embedded_impl?;
     let dynamic_impl = dynamic(
         ident,

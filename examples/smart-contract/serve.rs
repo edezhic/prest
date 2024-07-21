@@ -45,7 +45,7 @@ async fn home() -> Markup {
     let contract_ready = CONTRACT_ADDR.lock().await.is_some();
     html!(
         @if tooling_ready {
-            ."grid" {
+            $"grid" {
                 button hx-get="/build" {"Build"}
                 button hx-get="/test" {"Run tests"}
             }
@@ -160,11 +160,9 @@ async fn flip() -> Markup {
 }
 
 async fn full_html(content: Markup) -> Markup {
-    html!(
-        html data-theme="dark" {
-            (Head::with_title("With Substrate Contract"))
+    html!( html { (Head::with_title("With Substrate Contract"))
             body {
-                main."container" hx-target="main" hx-swap="beforeend" {(content)}
+                main $"container" hx-target="main" hx-swap="beforeend" {(content)}
                 (Scripts::default())
             }
         }
