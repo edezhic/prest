@@ -107,7 +107,6 @@ pub fn main() {
 ```
 
 ```toml
-...
 wasm-bindgen = "0.2"
 [build-dependencies]
 prest-build = "0.3"
