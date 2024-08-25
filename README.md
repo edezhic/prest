@@ -180,6 +180,7 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
 + upgrade scraping and polkadot examples, maybe also the llm example
++ web3 and more interactive frontend tools
 + sql escaping?
 
 There are also longer term things which will be needed or nice to have before the release of prest:
