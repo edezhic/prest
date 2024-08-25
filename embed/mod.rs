@@ -62,7 +62,7 @@ fn file_handler<T: Embed + ?Sized>(path: &str, headers: HeaderMap) -> Response {
     if path == "sw.js" || path == "sw.wasm" {
         response = response.header(
             header::CACHE_CONTROL,
-            "max-age=3600, stale-while-revalidate=86400, stale-if-error=604800",
+            "max-age=60, stale-while-revalidate=3600, stale-if-error=604800",
         );
     }
 

@@ -10,6 +10,9 @@ struct Prompt {
 }
 
 fn main() {
+    info!("Initializing LLM...");
+    let _ = *LLM;
+
     route("/", get(page))
         .route(
             "/prompt",
@@ -37,9 +40,7 @@ fn main() {
             "/reset",
             get(|| async {
                 let mut llm = LLM.lock().await;
-                std::thread::spawn(move || {
-                    *llm = llm::init().unwrap();
-                });
+                *llm = llm::init().unwrap();
                 Redirect::to("/")
             }),
         )
@@ -47,22 +48,9 @@ fn main() {
 }
 
 async fn page() -> Markup {
-    let ready = if let Some(llm) = Lazy::get(&LLM) {
-        llm.try_lock().is_ok()
-    } else {
-        std::thread::spawn(|| {
-            Lazy::force(&LLM);
-        });
-        false
-    };
     html!( html { (Head::with_title("With Mistral LLM"))
-        body $"max-w-screen-sm mx-auto mt-8" {
-            @if ready {
-                div {(history(false).await)}
-            } @else {
-                div hx-get="/" hx-target="body" hx-trigger="load delay:1s"{}
-                span {"loading..."}
-            }
+        body $"max-w-screen-sm mx-auto mt-8" { 
+            div {(history(false).await)}
             (Scripts::default())
         }
     })

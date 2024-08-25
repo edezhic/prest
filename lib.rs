@@ -36,7 +36,7 @@ pub use futures::{
     executor::block_on as await_fut,
     stream::{self, Stream, StreamExt, TryStreamExt},
 };
-pub use once_cell::sync::Lazy;
+pub use std::sync::LazyLock as Lazy;
 pub use serde_json::{json, to_string as to_json_string, from_str as from_json_str};
 pub use std::{convert::Infallible, env, sync::Arc};
 pub use toml::{Table as TomlTable, Value as TomlValue};

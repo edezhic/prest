@@ -1,0 +1,42 @@
+[workspace]
+members = ["."]
+resolver = "2" 
+
+[package]
+name = "todo-solana"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[target.'cfg(target_os = "solana")'.dependencies]
+anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }
+
+[target.'cfg(not(target_os = "solana"))'.dependencies]
+anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }
+anchor-client = { version = "0.30.1", features = ["async"] }
+prest = { path = "../../", version = "0.4" }
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+[profile.release.build-override]
+opt-level = 3
+incremental = false
+codegen-units = 1
+
+# until https://github.com/coral-xyz/anchor/pull/3057 is released
+[patch.crates-io.anchor-client]
+git = "https://github.com/coral-xyz/anchor.git"
+rev = "f677742a978ffdf7bc321746b4119394f6654b7c"
+[patch.crates-io.anchor-lang]
+git = "https://github.com/coral-xyz/anchor.git"
+rev = "f677742a978ffdf7bc321746b4119394f6654b7c"
+
+# dependencies conflicts, should be resolved with solana-program v2
+[patch.crates-io.curve25519-dalek]
+git = "https://github.com/solana-labs/curve25519-dalek.git"
+rev = "b500cdc2a920cd5bff9e2dd974d7b97349d61464"
+[patch.crates-io.aes-gcm-siv]
+git = "https://github.com/edezhic/AEADs"

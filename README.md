@@ -1,6 +1,6 @@
 # prest
 
-**P**rogressive **REST**ful framework that _makes application development simple again_. Even if you are not familiar with Rust yet you might be interested because it's designed to be as beginner-friendly as possible - **prest allows building full-stack cross-platform apps for the development cost of writing HTML**. Tutorials are available in the [blog](https://prest.blog/) which is also built with prest. Beware that its still alpha so can be recommended only for pet projects and training because many breaking changes are expected. 
+**P**rogressive **REST**ful framework that _makes application development simple again_. Even if you are not familiar with Rust yet you might be interested because it's designed to be as beginner-friendly as possible. Tutorials are available in the [blog](https://prest.blog/) which is also built with prest. Beware that its still alpha so can be recommended only for pet projects and training because many breaking changes are expected. 
 
 It ain't easy to compete with Laravel, Rails, Nextjs and many others, but I always wanted a framework which enables simplicity in common development needs and allows **any** customizations/optimizations without switching languages. Rust provides ways to build servers, clients, AIs, blockchains, OS kernels and whatever else you might need, while also being arguably the most [reliable practical language](https://prest.blog/rust). Thanks to a lot of [amazing dependencies](https://prest.blog/internals) under the hood prest already provides a whole bunch of features:
 
@@ -179,9 +179,7 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ more interactive example, maybe comments in the blog or w/e
-+ some built-in UI components/styles for spinners and other common pieces
-+ upgrade scraping and blockchain examples, maybe also the llm example
++ upgrade scraping and polkadot examples, maybe also the llm example
 + sql escaping?
 
 There are also longer term things which will be needed or nice to have before the release of prest:
