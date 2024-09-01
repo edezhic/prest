@@ -50,9 +50,15 @@ init!(tables Todo/*, OtherTable, ... */)
 Todo::find_all()
 Todo::find_by_task("Buy milk")
 Todo::select().filter(col("done").eq(true)).order_by("task").values()
+...
+let todo = Todo {
+    id: Uuid::now_v7(),
+    task: "Buy bread".to_owned(),
+    done: false,
+};
 todo.save()
 todo.update_task("Buy milk and bread")
-todo.check_task("Buy milk and bread")
+assert!(todo.check_task("Buy milk and bread"))
 todo.remove()
 ```
 
@@ -70,8 +76,8 @@ html!{
     a href=(GOOGLE_LOGIN_ROUTE) {"Login with Google"}
 }
 ...
-route("/authorized-only", get(|user: User| async {"Hello world"}))
-route("/optional", get(|auth: Auth| async {"auth.user is Option<User>"}))
+route("/authorized-only", get(|user: User| async {"Hello world"}));
+route("/optional", get(|auth: Auth| async {"auth.user is Option<User>"}));
 ```
 
 To enable it you'll need the `auth` feature of prest:
@@ -139,8 +145,8 @@ But for mobile platforms you'll need to do [some work](https://github.com/tauri-
 
 ```rust
 // paths relative to the build script
-bundle_sass("path to main css/scss/sass file")
-bundle_ts("path to main ts/js file")
+bundle_sass("path to main css/scss/sass file");
+bundle_ts("path to main ts/js file");
 ```
 
 And their compiled versions can be embedded with `embed_build_output_as!` just like PWA assets. Also, there is a similar and more flexible macro `embed_as!` which can be used with arbitrary folders and files, and this macro is designed to read files from the drive as needed in debug builds to avoid slowing down compilation, but in release builds it will embed their contents into the binary and you'll get 1 file with your whole app in it for convenience and faster reading. These macros generate rust structures which provide access for files' contents and metadata like blog is processing to render docs:
@@ -179,7 +185,7 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ upgrade scraping and polkadot examples, maybe also the llm example
++ upgrade polkadot, scraping and LLM examples
 + web3 and more interactive frontend tools
 + sql escaping?
 

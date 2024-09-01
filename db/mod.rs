@@ -1,4 +1,5 @@
 use crate::*;
+use futures::stream::iter;
 pub use gluesql::{
     core::ast_builder::{col, table},
     prelude::{Payload, Value as DbValue},
@@ -16,8 +17,8 @@ use gluesql::{
             RowIter, Store, StoreMut, Transaction,
         },
     },
+    gluesql_memory_storage::MemoryStorage, // as MemoryStorage,
     prelude::Glue,
-    shared_memory_storage::SharedMemoryStorage as MemoryStorage,
 };
 
 type GResult<T> = std::result::Result<T, GlueError>;
@@ -64,10 +65,10 @@ impl DbAccess for std::sync::OnceLock<Db> {
             }
             #[cfg(sw)]
             {
-                Persistent(MemoryStorage::new())
+                Persistent(MemoryStorage::default())
             }
         } else {
-            Memory(MemoryStorage::new())
+            Memory(MemoryStorage::default())
         };
 
         self.get_or_init(|| db);
@@ -222,7 +223,7 @@ pub trait Table: Sized {
         table(Self::TABLE_NAME).delete()
     }
 
-    fn update() -> UpdateNode<'static> {
+    fn update() -> UpdateNode {
         table(Self::TABLE_NAME).update()
     }
 
@@ -243,9 +244,9 @@ pub trait Table: Sized {
         }
     }
 
-    fn update_by_key(key: &Self::Key) -> UpdateNode<'static> {
-        Self::update().filter(Self::key_filter(key))
-    }
+    // fn update_by_key(key: &Self::Key) -> UpdateFilterNode<'static> {
+    //     Self::update().filter(Self::key_filter(key))
+    // }
 
     fn delete_by_key(key: &Self::Key) -> Result {
         let payload = Self::delete().filter(Self::key_filter(key)).exec()?;
@@ -285,7 +286,7 @@ impl Store for Db {
 
     async fn scan_data(&self, table_name: &str) -> GResult<RowIter> {
         match self {
-            Memory(s) => s.scan_data(table_name).await,
+            Memory(s) => Ok(Box::pin(iter(s.scan_data(table_name).into_iter().map(Ok)))),
             Persistent(s) => s.scan_data(table_name).await,
         }
     }

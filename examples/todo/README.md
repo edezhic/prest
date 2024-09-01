@@ -16,10 +16,10 @@ Then there is a manual implementation of the `Render` trait which will allow us 
 
 {src/main.rs:12-22}
 
-Since this is a quite unusal templating solution and used together with [HTMX](https://htmx.org/), [Tailwind](https://tailwindcss.com/) and [DaisyUI](https://daisyui.com/) let's go through it a bit:
+Since this is a quite unusal templating solution and used together with [HTMX](https://htmx.org/) and built-in [Tailwind](https://tailwindcss.com/) classes let's go through it a bit:
 
 1. if the tag is not specified, like the parent tag of a todo, then it's rendered as a `div`
-2. `."..."` is a shorthand for the `class` html attribute which contains tailwind/daisyui styles 
+2. `$"..."` works somewhat like class html attribute in tailwind but `html!` macro converts them into embedded css
 3. `hx-target="this"` sets htmx to swap this element on requests from it or it's children
 4. `hx-swap="outerHTML"` sets htmx to swap the whole element (by default it swaps it's children)
 5. `hx-vals=(json!(self))` adds json-serialized todo fields which htmx will form-encode and send with requests

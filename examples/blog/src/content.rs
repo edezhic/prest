@@ -1,9 +1,9 @@
 use prest::*;
 
-state!(README: String = { 
+state!(README: String = {
     let src = include_str!("../../../README.md");
     let homepage = src.trim_start_matches("# prest").trim_start();
-    md_to_html(homepage) 
+    md_to_html(homepage)
 });
 state!(INTERNALS: String = {
     let md = include_str!("../../../UNDER_THE_HOOD.md").to_owned();

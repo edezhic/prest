@@ -421,7 +421,7 @@ impl AuthzBackend for Db {
 
 #[derive(Table, Debug, Serialize, Deserialize)]
 pub struct SessionRow {
-    pub id: Uuid,
+    pub id: i128,
     pub record: String,
 }
 

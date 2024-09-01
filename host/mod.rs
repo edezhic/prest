@@ -48,7 +48,7 @@ pub use tokio::{
 pub type SseItem = Result<SseEvent, Infallible>;
 
 #[cfg(feature = "db")]
-pub(crate) use gluesql::sled_storage::SledStorage as PersistentStorage;
+pub(crate) use gluesql::gluesql_sled_storage::SledStorage as PersistentStorage;
 
 use std::sync::atomic::AtomicUsize;
 pub struct PrestRuntime {

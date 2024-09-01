@@ -33,7 +33,7 @@ async fn page(content: Markup) -> Markup {
 
                 $"flex justify-end" {
                     @if is_pwa() {
-                        #"sw-badge" $"mr-6 font-bold text-sm" hx-get="/sw/health" hx-target="this" hx-trigger="every 3s delay:3s" hx-swap="none" 
+                        #"sw-badge" $"mr-6 font-bold text-sm" hx-get="/sw/health" hx-target="this" hx-trigger="every 3s delay:3s" hx-swap="none"
                         _="on htmx:afterRequest
                             if event.detail.successful set #sw-badge.style.color to '#059669'
                             else set #sw-badge.style.color to '#991b1b'"

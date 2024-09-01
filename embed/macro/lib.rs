@@ -50,7 +50,7 @@ fn embedded(
     let array_len = list_values.len();
 
     let not_debug_attr = quote! { #[cfg(any(not(debug_assertions), target_arch = "wasm32"))]};
-    
+
     let handle_prefix = if let Some(prefix) = prefix {
         quote! {
           let file_path = file_path.strip_prefix(#prefix)?;

@@ -31,7 +31,7 @@ pub(crate) async fn page() -> impl IntoResponse {
         n => format!("schedule is running {n} tasks"),
     };
 
-    let content = html! {(DOCTYPE) html $"bg-stone-800 font-sans text-[#bbc4d4]" _="on click remove .open from #menu" {        
+    let content = html! {(DOCTYPE) html $"bg-stone-800 font-sans text-[#bbc4d4]" _="on click remove .open from #menu" {
         (Head::with_title("Prest Admin"))
         body $"max-w-screen-md lg:max-w-screen-lg md:mx-auto" {
             nav $"bg-stone-900 my-4 p-5 shadow-lg rounded-full grid grid-cols-3 items-center" {
@@ -57,7 +57,7 @@ pub(crate) async fn page() -> impl IntoResponse {
                         "}
                         $"py-4 flex flex-col gap-2 text-xs" {
                             @if cfg!(feature = "auth") {
-                                a href="/admin/shutdown" hx-boost="true" hx-target="body" 
+                                a href="/admin/shutdown" hx-boost="true" hx-target="body"
                                     hx-confirm="Are you sure you wish to completely shut down the app?" {"Shutdown"}
                             }
                         }
@@ -88,7 +88,9 @@ pub(crate) async fn page() -> impl IntoResponse {
 }
 
 pub(crate) async fn logs() -> Markup {
-    let logs: Vec<_> = LOG.read_last_lines(30).into_iter()
+    let logs: Vec<_> = LOG
+        .read_last_lines(30)
+        .into_iter()
         .map(|log| PreEscaped(log))
         .collect();
 
@@ -100,7 +102,9 @@ pub(crate) async fn logs() -> Markup {
 }
 
 pub(crate) async fn debug_logs() -> Markup {
-    let logs: Vec<_> = DEBUG_LOG.read_last_lines(300).into_iter()
+    let logs: Vec<_> = DEBUG_LOG
+        .read_last_lines(300)
+        .into_iter()
         .map(|log| PreEscaped(log))
         .collect();
 

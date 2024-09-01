@@ -8,12 +8,17 @@ use tower_http::{
 use tracing::{Level, Span};
 pub use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::{
-    filter::Targets, fmt::{self, time::ChronoUtc}, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer
+    filter::Targets,
+    fmt::{self, time::ChronoUtc},
+    layer::SubscriberExt,
+    util::SubscriberInitExt,
+    EnvFilter, Layer,
 };
 
 use std::{
     fs::OpenOptions,
-    io::{BufRead, Write}, path::PathBuf,
+    io::{BufRead, Write},
+    path::PathBuf,
 };
 
 pub struct Log(PathBuf);
@@ -28,11 +33,9 @@ impl Log {
     }
 
     pub fn read_last_lines(&self, count: usize) -> Vec<String> {
-        let Ok(file) = OpenOptions::new()
-            .read(true)
-            .open(&self.0) else {
-                return vec![]
-            };
+        let Ok(file) = OpenOptions::new().read(true).open(&self.0) else {
+            return vec![];
+        };
         let buf = RevBufReader::new(file);
         buf.lines()
             .take(count)
@@ -149,23 +152,28 @@ fn debug_filter() -> Targets {
         .with_target("sqlparser::parser", Level::INFO)
         .with_target("prest::host::traces", Level::DEBUG) // hide requests to /admin/logs
         .with_default(LevelFilter::TRACE)
-        
 }
 
 /// Initializes log collection
 pub fn init_tracing_subscriber() {
-    let debug_layer = fmt::layer().map_writer(move |_| DebugLogger).with_filter(debug_filter());
-    
+    let debug_layer = fmt::layer()
+        .map_writer(move |_| DebugLogger)
+        .with_filter(debug_filter());
+
     let admin_layer = fmt::layer()
         .with_timer(ChronoUtc::new("%k:%M:%S".to_owned()))
         .map_writer(move |_| Logger)
         .with_filter(pretty_filter());
-    
+
     let shell_layer = fmt::layer()
         .with_timer(ChronoUtc::new("%k:%M:%S".to_owned()))
         .with_filter(pretty_filter());
 
-    tracing_subscriber::registry().with(debug_layer).with(admin_layer).with(shell_layer).init()
+    tracing_subscriber::registry()
+        .with(debug_layer)
+        .with(admin_layer)
+        .with(shell_layer)
+        .init()
 }
 
 pub fn trace_layer() -> TraceLayer<

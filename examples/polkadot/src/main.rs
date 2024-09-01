@@ -16,6 +16,7 @@ state!(NODE: Mutex<Child> = {
 state!(CONTRACT_ADDR: Mutex<Option<String>> = { Mutex::new(None) });
 
 fn main() {
+    init!();
     route("/", get(home))
         .route("/build", get(build))
         .route("/test", get(test))

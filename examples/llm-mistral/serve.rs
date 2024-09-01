@@ -49,7 +49,7 @@ fn main() {
 
 async fn page() -> Markup {
     html!( html { (Head::with_title("With Mistral LLM"))
-        body $"max-w-screen-sm mx-auto mt-8" { 
+        body $"max-w-screen-sm mx-auto mt-8" {
             div {(history(false).await)}
             (Scripts::default())
         }

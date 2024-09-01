@@ -1,10 +1,6 @@
 [package]
-name = "smart-contract"
+name = "polkadot"
 edition = "2021"
-
-[[bin]]
-name = "serve"
-path = "./serve.rs"
 
 [dependencies]
 prest = { path = "../../", version = "0.4" }

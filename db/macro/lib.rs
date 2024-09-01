@@ -252,7 +252,7 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
         quote! {
             pub fn #fn_name(&mut self, #name_ident: #field_type) -> prest::Result<&mut Self> {
                 self.#name_ident = #name_ident;
-                Self::update_by_key(self.get_key())
+                Self::update().filter(Self::key_filter(self.get_key()))
                     #set_column
                     .exec()?;
                 Ok(self)
@@ -290,7 +290,7 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
     let save_fn = quote!(
         fn save(&self) -> prest::Result<&Self> {
             if Self::#find_by_key(self.get_key()).is_some() {
-                Self::update_by_key(self.get_key())
+                Self::update().filter(Self::key_filter(self.get_key()))
                     #(#set_columns)*
                     .exec()?;
             } else {

@@ -1,5 +1,5 @@
 use diesel::{pg::Pg, prelude::*};
-use prest::{Uuid, Serialize, Deserialize};
+use prest::{Deserialize, Serialize, Uuid};
 
 #[derive(Queryable, Selectable, Insertable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::todos)]
