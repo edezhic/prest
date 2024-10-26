@@ -12,35 +12,6 @@ struct Todo {
     pub done: bool,
 }
 
-fn main() {
-    init!(tables Todo);
-    shared_routes()
-        .route(
-            "/todos",
-            get(todos)
-                .put(|Form(todo): Form<Todo>| async move { todo.save().unwrap().render() })
-                .patch(|Form(mut todo): Form<Todo>| async move {
-                    todo.update_done(!todo.done).unwrap().render()
-                })
-                .delete(|Form(todo): Form<Todo>| async move {
-                    todo.remove().unwrap();
-                }),
-        )
-        .wrap_non_htmx(into_page)
-        .embed(BuiltAssets)
-        .run();
-}
-
-async fn todos() -> Markup {
-    html!(
-        form hx-put="/todos" hx-target="#list" hx-swap="beforeend" hx-on--after-request="this.reset()" {
-            input $"border rounded-md" type="text" name="task" {}
-            button $"ml-4" type="submit" {"Add"}
-        }
-        #"list" $"w-full" {@for todo in Todo::find_all() {(todo)}}
-    )
-}
-
 impl Render for Todo {
     fn render(&self) -> Markup {
         html! {
@@ -51,4 +22,32 @@ impl Render for Todo {
             }
         }
     }
+}
+
+fn main() {
+    init!(tables Todo);
+    shared_routes()
+        .route(
+            "/todos",
+            get(|| async {
+                html!(
+                    form hx-put="/todos" hx-target="#list" hx-swap="beforeend" hx-on--after-request="this.reset()" {
+                        input $"border rounded-md" type="text" name="task" {}
+                        button $"ml-4" type="submit" {"Add"}
+                    }
+                    #"list" $"w-full" {@for todo in Todo::find_all() {(todo)}}
+                )
+            })
+                .put(|Form(todo): Form<Todo>| async move { ok(todo.save()?.render()) })
+                .patch(|Form(mut todo): Form<Todo>| async move {
+                    ok(todo.update_done(!todo.done)?.render())
+                })
+                .delete(|Form(todo): Form<Todo>| async move {
+                    todo.remove()?;
+                    OK
+                }),
+        )
+        .wrap_non_htmx(into_page)
+        .embed(BuiltAssets)
+        .run();
 }

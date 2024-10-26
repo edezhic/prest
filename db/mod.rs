@@ -233,7 +233,7 @@ pub trait Table: Sized {
 
     fn insert_self(&self) -> Result {
         Self::insert().values(vec![self.into_row()]).exec()?;
-        Ok(())
+        OK
     }
 
     fn find_by_key(key: &Self::Key) -> Option<Self> {
@@ -251,7 +251,7 @@ pub trait Table: Sized {
     fn delete_by_key(key: &Self::Key) -> Result {
         let payload = Self::delete().filter(Self::key_filter(key)).exec()?;
         match payload {
-            Payload::Delete(_) => Ok(()),
+            Payload::Delete(_) => OK,
             _ => return Err(anyhow!("Couldn't delete item with key = {key}").into()),
         }
     }

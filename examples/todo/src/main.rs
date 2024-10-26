@@ -39,12 +39,13 @@ fn main() {
     route(
         "/",
         get(|| async { html!(@for todo in Todo::find_all() {(todo)}) })
-            .put(|Form(todo): Form<Todo>| async move { todo.save().unwrap().render() })
+            .put(|Form(todo): Form<Todo>| async move { ok(todo.save()?.render()) })
             .patch(|Form(mut todo): Form<Todo>| async move {
-                todo.update_done(!todo.done).unwrap().render()
+                ok(todo.update_done(!todo.done)?.render())
             })
             .delete(|Form(todo): Form<Todo>| async move {
-                todo.remove().unwrap();
+                todo.remove()?;
+                OK
             }),
     )
     .wrap_non_htmx(into_page)

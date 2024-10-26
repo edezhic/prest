@@ -89,14 +89,14 @@ impl SshSession {
                 tokio::io::AsyncWriteExt::flush(&mut stdout).await?;
             }
         }
-        Ok(())
+        OK
     }
 
     pub async fn close(&mut self) -> Result {
         self.session
             .disconnect(Disconnect::ByApplication, "", "English")
             .await?;
-        Ok(())
+        OK
     }
 }
 

@@ -48,6 +48,13 @@ impl AppConfigAccess for std::sync::OnceLock<AppConfig> {
             None
         };
 
+        #[cfg(host)] 
+        {
+            let project_dirs = prest::ProjectDirs::from("", "", &name).unwrap();
+            let path = project_dirs.data_dir().to_path_buf();
+            std::fs::create_dir_all(path).unwrap();
+        }
+        
         self.get_or_init(|| AppConfig {
             name,
             version,

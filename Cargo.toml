@@ -26,7 +26,6 @@ members = [
     "examples/blog", 
     "examples/llm-mistral", 
     "examples/scraper", 
-    "examples/polkadot", 
     "examples/todo", 
     "examples/todo-pwa", 
     "examples/todo-pwa-auth",
@@ -52,7 +51,7 @@ prest-embed-utils = { path = "embed/utils", version = "0.1.0", optional = true }
 prest-db-macro = { path = "db/macro", version = "0.2.0", optional = true }
 prest-serde-derive-fork = { path = "serde_derive_fork", version = "1.0.203" }
 
-anyhow = "1.0.86"
+anyhow = "1.0.91"
 thiserror = "1.0.63"
 async-trait = "0.1.81"
 itoa = "1"
@@ -96,6 +95,7 @@ russh-keys = "0.44"
 russh-sftp = "2.0.0-beta.2"
 rustls-acme = { version = "0.11", features = ["axum"] }
 rev_buf_reader = "0.3.0"
+async-broadcast = "0.7.1"
 
 # service worker
 [target.'cfg(target_arch = "wasm32")'.dependencies]

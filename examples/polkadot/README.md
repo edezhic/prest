@@ -1,5 +1,3 @@
-Dummy example that includes an [ink!](https://use.ink/)-based contract for [Substrate](https://substrate.io/)-based blockchains like [Polkadot](https://www.polkadot.network/). As of now it just provides a UI that invokes shell commands on the host to do all the work.
+!Currently broken!
 
-{contract/lib.rs}
-
-{contract/Cargo.toml}
+This example is aimed to create a full-stack todo app with a built-in polkadot-based blockchain as a database. Such database can be easily customizable, contain logic written also in Rust, has strong consistency guarantees, easily replicable and optionally publicly verifiable. These features can be interesting for mission-critical data including finances etc. As of now even code copypasted from polkadot-sdk repo produces compilations errors and the amount of required apis for a minimal example is relatively huge so I've set it aside until things improve.

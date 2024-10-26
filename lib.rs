@@ -174,3 +174,8 @@ impl IntoResponse for Error {
         StatusCode::INTERNAL_SERVER_ERROR.into_response()
     }
 }
+
+pub const OK: Result<(), Error> = Result::Ok(());
+pub const fn ok<T: IntoResponse>(resp: T) -> Result<T, Error> {
+    Ok(resp)
+}

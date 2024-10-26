@@ -120,5 +120,5 @@ pub(crate) async fn remote_update(binary_path: &str) -> Result {
     info!("Started new {name} process");
     let _ = ssh.close().await;
     info!("Deployed {name} successfully");
-    Ok(())
+    OK
 }

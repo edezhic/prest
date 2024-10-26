@@ -70,7 +70,7 @@ pub(crate) fn build_linux_binary() -> Result<String> {
     }
 }
 
-fn prepare_docker_builder(target_dir: &str) -> Result<()> {
+fn prepare_docker_builder(target_dir: &str) -> Result {
     let dockerfile_path = &format!("{target_dir}/Dockerfile");
 
     if !std::process::Command::new("docker")
@@ -98,5 +98,5 @@ fn prepare_docker_builder(target_dir: &str) -> Result<()> {
             return Err(Error::Anyhow(anyhow!("Failed to build the linux binary")));
         }
     }
-    Ok(())
+    OK
 }

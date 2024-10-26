@@ -1,0 +1,52 @@
+[workspace]
+
+[package]
+name = "runtime"
+edition = "2021"
+
+[lib]
+path = "./lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["std"]
+std = [
+	"codec/std",
+	"polkadot-sdk/std",
+	"scale-info/std",
+    "frame-support/std",
+    "frame-system/std",
+	"serde_json/std",
+]
+
+[dependencies]
+polkadot-sdk = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", features = ["experimental",
+	"pallet-balances",
+	"pallet-sudo",
+	"pallet-timestamp",
+	"pallet-transaction-payment",
+	"pallet-transaction-payment-rpc-runtime-api",
+	"runtime",
+]}
+codec = { package = "parity-scale-codec", version = "3.6", features = ["derive"] }
+scale-info = { version = "2.11.1", default-features = false, features = ["derive"] }
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409" }
+frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409" }
+getrandom = { version = "0.2", features = ["js"] }
+serde_json = { version = "1", default-features = false, features = ["alloc"] }
+
+#frame-executive = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409" }
+#sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409" }
+#sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409" }
+#sp-api = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409" }
+#sp-version = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409" }
+#sp-block-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409" }
+##sp-transaction-pool = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409" }
+#sp-inherents = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409" }
+#pallet-transaction-payment = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+#pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", default-features = false }
+
+[build-dependencies]
+polkadot-sdk = { optional = true, git = "https://github.com/paritytech/polkadot-sdk.git", branch = "stable2409", features = [
+	"substrate-wasm-builder",
+] }

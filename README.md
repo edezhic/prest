@@ -2,7 +2,7 @@
 
 **P**rogressive **REST**ful framework that _makes application development simple again_. Even if you are not familiar with Rust yet you might be interested because it's designed to be as beginner-friendly as possible. Tutorials are available in the [blog](https://prest.blog/) which is also built with prest. Beware that its still alpha so can be recommended only for pet projects and training because many breaking changes are expected. 
 
-It ain't easy to compete with Laravel, Rails, Nextjs and many others, but I always wanted a framework which enables simplicity in common development needs and allows **any** customizations/optimizations without switching languages. Rust provides ways to build servers, clients, AIs, blockchains, OS kernels and whatever else you might need, while also being arguably the most [reliable practical language](https://prest.blog/rust). Thanks to a lot of [amazing dependencies](https://prest.blog/internals) under the hood prest already provides a whole bunch of features:
+It ain't easy to compete with Laravel, Rails, Nextjs and many others, but I always wanted a framework which enables simplicity in common development needs and allows **any** customizations/optimizations without switching languages. Rust provides ways to build servers, clients, AIs, blockchains, OS kernels and whatever else you might need, while also being arguably the most [reliable practical language](https://prest.blog/rust). Thanks to a lot of [amazing dependencies](https://prest.blog/internals) under the hood prest re-exports a comprehensive toolkit for development and provides a bunch of features on top of them for simplicity:
 
 **Easy start** - create a default rust project, add `prest` dependency, bulk `use` everything from it, invoke `init!` macro and add your app's logic. No massive boilerplate projects, no custom required CLI tools.
 
@@ -176,17 +176,17 @@ Prest tutorials are designed to start from basics and then add more and more fea
 1. [Todo](https://prest.blog/todo) = basic full-stack todo app in just about 50 lines of code
 2. [PWA](https://prest.blog/todo-pwa) = 1 + PWA capabilities and an offline view, ~80 LoC
 3. [Auth](https://prest.blog/todo-pwa-auth) = 2 + username+password and Google auth, ~110 LoC
-4. [Sync](https://prest.blog/todo-pwa-auth-sync) = 3 + synchronization between clients, ~160 LoC
+4. [Sync](https://prest.blog/todo-pwa-auth-sync) = 3 + synchronization between clients, ~130 LoC
 
-There are also todo examples with alternative databases - postgres through [seaorm](https://prest.blog/postgres-seaorm) or [diesel](https://prest.blog/postgres-diesel), sqlite through [sqlx](https://prest.blog/sqlite-sqlx) or [turbosql](https://prest.blog/sqlite-turbosql), [mongo](https://prest.blog/mongo-driver), [redis](https://prest.blog/redis-driver). Also, there is a couple of examples that showcase how one might use prest with uncommon for web development tech: [web scraper](https://prest.blog/scraper), [Large Language Model](https://prest.blog/llm-mistral), [Solana blockchain program](https://prest.blog/solana) and [Polkadot smart contract](https://prest.blog/polkadot).
+There are also todo examples with alternative databases - postgres through [seaorm](https://prest.blog/postgres-seaorm) or [diesel](https://prest.blog/postgres-diesel), sqlite through [sqlx](https://prest.blog/sqlite-sqlx) or [turbosql](https://prest.blog/sqlite-turbosql), [mongo](https://prest.blog/mongo-driver), [redis](https://prest.blog/redis-driver). Also, there is a couple of examples that showcase how one might use prest with uncommon for web development tech: [web scraper](https://prest.blog/scraper), [Large Language Model](https://prest.blog/llm-mistral) and [Solana blockchain program](https://prest.blog/solana).
 
 To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/). I also recommend setting up the [rust-analyzer](https://rust-analyzer.github.io/) for your favourite IDE right away. To build & start any example from the cloned prest repo use `cargo run -p EXAMPLE-NAME`. Or just copy the selected example's code from the tutorials into local files and `cargo run` it. Some examples require additional setup and credentials which are mentioned in their docs.
 
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ upgrade polkadot, scraping and LLM examples
-+ web3 and more interactive frontend tools
++ upgrade scraping and LLM(https://github.com/EricLBuehler/mistral.rs llama 3.2?) examples
++ web3 and more interactive frontend tools?
 + sql escaping?
 
 There are also longer term things which will be needed or nice to have before the release of prest:

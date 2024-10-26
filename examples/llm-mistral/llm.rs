@@ -76,7 +76,7 @@ impl Mistral {
         self.history += text;
         self.tokens.append(&mut self.encode(text)?);
         self.processed = self.tokens.len();
-        Ok(())
+        OK
     }
     pub fn more(&mut self) -> bool {
         let next_token = self.predict().unwrap();

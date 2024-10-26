@@ -51,7 +51,7 @@ pub async fn start(router: Router) -> Result<(), Error> {
             .serve(router.into_make_service_with_connect_info::<SocketAddr>())
             .await?;
     }
-    Ok(())
+    OK
 }
 
 fn check_port() -> u16 {
