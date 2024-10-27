@@ -8,7 +8,7 @@ async fn home() -> Markup {
     into_page(html!(
         a hx-get="/todos" hx-trigger="load" hx-swap="outerHTML" hx-push-url="true"
             hx-on--after-request="if (!event.detail.successful) { document.getElementById('error').style.display = 'flex'; this.remove() }" {}
-        div #"error" style="display: none;" {"Couldn't connect to the server :("}
+        div id="error" style="display: none;" {"Couldn't connect to the server :("}
     ))
     .await
 }

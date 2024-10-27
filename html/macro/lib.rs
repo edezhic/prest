@@ -17,7 +17,8 @@ use quote::quote;
 
 /// Compose HTML templates right inside of Rust code with ease.
 ///
-/// As of now it is identical to the original so check out the [maud book](https://maud.lambda.xyz/) for details
+/// As of now it is almost identical to the original so check out the [maud book](https://maud.lambda.xyz/) for details
+/// the only new feature is $"..." notation for styles based on tailwind classes
 #[proc_macro]
 #[proc_macro_error]
 pub fn html(input: proc_macro::TokenStream) -> proc_macro::TokenStream {

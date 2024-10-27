@@ -53,7 +53,7 @@ fn main() {
                             button $"ml-4" type="submit" {"Sign in / Sign up"}
                         }
                     }
-                    #"todos" $"w-full" hx-ext="sse" sse-connect="/todos/subscribe" sse-swap="add" hx-swap="beforeend" {
+                    div id="todos" $"w-full" hx-ext="sse" sse-connect="/todos/subscribe" sse-swap="add" hx-swap="beforeend" {
                         @for item in Todo::find_all() {(item.render_for(&auth.user))}
                     }
                 )

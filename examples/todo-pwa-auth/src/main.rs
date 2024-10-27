@@ -38,7 +38,7 @@ fn main() {
                             input $"border rounded-md" type="text" name="task" {}
                             button $"ml-4" type="submit" {"Add"}
                         }
-                        #"list" $"w-full" {@for todo in Todo::find_by_owner(&user.id) {(todo)}}
+                        div id="list" $"w-full" {@for todo in Todo::find_by_owner(&user.id) {(todo)}}
                     } @else {
                         @if *WITH_GOOGLE_AUTH {
                             a $"p-4 border rounded-md" href=(GOOGLE_LOGIN_ROUTE) {"Login with Google"}

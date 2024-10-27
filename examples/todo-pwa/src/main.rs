@@ -35,7 +35,7 @@ fn main() {
                         input $"border rounded-md" type="text" name="task" {}
                         button $"ml-4" type="submit" {"Add"}
                     }
-                    #"list" $"w-full" {@for todo in Todo::find_all() {(todo)}}
+                    div id="list" $"w-full" {@for todo in Todo::find_all() {(todo)}}
                 )
             })
                 .put(|Form(todo): Form<Todo>| async move { ok(todo.save()?.render()) })

@@ -33,7 +33,7 @@ async fn page(content: Markup) -> Markup {
 
                 $"flex justify-end" {
                     @if is_pwa() {
-                        #"sw-badge" $"mr-6 font-bold text-sm" hx-get="/sw/health" hx-target="this" hx-trigger="every 3s delay:3s" hx-swap="none"
+                        div id="sw-badge" $"mr-6 font-bold text-sm" hx-get="/sw/health" hx-target="this" hx-trigger="every 3s delay:3s" hx-swap="none"
                         _="on htmx:afterRequest
                             if event.detail.successful set #sw-badge.style.color to '#059669'
                             else set #sw-badge.style.color to '#991b1b'"
@@ -46,7 +46,7 @@ async fn page(content: Markup) -> Markup {
                         }
                     }
 
-                    #"menu" $"absolute bg-stone-950 z-10 top-8 px-4 truncate shadow-xl rounded-xl w-52" {
+                    div id="menu" $"absolute bg-stone-950 z-10 top-8 px-4 truncate shadow-xl rounded-xl w-52" {
                         style {"
                             #menu { max-height: 0px } #menu.open { max-height: 1000px } 
                             #menu a { display: flex; align-items: center; padding: 0.25rem 0 0.25rem 0.5rem; border-radius: 1rem; }

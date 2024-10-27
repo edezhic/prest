@@ -82,7 +82,8 @@ pub use service_worker::*;
 macro_rules! init {
     ($(tables $($table:ident),+)?) => {
         {
-            let manifest = include_str!("../Cargo.toml");
+            // let manifest = include_str!("../Cargo.toml");
+            let manifest = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml"));
             #[cfg(not(target_arch = "wasm32"))]
             let ___ = prest::dotenv();
             prest::init_tracing_subscriber();

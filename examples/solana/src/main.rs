@@ -100,7 +100,7 @@ async fn into_page(content: Markup) -> Markup {
                 input $"border rounded-md" type="text" name="task" {}
                 button $"ml-4" type="submit" {"Add"}
             }
-            #"list" $"w-full" {(content)}
+            div id="list" $"w-full" {(content)}
             (Scripts::default())
         }
     }}

@@ -49,7 +49,7 @@ pub(crate) async fn page() -> impl IntoResponse {
                         }
                     }
 
-                    #"menu" $"absolute bg-stone-950 z-10 top-8 px-4 truncate shadow-xl rounded-xl w-52" {
+                    div id="menu" $"absolute bg-stone-950 z-10 top-8 px-4 truncate shadow-xl rounded-xl w-52" {
                         style {"
                             #menu { max-height: 0px } #menu.open { max-height: 1000px } 
                             #menu a { display: flex; align-items: center; padding: 0.25rem 0 0.25rem 0.5rem; border-radius: 1rem; }
