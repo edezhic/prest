@@ -185,7 +185,7 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ upgrade scraping and LLM(https://github.com/EricLBuehler/mistral.rs llama 3.2?) examples
++ upgrade scraping example?
 + web3 and more interactive frontend tools?
 + sql escaping?
 
