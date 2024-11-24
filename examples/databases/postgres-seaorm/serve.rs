@@ -33,7 +33,7 @@ fn main() {
     route(
         "/",
         get(|| async { html!(@for todo in Todos::find().all(&*DB).await.unwrap() {(todo)}) })
-            .put(|Form(NewTodo { task }): Form<NewTodo>| async move {
+            .put(|Vals(NewTodo { task }): Vals<NewTodo>| async move {
                 todos::ActiveModel {
                     uuid: ActiveValue::Set(Uuid::now_v7()),
                     task: ActiveValue::Set(task),
@@ -45,7 +45,7 @@ fn main() {
                 Redirect::to("/")
             })
             .patch(
-                |Form(ToggleTodo { uuid, done }): Form<ToggleTodo>| async move {
+                |Vals(ToggleTodo { uuid, done }): Vals<ToggleTodo>| async move {
                     todos::ActiveModel {
                         uuid: ActiveValue::Set(uuid),
                         done: ActiveValue::Set(!done),
@@ -57,7 +57,7 @@ fn main() {
                     Redirect::to("/")
                 },
             )
-            .delete(|Form(DeleteTodo { uuid }): Form<DeleteTodo>| async move {
+            .delete(|Vals(DeleteTodo { uuid }): Vals<DeleteTodo>| async move {
                 todos::ActiveModel {
                     uuid: ActiveValue::Set(uuid),
                     ..Default::default()
@@ -75,10 +75,10 @@ fn main() {
 impl Render for todos::Model {
     fn render(&self) -> Markup {
         html!(
-            $"flex items-center" hx-vals=(json!(self)) {
-                input type="checkbox" hx-patch="/" checked[self.done] {}
+            $"flex items-center" vals=(json!(self)) {
+                input type="checkbox" patch="/" checked[self.done] {}
                 label $"ml-4 text-lg" {(self.task)}
-                button $"ml-auto" hx-delete="/" {"Delete"}
+                button $"ml-auto" detele="/" {"Delete"}
             }
         )
     }
@@ -87,12 +87,12 @@ impl Render for todos::Model {
 async fn page(content: Markup) -> Markup {
     html! { html data-theme="dark" {
         (Head::with_title("With SeaORM Postgres"))
-        body."max-w-screen-sm mx-auto mt-12" hx-target="div" {
-            form $"flex gap-4 justify-center" hx-put="/" hx-target="#list" hx-swap="beforeend" hx-on--after-request="this.reset()" {
+        body."max-w-screen-sm mx-auto mt-12" into="div" {
+            form $"flex gap-4 justify-center" put="/" into="#list" swap-beforeend after-request="this.reset()" {
                 input $"border rounded-md" type="text" name="task" {}
                 button type="submit" {"Add"}
             }
-            div id="list" $"w-full" {(content)}
+            div #"list" $"w-full" {(content)}
             (Scripts::default())
         }
     }}

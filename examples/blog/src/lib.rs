@@ -1,7 +1,7 @@
 use prest::*;
 
 mod content;
-use content::{ExampleCategory::*, EXAMPLES, INTERNALS, PREST_VERSION, README, RUST};
+pub use content::{ExampleCategory::*, EXAMPLES, INTERNALS, PREST_VERSION, README, RUST};
 
 pub fn routes() -> Router {
     let mut router = route("/", get(README.clone()))
@@ -22,7 +22,7 @@ async fn page(content: Markup) -> Markup {
         (Head::with_title("Prest Blog"))
 
         body $"max-w-screen-md lg:max-w-screen-lg md:mx-auto"
-            hx-boost="true" hx-swap="innerHTML transition:true show:window:top" hx-target="main" {
+            hx-boost="true" hx-swap="innerHTML transition:true show:window:top" into="main" {
             nav $"bg-stone-900 my-4 p-5 shadow-lg rounded-full grid grid-cols-3 items-center" {
                 $"flex gap-6" {
                     a $"hover:text-white" href="https://github.com/edezhic/prest" {(include_html!("../icons/github.svg"))}
@@ -33,7 +33,7 @@ async fn page(content: Markup) -> Markup {
 
                 $"flex justify-end" {
                     @if is_pwa() {
-                        div id="sw-badge" $"mr-6 font-bold text-sm" hx-get="/sw/health" hx-target="this" hx-trigger="every 3s delay:3s" hx-swap="none"
+                        div #"sw-badge" $"mr-6 font-bold text-sm" get="/sw/health" into="this" trigger="every 3s delay:3s" swap-none
                         _="on htmx:afterRequest
                             if event.detail.successful set #sw-badge.style.color to '#059669'
                             else set #sw-badge.style.color to '#991b1b'"
@@ -46,7 +46,7 @@ async fn page(content: Markup) -> Markup {
                         }
                     }
 
-                    div id="menu" $"absolute bg-stone-950 z-10 top-8 px-4 truncate shadow-xl rounded-xl w-52" {
+                    div #"menu" $"absolute bg-stone-950 z-10 top-8 px-4 truncate shadow-xl rounded-xl w-52" {
                         style {"
                             #menu { max-height: 0px } #menu.open { max-height: 1000px } 
                             #menu a { display: flex; align-items: center; padding: 0.25rem 0 0.25rem 0.5rem; border-radius: 1rem; }

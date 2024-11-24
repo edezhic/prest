@@ -8,9 +8,9 @@ pub use wasm_bindgen::prelude::wasm_bindgen;
 use wasm_bindgen::{JsCast, JsValue};
 pub use web_sys::{console, FetchEvent, ServiceWorkerGlobalScope};
 
-// TODO: figure out how to use gluesql::idb_storage::IdbStorage as PersistentStorage for SW
+// TODO: figure out how to use gluesql::idb_storage::IdbStorage or another browser-based as PersistentStorage for SW
 #[cfg(feature = "db")]
-pub(crate) type PersistentStorage = gluesql::shared_memory_storage::SharedMemoryStorage;
+pub(crate) type PersistentStorage = gluesql::gluesql_shared_memory_storage::SharedMemoryStorage;
 
 /// Util trait to add handle_fetch_events function to the Router
 pub trait ServiceWorkerUtils {
@@ -164,9 +164,8 @@ pub async fn axum_response_to_websys(response: http::Response<Body>) -> Result<J
     }
     // init web_sys::ResponseInit (~= http::response::Parts)
     let mut parts = web_sys::ResponseInit::new();
-    parts
-        .headers(&websys_response_headers)
-        .status(response.status().as_u16());
+    parts.set_status(response.status().as_u16());
+    parts.set_headers(&websys_response_headers);
 
     // collect axum::Body into a buffer
     let body = response.into_body();

@@ -35,7 +35,7 @@ fn main() {
                 .unwrap();
             html!(@for todo in todos {(todo)})
         })
-        .put(|Form(Todo { task, .. }): Form<Todo>| async move {
+        .put(|Vals(Todo { task, .. }): Vals<Todo>| async move {
             let new_todo = Todo {
                 uuid: Uuid::new(),
                 task,
@@ -44,7 +44,7 @@ fn main() {
             TODOS.insert_one(&new_todo, None).await.unwrap();
             new_todo.render()
         })
-        .patch(|Form(Todo { uuid, done, .. }): Form<Todo>| async move {
+        .patch(|Vals(Todo { uuid, done, .. }): Vals<Todo>| async move {
             TODOS
                 .update_one(doc! {"uuid": uuid}, doc! {"$set": {"done": !done}}, None)
                 .await
@@ -56,7 +56,7 @@ fn main() {
                 .unwrap()
                 .render()
         })
-        .delete(|Form(Todo { uuid, .. }): Form<Todo>| async move {
+        .delete(|Vals(Todo { uuid, .. }): Vals<Todo>| async move {
             TODOS.delete_one(doc! {"uuid": uuid}, None).await.unwrap();
         }),
     )
@@ -67,10 +67,10 @@ fn main() {
 impl Render for Todo {
     fn render(&self) -> Markup {
         html!(
-            $"flex items-center" hx-target="this" hx-swap="outerHTML" hx-vals=(json!(self)) {
-                input type="checkbox" hx-patch="/" checked[self.done] {}
+            $"flex items-center" into="this" swap-full vals=(json!(self)) {
+                input type="checkbox" patch="/" checked[self.done] {}
                 label $"ml-4 text-lg" {(self.task)}
-                button $"ml-auto" hx-delete="/" {"Delete"}
+                button $"ml-auto" detele="/" {"Delete"}
             }
         )
     }
@@ -79,11 +79,11 @@ impl Render for Todo {
 async fn page(content: Markup) -> Markup {
     html! { html { (Head::with_title("With Mongo"))
         body $"max-w-screen-sm mx-auto mt-12" {
-            form $"flex gap-4 justify-center" hx-put="/" hx-target="#list" hx-swap="beforeend" hx-on--after-request="this.reset()" {
+            form $"flex gap-4 justify-center" put="/" into="#list" swap-beforeend after-request="this.reset()" {
                 input $"border rounded-md" type="text" name="task" {}
                 button type="submit" {"Add"}
             }
-            div id="list" $"w-full" {(content)}
+            div #"list" $"w-full" {(content)}
             (Scripts::default())
         }
     }}

@@ -100,7 +100,7 @@ impl<'a> Default for Scripts<'a> {
     fn default() -> Self {
         Self {
             others: None,
-            inlines: None,
+            inlines: Some(vec![include_str!("./htmx_patch.js")]),
             stylesheets: None,
             hyperscripts: None,
         }
@@ -149,18 +149,18 @@ impl<'a> Scripts<'a> {
 impl<'a> Render for Scripts<'a> {
     fn render(&self) -> Markup {
         #[cfg(debug_assertions)]
-        let htmx_src = "https://unpkg.com/htmx.org@2.0.0/dist/htmx.js";
+        let htmx_src = "https://unpkg.com/htmx.org@2.0.3/dist/htmx.js";
         #[cfg(not(debug_assertions))]
-        let htmx_src = "https://unpkg.com/htmx.org@2.0.0/dist/htmx.min.js";
+        let htmx_src = "https://unpkg.com/htmx.org@2.0.3/dist/htmx.min.js";
 
         html!(
             @if is_pwa() { script {(REGISTER_SW_SNIPPET)} }
             @if let Some(stylesheets) = &self.stylesheets { @for stylesheet in stylesheets {link href={(stylesheet)} rel="stylesheet"{}}}
-            script src=(htmx_src) defer crossorigin {}
-            script src="https://unpkg.com/htmx-ext-sse@2.2.0/sse.js" defer crossorigin {}
-            script src="https://unpkg.com/hyperscript.org@0.9.12" defer crossorigin {}
+            script src=(htmx_src) crossorigin {}
+            script src="https://unpkg.com/htmx-ext-sse@2.2.0/sse.js" crossorigin {}
+            script src="https://unpkg.com/hyperscript.org@0.9.12" crossorigin {}
             @if let Some(srcs) = &self.others { @for src in srcs {
-                script src={(src)} defer crossorigin {}
+                script src={(src)} crossorigin {}
             }}
             @if let Some(scripts) = &self.inlines { @for script in scripts {
                 script {(PreEscaped(script))}

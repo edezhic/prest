@@ -16,7 +16,7 @@ fn main() {
     route("/", get(page))
         .route(
             "/prompt",
-            post(|Form(prompt): Form<Prompt>| async move {
+            post(|Vals(prompt): Vals<Prompt>| async move {
                 {
                     let mut llm = LLM.lock().await;
                     if llm.history.len() == 0 {
@@ -66,17 +66,17 @@ async fn history(in_progress: bool) -> Markup {
     html!(
         (PreEscaped(content))
         @if in_progress {
-            ins hx-get="/more" hx-target="div" hx-trigger="load"{}
+            ins get="/more" into="div" trigger="load"{}
             span {"loading..."}
             br{}
-            button hx-get="/" hx-target="body" {"Pause"}
+            button get="/" into="body" {"Pause"}
         }
         @else {
-            form hx-post="/prompt" hx-target="div"  {
+            form post="/prompt" into="div"  {
                 input type="text" name="content" placeholder="Prompt" required {}
                 button type="submit" {(btn)}
             }
         }
-        button hx-get="/reset" hx-target="body" {"Reset"}
+        button get="/reset" into="body" {"Reset"}
     )
 }

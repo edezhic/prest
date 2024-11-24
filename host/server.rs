@@ -10,7 +10,7 @@ pub async fn start(router: Router) -> Result<(), Error> {
 
     let handle = SHUTDOWN.new_server_handle();
 
-    if DEPLOY.already() {
+    if *IS_REMOTE {
         if let Some(domain) = domain {
             let project_dirs = prest::ProjectDirs::from("", "", &name).unwrap();
             let mut certs_path = project_dirs.data_dir().to_path_buf();

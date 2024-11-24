@@ -135,7 +135,7 @@ struct AuthForm {
     next: Option<String>,
 }
 
-async fn login(mut auth: Auth, Form(form): Form<AuthForm>) -> impl IntoResponse {
+async fn login(mut auth: Auth, Vals(form): Vals<AuthForm>) -> impl IntoResponse {
     let AuthForm {
         username,
         email,

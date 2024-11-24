@@ -20,18 +20,18 @@ Since this is a quite unusal templating solution and used together with [HTMX](h
 
 1. if the tag is not specified, like the parent tag of a todo, then it's rendered as a `div`
 2. `$"..."` works somewhat like class html attribute in tailwind but `html!` macro converts them into embedded css
-3. `hx-target="this"` sets htmx to swap this element on requests from it or it's children
-4. `hx-swap="outerHTML"` sets htmx to swap the whole element (by default it swaps it's children)
-5. `hx-vals=(json!(self))` adds json-serialized todo fields which htmx will form-encode and send with requests
-6. `hx-patch="/"` sets this element to send `PATCH` method requests to `/` when triggered
-7. `checked[self.done]` adds `checked` attribute if `self.done` is true
-8. `hx-delete="/"` sets this element to send `DELETE` method requests to `/` when triggered
+3. `into="this"` (alias for `hx-target`) sets htmx to swap this element on requests from it or it's children
+4. `swap-full` (alias for `hx-swap="outerHTML"`) sets htmx to swap the whole element (by default it swaps it's children)
+5. `vals=(json!(self))` (alias for `hx-vals`) adds json-serialized todo fields which htmx will form-encode and send with requests
+6. `patch="/"` (alias for `hx-patch`) sets this element to send `PATCH` method requests to `/` when triggered
+7. `delete="/"` (alias for `hx-delete`) sets this element to send `DELETE` method requests to `/` when triggered
+8. `checked[self.done]` adds `checked` attribute if `self.done` is true
 
 Then goes the function that renders the whole page based on provided `content`:
 
 {src/main.rs:24-35}
 
-It includes a couple of utility structs `Head` and `Scripts` which render into the `head` and a bunch of `script` tags respectfully. They are not essential but provide a shorthand for meaningful defaults. Other things there are common html, htmx attributes that I've mentioned above and a `hx-on--after-request="this.reset()"` attribute that just invokes a little js snippet after an htmx request that clears out the form.
+It includes a couple of utility structs `Head` and `Scripts` which render into the `head` and a bunch of `script` tags respectfully. They are not essential but provide a shorthand for meaningful defaults. Other things there are common html, htmx attributes that I've mentioned above and a `after-request="this.reset()"` (alias for `hx-on--after-request`) attribute that just invokes a little js snippet after an htmx request that clears out the form.
 
 Alright, now we have all the components for our service so let's move on to the `main` function where it all will come together:
 
@@ -48,7 +48,7 @@ Then goes the definition of the router from just a single route `/` but with clo
 
 Then goes the `wrap_non_htmx` middleware that wraps response bodies with the provided function for requests that weren't initiated by htmx.  As the result if you'll go the `/` in browser it will initiate a usual `GET` request that will render the todos and wrap them into the page markup. However, when either the form that submit's new todos, todo checkbox or the delete button will trigger an htmx request the responses won't be wrapped and would be swapped straight into the opened page. 
 
-Finally comes the `.run()` utility method provided by prest that: attempts to read variables from `.env` in this or parent folders, starts tracing, adds middleware to catch panics, livereload in debug or compression and request body limits in release configs, checks the `PORT` env variable or defaults to `80`, checks the `DB_PATH` variable and initializes storage files there or defaults to in-memory storage, and finally starts the multi-threaded concurrent web server which will process the requests. 
+Finally comes the `.run()` utility method provided by prest that: attempts to read variables from `.env` in this or parent folders, starts tracing, adds middleware to catch panics, livereload in debug or compression and request body limits in release configs, checks the `PORT` env variable or defaults to `80`, initializes the database and finally starts the multi-threaded concurrent web server which will process the requests. 
 
 Hurray, now the app is running and you can play around with it. It's already a dynamic full-stack app which can handle a bunch of use cases, but one of the core premises of prest is to provide installable native-like UX so that's what we'll add in [the next example](https://prest.blog/todo-pwa).
 

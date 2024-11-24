@@ -29,17 +29,17 @@ fn main() {
             let todos = get_todos();
             html!(@for todo in todos {(render_item(todo.0, todo.1))})
         })
-        .put(|Form(TodoForm { task, .. }): Form<TodoForm>| async move {
+        .put(|Vals(TodoForm { task, .. }): Vals<TodoForm>| async move {
             add_todo(task);
             Redirect::to("/")
         })
         .patch(
-            |Form(TodoForm { uuid, done, .. }): Form<TodoForm>| async move {
+            |Vals(TodoForm { uuid, done, .. }): Vals<TodoForm>| async move {
                 toggle_todo(uuid, done);
                 Redirect::to("/")
             },
         )
-        .delete(|Form(TodoForm { uuid, .. }): Form<TodoForm>| async move {
+        .delete(|Vals(TodoForm { uuid, .. }): Vals<TodoForm>| async move {
             delete_todo(uuid);
             Redirect::to("/")
         }),
@@ -88,7 +88,7 @@ fn render_item(uuid: String, todo: Todo) -> Markup {
     let id = format!("uuid-{}", uuid);
     html!(
         div style="height: 64px; display: flex; justify-content: space-between; align-items: center;" {
-            form #(id) hx-patch="/"  style="margin-bottom: 0px;" {
+            form #(id) patch="/"  style="margin-bottom: 0px;" {
                 input type="hidden" name="uuid" value={(uuid)} {}
                 input type="hidden" name="done" value={(todo.done)} {}
                 label {
@@ -96,7 +96,7 @@ fn render_item(uuid: String, todo: Todo) -> Markup {
                     {(todo.task)}
                 }
             }
-            form hx-delete="/" style="margin-bottom: 0px;" {
+            form detele="/" style="margin-bottom: 0px;" {
                 input type="hidden" name="uuid" value={(uuid)} {}
                 input type="submit" value="Delete" style="margin-bottom: 0px;" {}
             }
@@ -106,8 +106,8 @@ fn render_item(uuid: String, todo: Todo) -> Markup {
 
 async fn page(content: Markup) -> Markup {
     html! { html { (Head::with_title("With Redis"))
-        body $"container" hx-target="div" style="margin-top: 16px;" {
-            form hx-put="/" hx-on--after-request="this.reset()" {
+        body $"container" into="div" style="margin-top: 16px;" {
+            form put="/" after-request="this.reset()" {
                 label for="task" {"Task description:"}
                 input type="text" name="task" {}
                 button type="submit" {"Add"}

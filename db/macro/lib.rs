@@ -301,7 +301,9 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
     );
 
     let schema_name = ident(&format!("{}Schema", struct_name.to_string()));
-    let path = format!("/admin/table/{}", table_name_str);
+
+    let relative_path = format!("/table/{table_name_str}");
+    let full_path = format!("/admin/db{relative_path}");
 
     let table_schema_clone = table_schema.clone();
 
@@ -334,8 +336,11 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
             fn schema(&self) -> ColumnsSchema {
                 &[#(#table_schema),*]
             }
-            fn path(&self) -> &'static str {
-                #path
+            fn relative_path(&self) -> &'static str {
+                #relative_path
+            }
+            fn full_path(&self) -> &'static str {
+                #full_path
             }
             fn get_all(&self) -> Vec<Vec<String>> {
                 let mut rows = vec![];
@@ -426,6 +431,7 @@ struct Column {
     list: bool,
     unique: bool,
     custom_type: bool,
+    stringy_expr_node: bool,
 }
 
 fn decompose(field: Field) -> Column {
@@ -507,6 +513,8 @@ fn decompose(field: Field) -> Column {
     let stringy_in_sql =
         list || custom_type || inner_type_str == "Uuid" || inner_type_str == "String";
 
+    let stringy_expr_node = inner_type_str == "u32" || inner_type_str == "u64" || inner_type_str == "f32" || inner_type_str == "f64";
+
     Column {
         type_string: type_str.to_owned(),
         column_type,
@@ -522,6 +530,7 @@ fn decompose(field: Field) -> Column {
         list,
         unique,
         custom_type,
+        stringy_expr_node,
     }
 }
 
@@ -552,6 +561,7 @@ fn set_column(column: &Column) -> TokenStream2 {
         list,
         optional,
         custom_type,
+        stringy_expr_node,
         ..
     } = column;
     let key: Expr = parse_quote!(#name_str);
@@ -566,6 +576,8 @@ fn set_column(column: &Column) -> TokenStream2 {
         quote!(if let Some(v) = &self.#name_ident { v.clone() } else { "NULL".to_owned() })
     } else if *stringy_in_sql {
         quote!(format!(#fmt_str, self.#name_ident.clone()))
+    } else if *stringy_expr_node{
+        quote!(self.#name_ident.to_string())
     } else {
         quote!(self.#name_ident.clone())
     };

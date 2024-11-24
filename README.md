@@ -20,17 +20,17 @@ fn main() {
 route("/", get("Hello world")).run()
 ```
 
-**UI** - `html!` macro for rust'y templating, easy inline styling with built-in [tailwind](https://tailwindcss.com) classes, simple client-server interactions with [htmx](https://htmx.org), unlimited flexibility with [hyperscript](https://hyperscript.org). Smooth UX without separate front-end stacks:
+**UI** - `html!` macro for rust'y templating, easy inline styling with built-in [tailwind](https://tailwindcss.com) classes, simple client-server interactions with [htmx](https://htmx.org) and it's aliases, unlimited flexibility with [hyperscript](https://hyperscript.org). Smooth UX without separate front-end stacks:
 
 ```rust
 html!{ 
     nav $"w-full bg-gray-900 rounded-full" {
         input $"mx-auto text-xs lg:text-md" name="search" 
-            hx-post="/search" hx-target="#search-results" {} 
+            post="/search" into="#search-results" {} 
     }
     ...
     main {
-        div#"search-results" {"Response will be placed here!"}
+        div #"search-results" {"Response will be placed here!"}
     }
 }
 ```
@@ -101,7 +101,9 @@ SSH_USER=root
 SSH_PASSWORD=verystrongpassword
 ```
 
-And just click the `Deploy` button in admin panel! It's quite likely that you'll want to provide more native-app-like experience for users so...
+And just click the `Deploy` button in the local admin panel! You can also manage deployments there: stop the current one, start a previous one, or cleanup old builds. 
+
+It's quite likely that you'll want to provide more native-app-like experience for users so...
 
 **[PWA](https://web.dev/articles/what-are-pwas)** - you can build some of your server and UI code into a WASM-based Service Worker and compose a Progressive Web Application so that your users can install it and use some routes offline. To make it work you'll need to separate host-only from shared host+client code and initialize shared routes in the SW, add `wasm-bindgen` and `prest-build` dependencies, add a lil build script and embed the compiled assets into the host:
 
@@ -185,11 +187,17 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
++ admin UX: logs management, route stats and DB editor
++ db dumps/recovery?
 + upgrade scraping example?
-+ web3 and more interactive frontend tools?
++ more interactive frontend tools?
 + sql escaping?
 
-There are also longer term things which will be needed or nice to have before the release of prest:
+Some ideas are more complex/crazy but interesting:
++ example with a built-in minimalistic polkadot chain - customizable + optionally distributed + optionally public DB
++ web3 tooling for the frontend, either with the above polkadot idea or for solana
+
+There are also longer term things which will be needed or nice to have before the stable release of prest:
 * await stable releases of most important dependencies like axum and sled 
 * parallel frontend and cranelift backend of the rust compiler for faster builds
 * stabilization and support of async iterator and other fundamental concurrent std apis

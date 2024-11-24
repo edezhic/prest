@@ -1,9 +1,22 @@
 use crate::*;
 use chrono::TimeZone;
-use std::{future::Future, sync::atomic::Ordering};
+use std::{future::Future, sync::atomic::{Ordering, AtomicUsize}};
 use tokio::time::sleep;
 pub use tokio_schedule::Job as RepeatableJob;
 use tokio_schedule::{every, Every};
+
+pub struct PrestRuntime {
+    pub inner: Runtime,
+    pub running_scheduled_tasks: AtomicUsize,
+}
+
+impl std::ops::Deref for PrestRuntime {
+    type Target = Runtime;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
 
 impl PrestRuntime {
     pub fn every(&self, period: u32) -> Every {
@@ -15,9 +28,26 @@ impl PrestRuntime {
         Self: Send + 'static,
         Fut: Future<Output = ()> + Send + 'static,
     {
-        RT.inner.spawn(async move {
+        RT.spawn(async move {
             RT.running_scheduled_tasks.fetch_add(1, Ordering::SeqCst);
             fut.await;
+            let current_tasks = RT.running_scheduled_tasks.fetch_sub(1, Ordering::SeqCst);
+            SHUTDOWN
+                .scheduled_task_running
+                .store(current_tasks == 0, Ordering::SeqCst);
+        });
+    }
+
+    pub fn try_once<'a, Fut>(&self, fut: Fut)
+    where
+        Self: Send + 'static,
+        Fut: Future<Output = Result> + Send + 'static,
+    {
+        RT.spawn(async move {
+            RT.running_scheduled_tasks.fetch_add(1, Ordering::SeqCst);
+            if let Err(e) =fut.await {
+                error!("{e}");
+            }
             let current_tasks = RT.running_scheduled_tasks.fetch_sub(1, Ordering::SeqCst);
             SHUTDOWN
                 .scheduled_task_running
@@ -45,7 +75,7 @@ impl<T: RepeatableJob> Schedulable for T {
         Fut: Future<Output = ()> + Send + 'a,
         <Self::TZ as TimeZone>::Offset: Send + 'a,
     {
-        RT.inner.spawn(async move {
+        RT.spawn(async move {
             while let Some(dur) = self.time_to_sleep() {
                 if SHUTDOWN.in_progress() {
                     break;

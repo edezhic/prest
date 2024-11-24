@@ -2,7 +2,7 @@ use proc_macro2::{Delimiter, Group, Ident, Literal, Span, TokenStream, TokenTree
 use proc_macro_error::SpanRange;
 use quote::quote;
 
-use crate::{ast::*, escape, tailwind};
+use crate::{ast::*, escape, htmx, tailwind};
 
 pub fn generate(markups: Vec<Markup>, output_ident: TokenTree) -> TokenStream {
     let mut build = Builder::new(output_ident.clone());
@@ -138,12 +138,17 @@ impl Generator {
     }
 
     fn name(&self, name: TokenStream, build: &mut Builder) {
-        build.push_escaped(&name_to_string(name));
+        let name = &name_to_string(name);
+        if let Some(longhand) = htmx::check_attr_shorthand(name) {
+            build.push_str(longhand);
+        } else {
+            let name = htmx::check_attr_name_alias(name);
+            build.push_escaped(name);
+        }
     }
 
     fn attrs(&self, styles_id: &str, attrs: Vec<Attr>, build: &mut Builder) {
         let attrs = desugar_attrs(styles_id, attrs);
-        //if attrs.iter().find(|a| a.name.to_string() == "style")
         for NamedAttr { name, attr_type } in attrs {
             match attr_type {
                 AttrType::Normal { value } => {
@@ -339,7 +344,6 @@ fn desugar_classes_or_ids(
     for (name, Toggler { cond, cond_span }) in values_toggled {
         let body = Block {
             markups: prepend_leading_space(name, &mut leading_space),
-            // TODO: is this correct?
             outer_span: cond_span,
         };
         markups.push(Markup::Special {

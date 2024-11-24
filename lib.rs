@@ -49,6 +49,12 @@ pub use uuid::Uuid;
 mod config;
 pub use config::*;
 
+mod result;
+pub use result::*;
+
+mod vals;
+pub use vals::*;
+
 #[cfg(feature = "db")]
 mod db;
 #[cfg(feature = "db")]
@@ -79,27 +85,6 @@ pub use service_worker::*;
 
 // --- GENERAL UTILS ---
 
-/// Starting point for prest apps that performs basic setup
-#[macro_export]
-macro_rules! init {
-    ($(tables $($table:ident),+)?) => {
-        {
-            // let manifest = include_str!("../Cargo.toml");
-            let manifest = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml"));
-            #[cfg(not(target_arch = "wasm32"))]
-            let ___ = prest::dotenv();
-            prest::init_tracing_subscriber();
-            let config = APP_CONFIG.init(manifest, env!("CARGO_MANIFEST_DIR"));
-            prest::DB.init();
-            $(
-                $( $table::prepare_table(); )+
-            )?
-            let _ = *prest::RT;
-            prest::info!("Initialized {} v{}", config.name, config.version);
-        }
-    };
-}
-
 /// A little helper to init router and route in a single call to improve formatting
 pub fn route<S: Clone + Send + Sync + 'static>(
     path: &str,
@@ -127,58 +112,4 @@ macro_rules! include_html {
     ($path: tt) => {
         PreEscaped(include_str!($path))
     };
-}
-
-/// Basic Result alias with [`enum@prest::Error`]`
-pub type Result<T = (), E = Error> = std::result::Result<T, E>;
-
-use thiserror::Error;
-
-/// Error type used across prest codebase
-#[derive(Error, Debug)]
-pub enum Error {
-    #[error("Internal")]
-    Internal,
-    #[error("Unauthorized")]
-    Unauthorized,
-    #[error("Not found")]
-    NotFound,
-    #[error(transparent)]
-    Env(#[from] std::env::VarError),
-    #[cfg(all(host, feature = "auth"))]
-    #[error(transparent)]
-    Session(#[from] tower_sessions::session_store::Error),
-    #[cfg(all(host, feature = "auth"))]
-    #[error(transparent)]
-    Auth(#[from] AuthError),
-    #[cfg(all(host, feature = "auth"))]
-    #[error(transparent)]
-    OAuth(#[from] openidconnect::ClaimsVerificationError),
-    #[cfg(feature = "db")]
-    #[error(transparent)]
-    GlueSQL(#[from] gluesql::core::error::Error),
-    #[error(transparent)]
-    IO(#[from] std::io::Error),
-    #[error(transparent)]
-    Anyhow(#[from] anyhow::Error),
-    #[error(transparent)]
-    FormRejection(#[from] axum::extract::rejection::FormRejection),
-    #[cfg(host)]
-    #[error(transparent)]
-    RuSSH(#[from] russh::Error),
-    #[cfg(host)]
-    #[error(transparent)]
-    RuSFTP(#[from] russh_sftp::client::error::Error),
-}
-
-impl IntoResponse for Error {
-    fn into_response(self) -> Response {
-        error!("{self}");
-        StatusCode::INTERNAL_SERVER_ERROR.into_response()
-    }
-}
-
-pub const OK: Result<(), Error> = Result::Ok(());
-pub const fn ok<T: IntoResponse>(resp: T) -> Result<T, Error> {
-    Ok(resp)
 }

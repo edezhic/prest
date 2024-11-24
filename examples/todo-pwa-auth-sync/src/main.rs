@@ -24,10 +24,10 @@ impl Todo {
             .unwrap_or(false);
 
         html! {
-            $"flex items-center" sse-swap=(self.id) hx-swap="outerHTML" hx-vals=(json!(self)) {
-                input type="checkbox" hx-patch="/todos" disabled[!owned] checked[self.done] {}
+            $"flex justify-between items-center" sse-swap=(self.id) swap-full vals=(json!(self)) {
+                input type="checkbox" patch="/todos" disabled[!owned] checked[self.done] {}
                 label $"ml-4 text-lg" {(self.task)}
-                button $"ml-auto" hx-delete="/todos" disabled[!owned] {"Delete"}
+                button $"ml-auto" delete="/todos" disabled[!owned] {"Delete"}
             }
         }
     }
@@ -41,7 +41,7 @@ fn main() {
             get(|auth: Auth| async move {
                 html!(
                     @if auth.user.is_some() {
-                        form hx-put="/todos" hx-swap="none" hx-on--after-request="this.reset()" {
+                        form put="/todos" swap-none after-request="this.reset()" {
                             input $"border rounded-md" type="text" name="task" {}
                             button $"ml-4" type="submit" {"Add"}
                         }
@@ -53,18 +53,18 @@ fn main() {
                             button $"ml-4" type="submit" {"Sign in / Sign up"}
                         }
                     }
-                    div id="todos" $"w-full" hx-ext="sse" sse-connect="/todos/subscribe" sse-swap="add" hx-swap="beforeend" {
+                    div #"todos" $"w-full" hx-ext="sse" sse-connect="/todos/subscribe" sse-swap="add" swap-beforeend {
                         @for item in Todo::find_all() {(item.render_for(&auth.user))}
                     }
                 )
             })
-                .put(|user: User, Form(mut todo): Form<Todo>| async move {
+                .put(|user: User, Vals(mut todo): Vals<Todo>| async move {
                     todo.owner = user.id;
                     todo.save()?;
                     TODO_UPDATES.send("add", Some(todo)).await?;
                     OK
                 })
-                .patch(|user: User, Form(mut todo): Form<Todo>| async move {
+                .patch(|user: User, Vals(mut todo): Vals<Todo>| async move {
                     if !todo.check_owner(user.id)? {
                         return Err(Error::Unauthorized);
                     }
@@ -72,7 +72,7 @@ fn main() {
                     TODO_UPDATES.send(todo.id.to_string(), Some(todo)).await?;
                     OK
                 })
-                .delete(|user: User, Query(todo): Query<Todo>| async move {
+                .delete(|user: User, Vals(todo): Vals<Todo>| async move {
                     if !todo.check_owner(user.id)? {
                         return Err(Error::Unauthorized);
                     }

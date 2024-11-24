@@ -1,5 +1,4 @@
 use crate::*;
-use futures::stream::iter;
 pub use gluesql::{
     core::ast_builder::{col, table},
     prelude::{Payload, Value as DbValue},
@@ -17,7 +16,7 @@ use gluesql::{
             RowIter, Store, StoreMut, Transaction,
         },
     },
-    gluesql_memory_storage::MemoryStorage, // as MemoryStorage,
+    gluesql_shared_memory_storage::SharedMemoryStorage as MemoryStorage,
     prelude::Glue,
 };
 
@@ -144,7 +143,8 @@ state!(DB_SCHEMA: DbSchema = { DbSchema::init() });
 pub trait TableSchemaTrait: Sync {
     fn name(&self) -> &'static str;
     fn schema(&self) -> ColumnsSchema;
-    fn path(&self) -> &'static str;
+    fn relative_path(&self) -> &'static str;
+    fn full_path(&self) -> &'static str;
     fn get_all(&self) -> Vec<Vec<String>>;
     async fn save(&self, req: Request) -> Result;
     async fn remove(&self, req: Request) -> Result;
@@ -286,7 +286,7 @@ impl Store for Db {
 
     async fn scan_data(&self, table_name: &str) -> GResult<RowIter> {
         match self {
-            Memory(s) => Ok(Box::pin(iter(s.scan_data(table_name).into_iter().map(Ok)))),
+            Memory(s) => s.scan_data(table_name).await,
             Persistent(s) => s.scan_data(table_name).await,
         }
     }

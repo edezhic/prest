@@ -11,7 +11,13 @@ state!(GOOGLE_CLIENT: GoogleClient = async {
     }
     let client_id = env::var("GOOGLE_CLIENT_ID")?;
     let client_secret = env::var("GOOGLE_CLIENT_SECRET")?;
-    let callback_url = "http://localhost/auth/google/callback".to_owned(); // TODO: replace hardcoded cb url with ...? built-in routes?
+
+    let domain = if let Some(domain) = &APP_CONFIG.check().domain {
+        format!("https://{domain}")
+    } else {
+        format!("http://localhost")
+    };
+    let callback_url = format!("{domain}{GOOGLE_CALLBACK_ROUTE}");
     GoogleClient::init(callback_url, client_id, client_secret).await
 });
 

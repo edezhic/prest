@@ -85,10 +85,10 @@ async fn list() -> Markup {
     };
     
     html!(@for (index, todo) in my_todos.iter().enumerate() {
-        $"flex justify-between items-center" hx-target="#list" hx-swap="outerHTML" {
-            input type="checkbox" hx-get=(format!("/toggle/{index}")) checked[todo.done] {}
+        $"flex justify-between items-center" into="#list" swap-full {
+            input type="checkbox" get=(format!("/toggle/{index}")) checked[todo.done] {}
             label $"ml-4 text-lg" {(todo.task)}
-            button $"ml-auto" hx-get=(format!("/delete/{index}")) {"Delete"}
+            button $"ml-auto" get=(format!("/delete/{index}")) {"Delete"}
         }
     })
 }
@@ -96,11 +96,11 @@ async fn list() -> Markup {
 async fn into_page(content: Markup) -> Markup {
     html! {(DOCTYPE) html {(Head::with_title("With Solana storage"))
         body $"max-w-screen-sm px-8 mx-auto mt-12 flex flex-col items-center" {
-            form method="POST" hx-target="#list" hx-on--after-request="this.reset()" {
+            form method="POST" into="#list" after-request="this.reset()" {
                 input $"border rounded-md" type="text" name="task" {}
                 button $"ml-4" type="submit" {"Add"}
             }
-            div id="list" $"w-full" {(content)}
+            div #"list" $"w-full" {(content)}
             (Scripts::default())
         }
     }}
@@ -111,7 +111,7 @@ struct NewTodo {
     task: String,
 }
 
-async fn add(Form(todo): Form<NewTodo>) -> Markup {
+async fn add(Vals(todo): Vals<NewTodo>) -> Markup {
     if let Err(e) = PROGRAM
         .request()
         .accounts(accounts::AddTodo {

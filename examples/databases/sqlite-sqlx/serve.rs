@@ -39,7 +39,7 @@ async fn get_todos() -> Markup {
     html!(@for todo in todos {(todo)})
 }
 
-async fn add_todo(Form(todo): Form<Todo>) -> Markup {
+async fn add_todo(Vals(todo): Vals<Todo>) -> Markup {
     let q = "insert into todos (uuid, task) values (?, ?) returning *";
     query_as::<Sqlite, Todo>(q)
         .bind(todo.uuid)
@@ -50,7 +50,7 @@ async fn add_todo(Form(todo): Form<Todo>) -> Markup {
         .render()
 }
 
-async fn toggle_todo(Form(todo): Form<Todo>) -> Markup {
+async fn toggle_todo(Vals(todo): Vals<Todo>) -> Markup {
     let q = "update todos set done = ? where uuid = ? returning *";
     query_as::<Sqlite, Todo>(q)
         .bind(!todo.done)
@@ -60,7 +60,7 @@ async fn toggle_todo(Form(todo): Form<Todo>) -> Markup {
         .unwrap()
         .render()
 }
-async fn delete_todo(Form(todo): Form<Todo>) {
+async fn delete_todo(Vals(todo): Vals<Todo>) {
     let q = "delete from todos where uuid = ?";
     query(q).bind(todo.uuid).execute(&*DB).await.unwrap();
 }
@@ -68,10 +68,10 @@ async fn delete_todo(Form(todo): Form<Todo>) {
 impl Render for Todo {
     fn render(&self) -> Markup {
         html! {
-            $"flex items-center" hx-target="this" hx-swap="outerHTML" hx-vals=(json!(self)) {
-                input type="checkbox" hx-patch="/" checked[self.done] {}
+            $"flex items-center" into="this" swap-full vals=(json!(self)) {
+                input type="checkbox" patch="/" checked[self.done] {}
                 label $"ml-4 text-lg" {(self.task)}
-                button $"ml-auto" hx-delete="/" {"Delete"}
+                button $"ml-auto" detele="/" {"Delete"}
             }
         }
     }
@@ -80,11 +80,11 @@ impl Render for Todo {
 async fn page(content: Markup) -> Markup {
     html! { html { (Head::with_title("With SQLx SQLite"))
         body $"max-w-screen-sm mx-auto mt-12" {
-            form $"flex gap-4 justify-center" hx-put="/" hx-target="#list" hx-swap="beforeend" hx-on--after-request="this.reset()" {
+            form $"flex gap-4 justify-center" put="/" into="#list" swap-beforeend after-request="this.reset()" {
                 input $"border rounded-md" type="text" name="task" {}
                 button type="submit" {"Add"}
             }
-            div id="list" $"w-full" {(content)}
+            div #"list" $"w-full" {(content)}
             (Scripts::default())
         }
     }}
