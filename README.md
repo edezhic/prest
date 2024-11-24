@@ -187,7 +187,7 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ admin UX: logs management, route stats and DB editor
++ admin panel redesign
 + db dumps/recovery?
 + upgrade scraping example?
 + more interactive frontend tools?
@@ -195,7 +195,7 @@ This is a hobby project and plans change on the fly, but there are things I'd li
 
 Some ideas are more complex/crazy but interesting:
 + example with a built-in minimalistic polkadot chain - customizable + optionally distributed + optionally public DB
-+ web3 tooling for the frontend, either with the above polkadot idea or for solana
++ web3 tooling for the frontend, either with the above polkadot idea or for solana, with as little JS as possible
 
 There are also longer term things which will be needed or nice to have before the stable release of prest:
 * await stable releases of most important dependencies like axum and sled 
