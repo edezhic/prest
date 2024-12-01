@@ -10,7 +10,7 @@ macro_rules! state {
             init().unwrap()
         });
     };
-    
+
     ($struct_name:ident: $type:ty = async $init:block) => {
         pub static $struct_name: prest::Lazy<$type> = prest::Lazy::new(|| {
             async fn init() -> prest::AnyhowResult<$type> {

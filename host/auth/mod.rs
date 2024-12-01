@@ -13,7 +13,7 @@ use password_auth::{generate_hash, verify_password};
 pub use tower_sessions::Session;
 use tower_sessions::{
     session::{Id, Record},
-    session_store::{Error, Result},
+    session_store::{Error as SessionError, Result as SessionResult},
     Expiry, SessionManagerLayer, SessionStore,
 };
 
@@ -70,14 +70,14 @@ pub const GOOGLE_CALLBACK_ROUTE: &str = "/auth/google/callback";
 pub fn init_auth_module() -> (AuthLayer, Router) {
     SessionRow::prepare_table();
     User::prepare_table();
-    let mut session_layer = SessionManagerLayer::new(DB.cloned())
+    let mut session_layer = SessionManagerLayer::new(DB.copy())
         .with_name("prest_session")
         .with_same_site(tower_sessions::cookie::SameSite::Lax)
         .with_expiry(Expiry::OnInactivity(time::Duration::days(30)));
     if let Some(domain) = APP_CONFIG.check().domain.clone() {
         session_layer = session_layer.with_domain(domain);
     }
-    let layer = AuthManagerLayerBuilder::new(DB.cloned(), session_layer).build();
+    let layer = AuthManagerLayerBuilder::new(DB.copy(), session_layer).build();
 
     let mut router = route(LOGIN_ROUTE, post(login)).route(LOGOUT_ROUTE, get(logout));
 
@@ -260,9 +260,9 @@ async fn google_oauth_callback(
 
 async fn logout(mut auth: Auth) -> impl IntoResponse {
     if let Some(_) = auth.user {
-        auth.logout().await.unwrap();
+        auth.logout().await?;
     }
-    Redirect::to("/")
+    ok(Redirect::to("/"))
 }
 
 #[async_trait]
@@ -317,7 +317,8 @@ impl AuthUser for User {
 use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum AuthError {
-    // TODO
+    #[error("User not found: {0}")]
+    UserNotFound(String),
 }
 
 #[async_trait]
@@ -343,7 +344,8 @@ impl AuthnBackend for Db {
                     Some(user) => Ok(Some(user)),
                     None => {
                         let user = User::from_email(email);
-                        user.save().unwrap();
+                        user.save()
+                            .map_err(|e| AuthError::UserNotFound(e.to_string()))?;
                         Ok(Some(user))
                     }
                 }
@@ -427,33 +429,35 @@ pub struct SessionRow {
 
 #[async_trait]
 impl SessionStore for Db {
-    async fn save(&self, record: &Record) -> Result<()> {
+    async fn save(&self, record: &Record) -> SessionResult<()> {
         let id = record.id.0;
         let record = match to_json_string(record) {
             Ok(s) => s,
-            Err(e) => return Err(Error::Encode(format!("{e}"))),
+            Err(e) => return Err(SessionError::Encode(format!("{e}"))),
         };
         match (SessionRow { id, record }).save() {
             Ok(_) => Ok(()),
-            Err(e) => Err(Error::Backend(format!("Session save error: {e}"))),
+            Err(e) => Err(SessionError::Backend(format!("Session save error: {e}"))),
         }
     }
 
-    async fn load(&self, session_id: &Id) -> Result<Option<Record>> {
+    async fn load(&self, session_id: &Id) -> SessionResult<Option<Record>> {
         let search = SessionRow::find_by_id(&session_id.0);
         let Some(session_row) = search else {
             return Ok(None);
         };
         match from_json_str(&session_row.record) {
             Ok(record) => Ok(Some(record)),
-            Err(e) => Err(Error::Decode(format!("Session load error: {e}"))),
+            Err(e) => Err(SessionError::Decode(format!("Session load error: {e}"))),
         }
     }
 
-    async fn delete(&self, session_id: &Id) -> Result<()> {
+    async fn delete(&self, session_id: &Id) -> SessionResult<()> {
         match SessionRow::delete_by_key(&session_id.0) {
             Ok(_) => Ok(()),
-            Err(e) => Err(Error::Backend(format!("Session deletion error: {e}"))),
+            Err(e) => Err(SessionError::Backend(format!(
+                "Session deletion error: {e}"
+            ))),
         }
     }
 }

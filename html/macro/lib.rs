@@ -8,9 +8,9 @@ extern crate proc_macro;
 mod ast;
 mod escape;
 mod generate;
+mod htmx;
 mod parse;
 mod tailwind;
-mod htmx;
 
 use proc_macro2::{Ident, Span, TokenStream, TokenTree};
 use proc_macro_error::proc_macro_error;

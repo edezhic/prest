@@ -16,17 +16,20 @@ use tracing_subscriber::{
     EnvFilter, Layer,
 };
 
+pub const LOGS_INFO_NAME: &str = "info";
+pub const LOGS_TRACES_NAME: &str = "traces";
+
 state!(LOGS: Logs = {
     let AppConfig {
-        name, ..
+        data_dir,
+        ..
     } = APP_CONFIG.check();
 
-    let project_dirs = prest::ProjectDirs::from("", "", &name).unwrap();
-    let mut info_path = project_dirs.data_dir().to_path_buf();
-    info_path.push("info");
+    let mut info_path = data_dir.clone();
+    info_path.push(LOGS_INFO_NAME);
 
-    let mut traces_path = project_dirs.data_dir().to_path_buf();
-    traces_path.push("traces");
+    let mut traces_path = data_dir.clone();
+    traces_path.push(LOGS_TRACES_NAME);
 
     Logs {
         info: Log(info_path),
@@ -58,7 +61,8 @@ impl Logs {
 
         f.write_all(data.as_bytes()).expect("Unable to append log");
         if detailed {
-            f.write_all(b",").expect("Unable to append comma to the latest trace");
+            f.write_all(b",")
+                .expect("Unable to append comma to the latest trace");
         }
     }
 
@@ -131,9 +135,9 @@ impl<'a> tracing_subscriber::fmt::writer::MakeWriter<'a> for MakeTracesLogWriter
     }
 }
 
-fn info_filter() -> EnvFilter {
+fn info_filter(level: LevelFilter) -> EnvFilter {
     EnvFilter::builder()
-        .with_default_directive(LevelFilter::INFO.into())
+        .with_default_directive(level.into())
         .from_env()
         .unwrap()
         .add_directive("sqlparser::parser=info".parse().unwrap())
@@ -172,12 +176,12 @@ pub fn init_tracing_subscriber() {
         .with_file(false)
         .with_target(false)
         .map_writer(move |_| MakeInfoLogWriter)
-        .with_filter(info_filter());
+        .with_filter(info_filter(LevelFilter::INFO));
 
     #[cfg(debug_assertions)]
     let shell_layer = fmt::layer()
         .with_timer(ChronoUtc::new("%k:%M:%S".to_owned()))
-        .with_filter(info_filter());
+        .with_filter(info_filter(LevelFilter::DEBUG));
 
     let registry = tracing_subscriber::registry()
         .with(traces_layer)

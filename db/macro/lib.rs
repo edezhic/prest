@@ -97,6 +97,7 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
             let transform = match from_row_transform {
                 FromRowTransform::UuidFromU128 => quote!(let #inner = prest::Uuid::from_u128(#inner);),
                 FromRowTransform::Deserialize => quote!(let #inner = serde_json::from_str(&#inner).unwrap();),
+                FromRowTransform::AsF32 => quote!(let #inner = #inner as f32;),
                 FromRowTransform::None => quote!(),
             };
             if *list {
@@ -241,6 +242,38 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
         }
     });
 
+    let range_fns = columns.iter().filter(|col| col.comparable).map(|col| {
+        let Column {
+            name_str,
+            field_type,
+            stringy_expr_node,
+            stringy_in_sql,
+            ..
+        } = col;
+        let values = quote!(Self::select()
+            .filter(filter)
+            .rows()
+            .unwrap()
+            .into_iter()
+            .map(Self::from_row)
+            .collect());
+
+        let fn_name = find_in_range_(col);
+        let filter_str = if *stringy_expr_node || *stringy_in_sql {
+            format!("{name_str} >= '{{min}}' AND {name_str} <= '{{max}}'")
+        } else {
+            format!("{name_str} >= {{min}} AND {name_str} <= {{max}}")
+        };
+        let filter = quote!(format!(#filter_str));
+        quote! {
+            pub fn #fn_name(min: &#field_type, max: &#field_type) -> Vec<Self> {
+                let filter = #filter.to_owned();
+                let mut values: Vec<Self> = #values;
+                values
+            }
+        }
+    });
+
     let update_fns = columns.iter().map(|col| {
         let Column {
             name_ident,
@@ -307,7 +340,7 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
 
     let table_schema_clone = table_schema.clone();
 
-    let cells_renders = columns.iter().map(|col| {
+    let get_all_as_strings = columns.iter().map(|col| {
         let Column {
             name_ident,
             list,
@@ -326,6 +359,19 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
         }
     });
 
+    let get_all_as_strings_clone = get_all_as_strings.clone();
+    let render_fields_idents_clone = render_fields_idents.clone();
+
+    let id_from_str = if key_column.type_string != "String" {
+        let key_type = key_column.field_type.clone();
+        Some(quote! {
+            use std::str::FromStr;
+            let id = #key_type::from_str(&id)?;
+        })
+    } else {
+        None
+    };
+
     quote! {
         struct #schema_name;
         #[async_trait]
@@ -342,23 +388,30 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
             fn full_path(&self) -> &'static str {
                 #full_path
             }
-            fn get_all(&self) -> Vec<Vec<String>> {
+            async fn get_all(&self) -> Vec<Vec<String>> {
                 let mut rows = vec![];
                 for item in #struct_name::find_all() {
                     let #struct_name { #(#render_fields_idents ,)* } = item;
                     let mut row = vec![];
-                    #(#cells_renders)*
+                    #(#get_all_as_strings)*
                     rows.push(row);
                 }
                 rows
             }
-            async fn save(&self, req: Request) -> std::result::Result<(), prest::Error> {
-                let value: #struct_name = Form::from_request(req, &()).await?.0;
+            async fn get_row_by_id(&self, id: String) -> std::result::Result<Vec<String>, prest::Error> {
+                #id_from_str
+                let #struct_name { #(#render_fields_idents_clone ,)* } = #struct_name::find_by_key(&id).unwrap();
+                let mut row = vec![];
+                #(#get_all_as_strings_clone)*
+                Ok(row)
+            }
+            async fn save(&self, req: Request) -> std::result::Result<String, prest::Error> {
+                let value: #struct_name = Vals::from_request(req, &()).await?.0;
                 value.save()?;
-                Ok(())
+                Ok(value.get_key().to_string())
             }
             async fn remove(&self, req: Request) -> std::result::Result<(), prest::Error> {
-                let value: #struct_name = Form::from_request(req, &()).await?.0;
+                let value: #struct_name = Vals::from_request(req, &()).await?.0;
                 value.remove()?;
                 Ok(())
             }
@@ -404,6 +457,7 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
 
         impl #struct_name {
             #(#find_fns)*
+            #(#range_fns)*
             #(#update_fns)*
             #(#check_fns)*
         }
@@ -413,6 +467,7 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
 enum FromRowTransform {
     UuidFromU128,
     Deserialize,
+    AsF32,
     None,
 }
 
@@ -432,6 +487,7 @@ struct Column {
     unique: bool,
     custom_type: bool,
     stringy_expr_node: bool,
+    comparable: bool,
 }
 
 fn decompose(field: Field) -> Column {
@@ -472,7 +528,8 @@ fn decompose(field: Field) -> Column {
     }
 
     let custom_type = match inner_type_str {
-        "Uuid" | "String" | "bool" | "u64" | "f64" | "u8" => false,
+        "Uuid" | "String" | "NaiveDateTime" | "bool" | "u128" | "u64" | "u32" | "u16" | "u8"
+        | "i128" | "i64" | "i32" | "i16" | "i8" | "f64" | "f32" => false,
         _ => true,
     };
 
@@ -484,10 +541,19 @@ fn decompose(field: Field) -> Column {
         match inner_type_str {
             "Uuid" => "UUID",
             "String" => "TEXT",
+            "NaiveDateTime" => "TIMESTAMP",
             "bool" => "BOOLEAN",
+            "u128" => "UINT128",
             "u64" => "UINT64",
+            "u32" => "UINT32",
+            "u16" => "UINT16",
             "u8" => "UINT8",
-            "f64" => "FLOAT",
+            "i128" => "INT128",
+            "i64" => "INTEGER",
+            "i32" => "INT32",
+            "i16" => "INT16",
+            "i8" => "INT8",
+            "f64" | "f32" => "FLOAT",
             _ => "TEXT",
         }
     }
@@ -496,24 +562,46 @@ fn decompose(field: Field) -> Column {
     let raw_dbvalue_variant = match inner_type_str {
         "Uuid" => "Uuid",
         "String" => "Str",
+        "NaiveDateTime" => "Timestamp",
         "bool" => "Bool",
+        "u128" => "U128",
         "u64" => "U64",
+        "u32" => "U32",
+        "u16" => "U16",
         "u8" => "U8",
-        "f64" => "F64",
+        "i128" => "I128",
+        "i64" => "I64",
+        "i32" => "I32",
+        "i16" => "I16",
+        "i8" => "I8",
+        "f64" | "f32" => "F64",
         _ => "Str",
     };
     let dbvalue_variant = ident(raw_dbvalue_variant);
 
     let from_row_transform = match inner_type_str {
         "Uuid" => FromRowTransform::UuidFromU128,
+        "f32" => FromRowTransform::AsF32,
         _ if custom_type => FromRowTransform::Deserialize,
         _ => FromRowTransform::None,
     };
 
-    let stringy_in_sql =
-        list || custom_type || inner_type_str == "Uuid" || inner_type_str == "String";
+    let stringy_in_sql = list
+        || custom_type
+        || inner_type_str == "Uuid"
+        || inner_type_str == "String"
+        || inner_type_str == "NaiveDateTime";
 
-    let stringy_expr_node = inner_type_str == "u32" || inner_type_str == "u64" || inner_type_str == "f32" || inner_type_str == "f64";
+    // proly a lot more
+    let stringy_expr_node =
+        inner_type_str != "String" && inner_type_str != "i64" && inner_type_str != "bool";
+
+    let comparable = match inner_type_str {
+        "NaiveDateTime" | "u128" | "u64" | "u32" | "u16" | "u8" | "i128" | "i64" | "i32"
+        | "i16" | "i8" | "f64" | "f32" => true,
+        _ => false,
+    } && !optional
+        && !list;
 
     Column {
         type_string: type_str.to_owned(),
@@ -531,6 +619,7 @@ fn decompose(field: Field) -> Column {
         unique,
         custom_type,
         stringy_expr_node,
+        comparable,
     }
 }
 
@@ -576,7 +665,7 @@ fn set_column(column: &Column) -> TokenStream2 {
         quote!(if let Some(v) = &self.#name_ident { v.clone() } else { "NULL".to_owned() })
     } else if *stringy_in_sql {
         quote!(format!(#fmt_str, self.#name_ident.clone()))
-    } else if *stringy_expr_node{
+    } else if *stringy_expr_node {
         quote!(self.#name_ident.to_string())
     } else {
         quote!(self.#name_ident.clone())
@@ -591,6 +680,10 @@ fn find_by_(col: &Column) -> Ident {
 
 fn find_by_null_(col: &Column) -> Ident {
     ident(&format!("find_by_null_{}", col.name_str))
+}
+
+fn find_in_range_(col: &Column) -> Ident {
+    ident(&format!("find_in_range_{}", col.name_str))
 }
 
 fn update_(col: &Column) -> Ident {

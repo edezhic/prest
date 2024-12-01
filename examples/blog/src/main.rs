@@ -25,7 +25,9 @@ fn main() {
         id: Uuid::now_v7(),
         task: "example".into(),
         done: false,
-    }.save().expect("should save");
+    }
+    .save()
+    .expect("should save");
 
     blog::routes().embed(BuiltAssets).run()
 }

@@ -1,6 +1,6 @@
 # prest
 
-**P**rogressive **REST**ful framework that _makes application development simple again_. Even if you are not familiar with Rust yet you might be interested because it's designed to be as beginner-friendly as possible. Tutorials are available in the [blog](https://prest.blog/) which is also built with prest. Beware that its still alpha so can be recommended only for pet projects and training because many breaking changes are expected. 
+**P**rogressive **REST**ful framework that _makes application development simple again_. Even if you are not familiar with Rust yet you might be interested because it's designed to be as beginner-friendly as possible. Tutorials are available in the [blog](https://prest.blog/) which is also built with prest. Beware that its still alpha and can only be recommended for pet projects and training because many breaking changes are expected. 
 
 It ain't easy to compete with Laravel, Rails, Nextjs and many others, but I always wanted a framework which enables simplicity in common development needs and allows **any** customizations/optimizations without switching languages. Rust provides ways to build servers, clients, AIs, blockchains, OS kernels and whatever else you might need, while also being arguably the most [reliable practical language](https://prest.blog/rust). Thanks to a lot of [amazing dependencies](https://prest.blog/internals) under the hood prest re-exports a comprehensive toolkit for development and provides a bunch of features on top of them for simplicity:
 
@@ -64,7 +64,7 @@ todo.remove()
 
 As of now `Table` also requires derived `Deserialize` to enable DB editor in the...
 
-**Admin panel** - collects filtered stats for requests/responses, logs, and provides read/write GUI to all initialized tables. While blog intentionally exposes access to it for demo purposes, by default all built-in and apps routes starting with `/admin` are protected by...
+**Admin panel** - collects filtered stats for requests/responses with their timings, high-level info and traces, provides read/write GUI to all initialized tables, allows tracking scheduled tasks and remote host controls in local builds. While blog intentionally exposes access to it for demo purposes, by default all built-in and apps routes starting with `/admin` are protected by...
 
 **Auth** - session and user management based on passwords and OAuth/openID. Persisted in the built-in DB, can be initiated by leading users to the predefined routes, and can retrieve current auth/user info using an extractor:
 
@@ -86,7 +86,7 @@ To enable it you'll need the `auth` feature of prest:
 prest = { version = "0.4", features = ["auth"] }
 ```
 
-Note that currently without this feature panel will be public, so you can take a look in the [blog's](https://prest.blog/admin).
+Note that currently without this feature panel will be public, and you can check it out in the [blog](https://prest.blog/admin).
 
 **Deployment** - prest supports 1 click build-upload-start deploy pipeline based on docker for cross-platform compilation, and comes with automatically configured TLS based on LetsEncrypt. To make it work you'll need to specify the domain in the `Cargo.toml` and provide credentials:
 
@@ -158,16 +158,19 @@ embed_as!(ExamplesDocs from "../" only "*.md");
 embed_as!(ExamplesCode from "../" except "*.md");
 ```
 
-or they can be easily embedded into the router with `.embed(StructName)`.
+or you can easily embed these files into the router with `.embed(StructName)`.
 
 There is also a rust-based cron alternative for background tasks spawned as easy as:
 
 ```rust 
-RT.every(5).seconds().spawn(|| async { do_smth().await })
-RT.every(1).day().at(hour, minute, second).spawn(...) 
+RT.every(5).minutes().spawn(|| async { do_smth().await  })
+// returns either `()` or `Result<(), E: Display>` to enable `?`
+// named tasks can be used to gather additional stats about them 
+RT.every(3).hours().schedule("my regular task", || async { ... })
+RT.every(1).day().at(hour, minute, second).schedule(...) 
 ```
 
-Logging with `trace!`, `debug!`, `info!`, `warn!` and `error!` macros, graceful shutdown mechanism, and many other utils.
+As well as logging with `trace!`, `debug!`, `info!`, `warn!` and `error!` macros, graceful shutdown mechanism, and many other utils.
 
 ### getting started
 
@@ -191,13 +194,15 @@ This is a hobby project and plans change on the fly, but there are things I'd li
 + db dumps/recovery?
 + upgrade scraping example?
 + more interactive frontend tools?
-+ sql escaping?
++ consider last scheduled jobs after server restart 
++ replace sql strings with AST nodes in Table macro
 
 Some ideas are more complex/crazy but interesting:
 + example with a built-in minimalistic polkadot chain - customizable + optionally distributed + optionally public DB
 + web3 tooling for the frontend, either with the above polkadot idea or for solana, with as little JS as possible
 
 There are also longer term things which will be needed or nice to have before the stable release of prest:
+* get rid of as many panics as possible
 * await stable releases of most important dependencies like axum and sled 
 * parallel frontend and cranelift backend of the rust compiler for faster builds
 * stabilization and support of async iterator and other fundamental concurrent std apis

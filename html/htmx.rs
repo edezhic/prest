@@ -4,10 +4,11 @@ use crate::*;
 pub trait HtmxRouting<F> {
     fn wrap_non_htmx(self, wrapper: F) -> Self;
 }
-impl<F, MF> HtmxRouting<F> for Router
+impl<F, Fut, R> HtmxRouting<F> for Router
 where
-    F: Fn(Markup) -> MF + Clone + Send + 'static,
-    MF: Future<Output = Markup> + Send,
+    F: Fn(Markup) -> Fut + Clone + Send + 'static,
+    Fut: Future<Output = R> + Send,
+    R: IntoResponse,
 {
     fn wrap_non_htmx(self, wrapper: F) -> Self {
         self.route_layer(HtmxLayer::wrap(wrapper))
@@ -61,12 +62,13 @@ use core::{
 };
 use std::boxed::Box;
 
-impl<S, F, MF> Service<Request<Body>> for HtmxMiddleware<S, F>
+impl<S, F, Fut, R> Service<Request<Body>> for HtmxMiddleware<S, F>
 where
     S: Service<Request<Body>, Response = Response> + Send + 'static,
     S::Future: Send + 'static,
-    F: Fn(Markup) -> MF + Send + Clone + 'static,
-    MF: Future<Output = Markup> + Send,
+    F: Fn(Markup) -> Fut + Send + Clone + 'static,
+    Fut: Future<Output = R> + Send,
+    R: IntoResponse,
 {
     type Response = S::Response;
     type Error = S::Error;
@@ -96,12 +98,12 @@ where
             if not_htmx_request {
                 let body = axum::body::to_bytes(body, 10000000).await.unwrap();
                 let content = std::string::String::from_utf8(body.to_vec()).unwrap();
-                let content_future = wrapper(PreEscaped(content));
-                let content = content_future.await;
-                let body = Body::from(content.0);
-                let length = body.size_hint().lower();
-                parts.headers.insert(header::CONTENT_LENGTH, length.into());
-                let response = Response::from_parts(parts, body);
+                let response_future = wrapper(PreEscaped(content));
+                let response = response_future.await.into_response();
+                // let body = Body::from(content.0);
+                // let length = body.size_hint().lower();
+                // parts.headers.insert(header::CONTENT_LENGTH, length.into());
+                // let response = Response::from_parts(parts, body);
                 Ok(response)
             } else {
                 parts.headers.insert(

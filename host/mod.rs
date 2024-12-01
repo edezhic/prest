@@ -1,17 +1,12 @@
 use crate::*;
 
 mod admin;
-// use admin::*;
-
-mod state;
-
+mod remote;
 mod server;
+mod state;
 
 mod docker;
 pub(crate) use docker::*;
-
-mod shutdown;
-pub use shutdown::*;
 
 mod runtime;
 pub use runtime::*;
@@ -29,9 +24,9 @@ pub use auth::*;
 
 #[cfg(feature = "traces")]
 mod logs;
-pub use logs::init_tracing_subscriber;
 #[cfg(feature = "traces")]
 use logs::*;
+pub use logs::{init_tracing_subscriber, LOGS_INFO_NAME, LOGS_TRACES_NAME};
 
 #[cfg(feature = "traces")]
 pub mod analytics;
@@ -50,11 +45,12 @@ pub use tokio::{
     task::block_in_place,
 };
 
-
+// #[cfg(feature = "db")]
+// mod shared_sled_storage;
 #[cfg(feature = "db")]
-pub(crate) use gluesql::gluesql_sled_storage::SledStorage as PersistentStorage;
+pub(crate) use gluesql_sled_storage::SledStorage as PersistentStorage;
 
-state!(RT: PrestRuntime = { PrestRuntime { inner: Runtime::new().unwrap(), running_scheduled_tasks: 0.into() } });
+state!(RT: PrestRuntime = { PrestRuntime::init() });
 state!(IS_REMOTE: bool = { env::var("DEPLOYED_TO_REMOTE").is_ok() });
 
 /// Utility trait to use Router as the host
@@ -75,7 +71,7 @@ impl HostUtils for Router {
             .add_auth()
             .add_default_favicon()
             .add_analytics()
-            .nest("/admin",admin::routes())
+            .nest("/admin", admin::routes())
             .add_utility_layers()
             .serve()
     }
@@ -85,8 +81,7 @@ impl HostUtils for Router {
         webview::init_webview(&localhost(&check_port())).unwrap();
     }
     fn serve(self) {
-        RT
-            .block_on(async move { server::start(self).await })
+        RT.block_on(async move { server::start(self).await })
             .unwrap();
     }
 

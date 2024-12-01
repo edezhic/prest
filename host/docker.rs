@@ -58,14 +58,10 @@ pub(crate) fn build_linux_binary() -> Result<String> {
         Ok(s) if s.code().filter(|c| *c == 0).is_some() => Ok(format!(
             "{target_path}/{name}/x86_64-unknown-linux-gnu/release/{name}"
         )),
-        Ok(s) => Err(Error::Anyhow(anyhow!(
-            "Failed to build the linux binary: {s}"
-        ))),
+        Ok(s) => Err(e!("Failed to build the linux binary: {s}")),
         Err(e) => {
             error!("{e}");
-            Err(Error::Anyhow(anyhow!(
-                "Failed to start the docker builder image"
-            )))
+            Err(e!("Failed to start the docker builder image"))
         }
     }
 }
@@ -79,7 +75,7 @@ fn prepare_docker_builder(target_dir: &str) -> Result {
         .arg(DOCKER_BUILDER_IMAGE)
         .stdout(Stdio::null())
         .status()
-        .unwrap()
+        .somehow()?
         .success()
     {
         std::fs::write(dockerfile_path, BUILDER_DOCKERFILE)?;
@@ -95,7 +91,7 @@ fn prepare_docker_builder(target_dir: &str) -> Result {
             .status()
         {
             error!("{e}");
-            return Err(Error::Anyhow(anyhow!("Failed to build the linux binary")));
+            return Err(e!("Failed to build the linux binary"));
         }
     }
     OK

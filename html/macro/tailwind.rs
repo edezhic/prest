@@ -579,6 +579,7 @@ fn parse_color(class: &str) -> Option<String> {
         "text" => "color",
         "bg" => "background-color",
         "border" => "border-color",
+        "accent" => "accent-color",
         _ => return None,
     };
 

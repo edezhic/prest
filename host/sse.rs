@@ -1,6 +1,6 @@
 use crate::*;
-pub use axum::response::sse::{Event as SseEvent, KeepAlive as SseKeepAlive, Sse};
 use async_broadcast::{broadcast, Receiver, Sender};
+pub use axum::response::sse::{Event as SseEvent, KeepAlive as SseKeepAlive, Sse};
 /// Alias for Server Sent Events event
 pub type SseItem = Result<SseEvent, Infallible>;
 
@@ -37,7 +37,7 @@ impl<T: Clone + Send> SseBroadcast<T> {
                 data,
             })
             .await
-            .map_err(|e| anyhow!("{e}"))?;
+            .somehow()?;
         Ok(())
     }
 }

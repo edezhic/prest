@@ -1,57 +1,55 @@
-use crate::{analytics::RouteStats, *};
+use crate::{analytics::RouteStat, *};
 
 pub(crate) async fn full() -> impl IntoResponse {
-    let routes_stats = RouteStats::find_all();
+    let routes_stats = RouteStat::find_all();
     let mut total_path_hits = 0;
 
-    let stats_view: Vec<(String, u64, String, Vec<(u16, u64)>, bool)> =  routes_stats.into_iter().map(|rs| {
-        let statuses: Vec<(u16, u64)> = rs
-            .statuses
-            .into_iter()
-            .filter(|(status, _)| *status != 200 && *status != 304)
-            .collect();
-        if !rs.is_asset {
-            total_path_hits += rs.hits;
-        }
-        let avg_latency = format!("{:.3}ms", rs.avg_latency);
-        (rs.path, rs.hits, avg_latency, statuses, rs.is_asset)
-    }).collect();
+    type Stats = Vec<(Markup, Markup, u64, Markup)>;
 
-    let (path_stats, asset_stats): (Vec<_>, Vec<_>) =
-        stats_view.into_iter().partition(|r| { !r.4 });
+    let mut path_stats: Stats = vec![];
+    let mut asset_stats: Stats = vec![];
+
+    for route in routes_stats {
+        for (method, (hits, latency)) in route.method_hits_and_latency {
+            let method = PreEscaped(method);
+            let path = PreEscaped(route.path.clone());
+            let latency = PreEscaped(format!("{:.3}ms", latency));
+
+            let view = (method, path, hits, latency);
+
+            if route.is_asset {
+                asset_stats.push(view);
+            } else {
+                path_stats.push(view);
+                total_path_hits += hits;
+            }
+        }
+    }
 
     html! {
+        a get="/admin/schedule_stats" trigger="load" into="this" swap-full {}
         $"font-bold text-lg" {"Routes stats (total hits: "(total_path_hits)"*)"}
-        $"italic text-xs" {"*only counts requests to the server, static pages like blog's are served primarily by the Service Worker and aren't reflected here"}
-        table $"w-full text-sm font-mono" {
+        $"hidden md:block italic text-xs" {"*only counts requests to the server, static pages like blog's are served primarily by the Service Worker and aren't reflected here"}
+        table $"w-full text-xs md:text-sm font-mono" {
             @for route in path_stats {
                 tr {
-                    td $"w-1/4"{(route.0)}
-                    td $"w-1/4"{(route.1)}
-                    td $"w-1/4"{(route.2)}
-                    td $"w-1/4"{
-                        @for (status, hits) in route.3 {
-                            (status)"("(hits)")"
-                        }
-                    }
+                    td $"w-[17%]"{(route.0)}
+                    td $"w-[53%]"{(route.1)}
+                    td $"w-[10%]"{(route.2)}
+                    td $"w-[20%]"{(route.3)}
                 }
             }
         }
         $"font-bold text-lg" {"Assets"}
-        table $"w-full text-sm font-mono" {
+        table $"w-full text-xs md:text-sm font-mono" {
             @for route in asset_stats {
                 tr {
-                    td $"w-1/4"{(route.0)}
-                    td $"w-1/4"{(route.1)}
-                    td $"w-1/4"{(route.2)}
-                    td $"w-1/4"{
-                        @for (status, hits) in route.3 {
-                            (status)"("(hits)")"
-                        }
-                    }
+                    td $"w-[17%]"{(route.0)}
+                    td $"w-[53%]"{(route.1)}
+                    td $"w-[10%]"{(route.2)}
+                    td $"w-[20%]"{(route.3)}
                 }
             }
         }
     }
 }
-

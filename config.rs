@@ -6,24 +6,19 @@ macro_rules! init {
     ($(tables $($table:ident),+)?) => {
         {
             let manifest = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml"));
-            #[cfg(not(target_arch = "wasm32"))] {
-                let _ = prest::dotenv();
-                let _ = *prest::SYSTEM_INFO;
-            }
-            
             let config = APP_CONFIG.init(manifest, env!("CARGO_MANIFEST_DIR"));
-            
+
             #[cfg(not(target_arch = "wasm32"))] {
+                prest::Lazy::force(&RT);
+                let _ = prest::dotenv();
                 prest::init_tracing_subscriber();
-                prest::DB.init();
+                prest::Lazy::force(&DB);
+                // initializing here because it starts with the runtime but requires the DB
+                prest::ScheduledJobRecord::migrate();
                 $(
                     $( $table::prepare_table(); )+
-                )?    
-                let _ = *prest::RT;
-                #[cfg(unix)] {
-                    let _ = *prest::SHUTDOWN;
-                    prest::RT.spawn(listen_shutdown());
-                }
+                )?
+                prest::Lazy::force(&SYSTEM_INFO);
             }
 
             prest::info!("Initialized {} v{}", config.name, config.version);
@@ -38,13 +33,16 @@ pub struct AppConfig {
     pub persistent: bool,
     pub domain: Option<String>,
     pub manifest_dir: String,
+    #[cfg(host)]
+    pub data_dir: std::path::PathBuf,
 }
 
-/// Holds initialized [`AppConfig`]
+/// Holds initialized [`AppConfig`], requires arguments from the init macro to initialize so cant be Lazy
 pub static APP_CONFIG: std::sync::OnceLock<AppConfig> = std::sync::OnceLock::new();
 
 /// Interface for the [`APP_CONFIG`]
 pub trait AppConfigAccess {
+    /// Runs inside of the [`init!`] macro to read options from app's manifest
     fn init(&self, manifest: &'static str, manifest_dir: &'static str) -> &AppConfig;
     fn check(&self) -> &AppConfig;
 }
@@ -84,11 +82,12 @@ impl AppConfigAccess for std::sync::OnceLock<AppConfig> {
         };
 
         #[cfg(host)]
-        {
+        let data_dir = {
             let project_dirs = prest::ProjectDirs::from("", "", &name).unwrap();
             let path = project_dirs.data_dir().to_path_buf();
-            std::fs::create_dir_all(path).unwrap();
-        }
+            std::fs::create_dir_all(&path).unwrap();
+            path
+        };
 
         self.get_or_init(|| AppConfig {
             name,
@@ -96,11 +95,13 @@ impl AppConfigAccess for std::sync::OnceLock<AppConfig> {
             persistent,
             domain,
             manifest_dir: manifest_dir.to_owned(),
+            #[cfg(host)]
+            data_dir,
         })
     }
 
     fn check(&self) -> &AppConfig {
         self.get()
-            .expect("config should be initialized first. Did you forget to run init! macro?")
+            .expect("App config should be initialized first. Did you forget to add `init!();` macro in the beginning of the main function?")
     }
 }

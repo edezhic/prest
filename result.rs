@@ -4,7 +4,7 @@ use crate::*;
 pub type Result<T = (), E = Error> = std::result::Result<T, E>;
 
 /// Utility for type inference that allows using `?` operator in closure handlers
-pub const OK: Result<(), Error> = Result::Ok(());
+pub const OK: prest::Result<(), Error> = prest::Result::Ok(());
 
 /// Utility for type inference that allows using `?` operator in closure handlers
 pub const fn ok<T: IntoResponse>(resp: T) -> Result<T, Error> {
@@ -23,18 +23,42 @@ pub enum Error {
     NotFound,
     #[error(transparent)]
     Env(#[from] std::env::VarError),
+    #[error(transparent)]
+    ChronoParse(#[from] chrono::ParseError),
+    #[error(transparent)]
+    UuidParse(#[from] uuid::Error),
+    #[error(transparent)]
+    ParseIntError(#[from] std::num::ParseIntError),
     #[cfg(all(host, feature = "auth"))]
     #[error(transparent)]
     Session(#[from] tower_sessions::session_store::Error),
     #[cfg(all(host, feature = "auth"))]
     #[error(transparent)]
-    Auth(#[from] AuthError),
+    AuthBackend(#[from] AuthError),
+    #[cfg(all(host, feature = "auth"))]
+    #[error(transparent)]
+    AxumLogin(#[from] axum_login::Error<Db>),
     #[cfg(all(host, feature = "auth"))]
     #[error(transparent)]
     OAuth(#[from] openidconnect::ClaimsVerificationError),
     #[cfg(feature = "db")]
     #[error(transparent)]
     GlueSQL(#[from] gluesql::core::error::Error),
+    #[cfg(all(host, feature = "db"))]
+    #[error(transparent)]
+    Sled(#[from] sled::Error),
+    #[cfg(all(host, feature = "db"))]
+    #[error(transparent)]
+    SledTransactionError(#[from] sled::transaction::TransactionError),
+    #[cfg(all(host, feature = "db"))]
+    #[error(transparent)]
+    SledUnabortableTransactionError(#[from] sled::transaction::UnabortableTransactionError),
+    #[cfg(all(host, feature = "db"))]
+    #[error(transparent)]
+    SledConflictableTransactionError(#[from] sled::transaction::ConflictableTransactionError),
+    #[cfg(all(host, feature = "db"))]
+    #[error(transparent)]
+    Bincode(#[from] bincode::Error),
     #[error(transparent)]
     IO(#[from] std::io::Error),
     #[error(transparent)]
@@ -58,7 +82,7 @@ impl IntoResponse for Error {
             Error::QueryRejection(e) => e.into_response(),
             Error::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
             #[cfg(all(host, feature = "auth"))]
-            Error::Auth(_) | Error::Session(_) | Error::OAuth(_) => {
+            Error::AxumLogin(_) | Error::AuthBackend(_) | Error::Session(_) | Error::OAuth(_) => {
                 StatusCode::UNAUTHORIZED.into_response()
             }
             Error::NotFound => StatusCode::NOT_FOUND.into_response(),
@@ -70,3 +94,31 @@ impl IntoResponse for Error {
     }
 }
 
+pub trait Somehow<T, E> {
+    fn somehow(self) -> Result<T, Error>;
+}
+
+impl<T, E> Somehow<T, E> for Result<T, E>
+where
+    E: std::fmt::Display,
+{
+    fn somehow(self) -> Result<T, Error> {
+        self.map_err(|e| anyhow!("{e}").into())
+    }
+}
+
+#[macro_export]
+macro_rules! e {
+    ($($tokens:tt),+) => {
+        prest::Error::Anyhow(anyhow!($($tokens),+))
+    };
+}
+
+#[cfg(host)]
+impl From<sled::transaction::ConflictableTransactionError<Box<bincode::ErrorKind>>> for Error {
+    fn from(
+        value: sled::transaction::ConflictableTransactionError<Box<bincode::ErrorKind>>,
+    ) -> Self {
+        e!("{value}")
+    }
+}

@@ -57,10 +57,10 @@ impl GoogleClient {
         Ok(token
             .extra_fields()
             .id_token()
-            .ok_or(anyhow!("server did not return an ID token"))?
+            .ok_or(e!("server did not return an ID token"))?
             .claims(&self.0.id_token_verifier(), &nonce)?
             .email()
-            .ok_or(anyhow!("email not found in openID claims"))?
+            .ok_or(e!("email not found in openID claims"))?
             .to_string())
     }
 
@@ -70,7 +70,7 @@ impl GoogleClient {
             .exchange_code(AuthorizationCode::new(code))
             .request_async(async_http_client)
             .await
-            .map_err(|e| anyhow!(e))?)
+            .somehow()?)
     }
 }
 

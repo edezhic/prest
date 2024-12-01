@@ -1,23 +1,58 @@
 use crate::{host::internal_request, *};
 
+use http::Method;
 use pin_project_lite::pin_project;
 use std::{collections::HashMap, task::ready, time::Instant};
 use tracing::Span;
 
 /// Describes collected stats for some path
 #[derive(Debug, Table, Serialize, Deserialize)]
-pub struct RouteStats {
+pub struct RouteStat {
     pub path: String,
-    pub hits: u64,
-    pub statuses: HashMap<u16, u64>,
-    pub avg_latency: f64,
+    pub method_hits_and_latency: HashMap<String, (u64, f64)>,
     pub is_asset: bool,
+}
+
+impl RouteStat {
+    pub fn record(req_method: Method, path: String, latency: f64) {
+        let req_method = req_method.to_string();
+        if let Some(mut stats) = RouteStat::find_by_path(&path) {
+            let entry = stats.method_hits_and_latency.entry(req_method).or_default();
+
+            let updated_hits = entry.0 + 1;
+
+            let updated_avg_latency = (entry.0 as f64 * entry.1 + latency) / (updated_hits as f64);
+
+            *entry = (updated_hits, updated_avg_latency);
+
+            if let Err(e) = stats.save() {
+                warn!("Failed to update stats: {e}");
+            }
+        } else {
+            let is_asset =
+                mime_guess::from_path(&path).first().is_some() || path.ends_with(".webmanifest");
+
+            let mut mhal = HashMap::new();
+            mhal.insert(req_method, (1, latency));
+
+            let stats = RouteStat {
+                path,
+                method_hits_and_latency: mhal,
+                is_asset,
+            };
+
+            if let Err(e) = stats.save() {
+                warn!("Failed to save new stats: {e}");
+            }
+        }
+    }
 }
 
 fn record_response_metrics(
     resp: &Response,
     latency: std::time::Duration,
     _span: &Span,
+    req_method: Method,
     req_path: String,
     internal_req: bool,
 ) {
@@ -25,58 +60,22 @@ fn record_response_metrics(
     let short_latency = format!("{latency:.3}");
 
     let status = resp.status();
-    let boring_resp =
-        status == StatusCode::NOT_MODIFIED || status == StatusCode::METHOD_NOT_ALLOWED;
 
-    if boring_resp {
-        trace!(kind = "response", latency_ms = %short_latency, code = %status);
-    } else {
-        debug!(kind = "response", latency_ms = %short_latency, code = %status);
+    let boring_resp = matches!(
+        status,
+        StatusCode::NOT_MODIFIED | StatusCode::METHOD_NOT_ALLOWED | StatusCode::NOT_FOUND
+    );
+
+    match boring_resp {
+        true => trace!(kind = "response", latency_ms = %short_latency, code = %status),
+        false => debug!(kind = "response", latency_ms = %short_latency, code = %status),
     }
 
-    if internal_req || status == StatusCode::NOT_FOUND {
-        return;
+    if !internal_req && !boring_resp {
+        RT.spawn_blocking(move || {
+            RouteStat::record(req_method, req_path, latency);
+        });
     }
-
-    RT.spawn_blocking(move || {
-        let status = status.as_u16();
-        if let Some(mut stats) = RouteStats::find_by_path(&req_path) {
-            let updated_hits = stats.hits + 1;
-
-            let updated_avg_latency =
-                (stats.hits as f64 * stats.avg_latency + latency) / (updated_hits as f64);
-
-            stats.hits = updated_hits;
-            stats.avg_latency = updated_avg_latency;
-
-            stats
-                .statuses
-                .entry(status)
-                .and_modify(|v| *v += 1)
-                .or_insert(1);
-
-            if let Err(e) = stats.save() {
-                warn!("Failed to update stats: {e}");
-            }
-        } else {
-            let is_asset = mime_guess::from_path(&req_path).first().is_some()
-                || req_path.ends_with(".webmanifest");
-
-            let mut stats = RouteStats {
-                path: req_path,
-                hits: 1,
-                statuses: HashMap::new(),
-                avg_latency: latency,
-                is_asset,
-            };
-
-            stats.statuses.insert(status, 1);
-
-            if let Err(e) = stats.save() {
-                warn!("Failed to save new stats: {e}");
-            }
-        }
-    });
 }
 
 /// Layer that collects analytics
@@ -85,7 +84,7 @@ pub struct AnalyticsLayer;
 
 impl AnalyticsLayer {
     pub fn init() -> Self {
-        RouteStats::migrate();
+        RouteStat::migrate();
         Self
     }
 }
@@ -129,6 +128,7 @@ where
         let start = Instant::now();
         let internal_req = internal_request(&req);
         let span = make_span(&req, internal_req);
+        let req_method = req.method().clone();
         let req_path = req.uri().path().to_owned();
 
         let future = {
@@ -140,6 +140,7 @@ where
             inner: future,
             span,
             start,
+            req_method: Some(req_method),
             req_path: Some(req_path),
             internal_req,
         }
@@ -169,6 +170,7 @@ pin_project! {
         pub(crate) inner: F,
         pub(crate) span: Span,
         pub(crate) start: Instant,
+        pub(crate) req_method: Option<Method>,
         pub(crate) req_path: Option<String>,
         pub(crate) internal_req: bool,
     }
@@ -193,6 +195,7 @@ where
                     &res,
                     latency,
                     this.span,
+                    this.req_method.take().unwrap(),
                     this.req_path.take().unwrap(),
                     *this.internal_req,
                 );

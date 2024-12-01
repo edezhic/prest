@@ -4,16 +4,18 @@ use rustls_acme::{caches::DirCache, AcmeConfig};
 use std::net::{Ipv6Addr, SocketAddr};
 
 pub async fn start(router: Router) -> Result<(), Error> {
-    let app = APP_CONFIG.check();
-    let name = app.name.clone();
-    let domain = app.domain.clone();
+    let AppConfig {
+        name,
+        domain,
+        data_dir,
+        ..
+    } = APP_CONFIG.check();
 
-    let handle = SHUTDOWN.new_server_handle();
+    let handle = RT.new_server_handle();
 
     if *IS_REMOTE {
         if let Some(domain) = domain {
-            let project_dirs = prest::ProjectDirs::from("", "", &name).unwrap();
-            let mut certs_path = project_dirs.data_dir().to_path_buf();
+            let mut certs_path = data_dir.clone();
             certs_path.push("certs");
 
             let mut state = AcmeConfig::new(vec![domain.clone()])

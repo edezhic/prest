@@ -23,7 +23,7 @@ async fn page(content: Markup) -> Markup {
 
         body $"max-w-screen-md lg:max-w-screen-lg md:mx-auto"
             hx-boost="true" hx-swap="innerHTML transition:true show:window:top" into="main" {
-            nav $"bg-stone-900 my-4 p-5 shadow-lg rounded-full grid grid-cols-3 items-center" {
+            nav $"bg-stone-900 top-4 mb-4 p-5 shadow-lg rounded-full grid grid-cols-3 items-center sticky z-10" {
                 $"flex gap-6" {
                     a $"hover:text-white" href="https://github.com/edezhic/prest" {(include_html!("../icons/github.svg"))}
                     a $"hover:text-white" href="https://docs.rs/prest" {(include_html!("../icons/docs.svg"))}
@@ -32,8 +32,10 @@ async fn page(content: Markup) -> Markup {
                 a $"font-bold text-center hover:text-white" href="/" {"PREST"}
 
                 $"flex justify-end" {
+                    a $"hover:text-white mr-3 lg:mr-6" href="/admin" boost="false" {(include_html!("../icons/admin.svg"))}
+
                     @if is_pwa() {
-                        div #"sw-badge" $"mr-6 font-bold text-sm" get="/sw/health" into="this" trigger="every 3s delay:3s" swap-none
+                        div #"sw-badge" $"mr-3 lg:mr-6 font-bold text-sm" get="/sw/health" into="this" trigger="every 3s delay:3s" swap-none
                         _="on htmx:afterRequest
                             if event.detail.successful set #sw-badge.style.color to '#059669'
                             else set #sw-badge.style.color to '#991b1b'"
@@ -46,7 +48,7 @@ async fn page(content: Markup) -> Markup {
                         }
                     }
 
-                    div #"menu" $"absolute bg-stone-950 z-10 top-8 px-4 truncate shadow-xl rounded-xl w-52" {
+                    div #"menu" $"absolute bg-stone-950 z-20 top-8 px-4 truncate shadow-xl rounded-xl w-52" {
                         style {"
                             #menu { max-height: 0px } #menu.open { max-height: 1000px } 
                             #menu a { display: flex; align-items: center; padding: 0.25rem 0 0.25rem 0.5rem; border-radius: 1rem; }
@@ -74,8 +76,8 @@ async fn page(content: Markup) -> Markup {
                 code { font-size: 13px !important }
                 "#}
 
-            main $"opacity-80 mx-auto p-4 gap-3 flex flex-col text-sm lg:text-base leading-loose"
-                hx-history-elt _="on load or htmx:afterSwap call format_content()"
+            main history-elt _="on load or htmx:afterSwap call format_content()"
+                $"opacity-80 mx-auto p-4 gap-3 flex flex-col text-sm lg:text-base leading-loose"
                 {(content)}
 
             $"flex items-center justify-evenly p-4 w-full bg-stone-900 rounded-full mb-4 mx-auto text-xs lg:text-base" {
