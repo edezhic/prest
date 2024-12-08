@@ -4,11 +4,15 @@ embed_build_output_as!(BuiltAssets);
 
 #[derive(Debug, Table, Default, Serialize, Deserialize)]
 struct Todo {
-    #[serde(default = "Uuid::now_v7")]
     pub id: Uuid,
-    pub task: String,
-    #[serde(default)]
+    pub custom: Inner,
     pub done: bool,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
+struct Inner {
+    a: String,
+    b: NaiveDateTime,
 }
 
 fn main() {
@@ -23,7 +27,7 @@ fn main() {
     // prepare table to showcase in the admin panel
     Todo {
         id: Uuid::now_v7(),
-        task: "example".into(),
+        custom: Default::default(),
         done: false,
     }
     .save()

@@ -22,7 +22,7 @@ async fn page(content: Markup) -> Markup {
         (Head::with_title("Prest Blog"))
 
         body $"max-w-screen-md lg:max-w-screen-lg md:mx-auto"
-            hx-boost="true" hx-swap="innerHTML transition:true show:window:top" into="main" {
+            hx-boost="true" hx-swap="innerHTML show:window:top" into="main" {
             nav $"bg-stone-900 top-4 mb-4 p-5 shadow-lg rounded-full grid grid-cols-3 items-center sticky z-10" {
                 $"flex gap-6" {
                     a $"hover:text-white" href="https://github.com/edezhic/prest" {(include_html!("../icons/github.svg"))}
@@ -32,13 +32,14 @@ async fn page(content: Markup) -> Markup {
                 a $"font-bold text-center hover:text-white" href="/" {"PREST"}
 
                 $"flex justify-end" {
-                    a $"hover:text-white mr-3 lg:mr-6" href="/admin" boost="false" {(include_html!("../icons/admin.svg"))}
+                    a $"hover:text-white mr-2 lg:mr-6" href="/admin" boost="false" {(include_html!("../icons/admin.svg"))}
 
                     @if is_pwa() {
-                        div #"sw-badge" $"mr-3 lg:mr-6 font-bold text-sm" get="/sw/health" into="this" trigger="every 3s delay:3s" swap-none
+                        div $"mr-2 lg:mr-6 font-bold text-sm" get="/sw/health" swap="none transition:false" trigger="every 3s delay:3s"
                         _="on htmx:afterRequest
-                            if event.detail.successful set #sw-badge.style.color to '#059669'
-                            else set #sw-badge.style.color to '#991b1b'"
+                            if event.detail.successful set my.style.color to '#059669'
+                            else set my.style.color to '#991b1b' 
+                            halt the event"
                         {"SW"}
                     }
 

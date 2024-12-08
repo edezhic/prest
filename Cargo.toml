@@ -38,7 +38,7 @@ auth = ["tower-sessions", "axum-login", "openidconnect", "password-auth", "db"]
 db = ["gluesql", "gluesql_sled_storage", "bincode", "prest-db-macro"]
 embed = ["prest-embed-macro", "prest-embed-utils", "hex"]
 html = ["prest-html-macro"]
-traces = ["tracing-subscriber", "tracing-web", "ansi-to-html"]
+traces = ["tracing-subscriber", "tracing-appender", "tracing-web", "ansi-to-html"]
 webview = ["wry", "tao"]
 validator = ["axum-valid/full_validator"]
 validify = ["axum-valid/full_validify"]
@@ -51,7 +51,7 @@ prest-embed-utils = { path = "embed/utils", version = "0.1.0", optional = true }
 prest-db-macro = { path = "db/macro", version = "0.3.0", optional = true }
 prest-serde-derive-fork = { path = "serde_derive_fork", version = "1.0.203" }
 
-anyhow = "1.0.93"
+anyhow = "1.0.94"
 thiserror = "2"
 async-trait = "0.1.81"
 itoa = "1"
@@ -66,24 +66,25 @@ time = { version = "0.3", features = ["wasm-bindgen"] }
 hex = { version = "0.4", optional = true }
 axum-htmx = { version = "0.6", features = ["serde"] }
 axum-valid = { version = "0.14", default-features = false, features = ["form", "json", "query", "422"] }
-toml = "0.8.8"
+toml = "0.8"
 semver = { version = "1.0", features = ["serde"] }
-ansi-to-html = { version = "0.2.1", optional = true }
+ansi-to-html = { version = "0.2", optional = true }
 pin-project-lite = "0.2"
-gluesql = { git = "https://github.com/gluesql/gluesql.git", rev = "9e3f8fc", default-features = false, features = ["gluesql-shared-memory-storage"], optional = true }
+gluesql = { version = "0.16.3", default-features = false, features = ["gluesql-shared-memory-storage"], optional = true }
 
 # host
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 axum = "0.7.9"
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "net", "sync", "signal"] }
-tower-http = { version = "0.5.1", features = ["catch-panic", "compression-br", "limit", "normalize-path"] }
+tower-http = { version = "0.6.2", features = ["catch-panic", "compression-br", "limit", "normalize-path"] }
 dotenvy = "0.15"
-tower-livereload = "0.9.3"
-uuid = { version = "1.6", features = ["v4", "v7", "serde"] }
+tower-livereload = "0.9.5"
+uuid = { version = "1.11", features = ["v4", "v7", "serde"] }
 axum-server = { version = "0.7", features = ["tls-rustls"] }
-gluesql_sled_storage = { git = "https://github.com/gluesql/gluesql.git", rev = "9e3f8fc", optional = true }
+gluesql_sled_storage = { version = "0.16.3", optional = true }
 bincode = { version = "1", optional = true }
 tracing-subscriber = { version = "0.3.18", features = ["fmt", "chrono", "env-filter", "json"], optional = true } 
+tracing-appender = { version = "0.2", optional = true }
 tower-sessions = { version = "0.13", optional = true }
 axum-login = { version = "0.16", optional = true }
 openidconnect = { version = "3.5", optional = true }
@@ -93,10 +94,10 @@ tao = { version = "0.24", default-features = false, features = [ "rwh_05" ], opt
 tokio_schedule = "0.3.1"
 directories = "5.0"
 sled = "0.34"
-russh = "0.44"
-russh-keys = "0.44"
-russh-sftp = "2.0.0-beta.2"
-rustls-acme = { version = "0.11", features = ["axum"] }
+russh = "0.48"
+russh-keys = "0.48.1"
+russh-sftp = "2.0.6"
+rustls-acme = { version = "0.12", features = ["axum"] }
 rev_buf_reader = "0.3.0"
 async-broadcast = "0.7.1"
 sysinfo = "0.32"
@@ -114,4 +115,4 @@ tracing-web = { version = "0.1.3", optional = true }
 tracing-subscriber = { version = "0.3.18", features = ["fmt", "time"], optional = true }
 
 [build-dependencies]
-prest-build = { path = "./build", version = "0.2", default-features = false }
+prest-build = { path = "./build", version = "0.3", default-features = false, features = ["typescript", "sass"] }

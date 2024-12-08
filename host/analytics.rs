@@ -26,7 +26,7 @@ impl RouteStat {
             *entry = (updated_hits, updated_avg_latency);
 
             if let Err(e) = stats.save() {
-                warn!("Failed to update stats: {e}");
+                warn!(target:"analytics", "Failed to update stats: {e}");
             }
         } else {
             let is_asset =
@@ -42,7 +42,7 @@ impl RouteStat {
             };
 
             if let Err(e) = stats.save() {
-                warn!("Failed to save new stats: {e}");
+                warn!(target:"analytics", "Failed to save new stats: {e}");
             }
         }
     }
@@ -54,7 +54,6 @@ fn record_response_metrics(
     _span: &Span,
     req_method: Method,
     req_path: String,
-    internal_req: bool,
 ) {
     let latency = latency.as_secs_f64() * 1000.0; // into millis
     let short_latency = format!("{latency:.3}");
@@ -67,14 +66,13 @@ fn record_response_metrics(
     );
 
     match boring_resp {
-        true => trace!(kind = "response", latency_ms = %short_latency, code = %status),
-        false => debug!(kind = "response", latency_ms = %short_latency, code = %status),
-    }
-
-    if !internal_req && !boring_resp {
-        RT.spawn_blocking(move || {
-            RouteStat::record(req_method, req_path, latency);
-        });
+        true => trace!(target: "response", latency = %short_latency, code = %status.as_u16()),
+        false => {
+            debug!(target: "response", latency = %short_latency, code = %status.as_u16());
+            RT.spawn_blocking(move || {
+                RouteStat::record(req_method, req_path, latency);
+            });
+        }
     }
 }
 
@@ -127,7 +125,7 @@ where
     fn call(&mut self, req: Request<Body>) -> Self::Future {
         let start = Instant::now();
         let internal_req = internal_request(&req);
-        let span = make_span(&req, internal_req);
+        let span = make_span(&req);
         let req_method = req.method().clone();
         let req_path = req.uri().path().to_owned();
 
@@ -147,7 +145,7 @@ where
     }
 }
 
-fn make_span(request: &Request, internal_req: bool) -> Span {
+fn make_span(request: &Request) -> Span {
     let method = request.method().as_str();
     let uri = request.uri();
     let path = uri.path();
@@ -157,11 +155,7 @@ fn make_span(request: &Request, internal_req: bool) -> Span {
         uri.to_string()
     };
 
-    if internal_req {
-        tracing::trace_span!("request", method, uri)
-    } else {
-        tracing::debug_span!("request", method, uri)
-    }
+    tracing::debug_span!("http", method, uri)
 }
 
 pin_project! {
@@ -187,18 +181,19 @@ where
         let this = self.project();
         let _guard = this.span.enter();
         let result = ready!(this.inner.poll(cx));
-        let latency = this.start.elapsed();
-
+        
         match result {
             Ok(res) => {
-                record_response_metrics(
-                    &res,
-                    latency,
-                    this.span,
-                    this.req_method.take().unwrap(),
-                    this.req_path.take().unwrap(),
-                    *this.internal_req,
-                );
+                if !*this.internal_req {
+                    record_response_metrics(
+                        &res,
+                        this.start.elapsed(),
+                        this.span,
+                        this.req_method.take().unwrap(),
+                        this.req_path.take().unwrap(),
+                    );
+                }
+                
                 Poll::Ready(Ok(res))
             }
             Err(err) => Poll::Ready(Err(err)),

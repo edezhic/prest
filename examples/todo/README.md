@@ -20,12 +20,11 @@ Since this is a quite unusal templating solution and used together with [HTMX](h
 
 1. if the tag is not specified, like the parent tag of a todo, then it's rendered as a `div`
 2. `$"..."` works somewhat like class html attribute in tailwind but `html!` macro converts them into embedded css
-3. `into="this"` (alias for `hx-target`) sets htmx to swap this element on requests from it or it's children
-4. `swap-full` (alias for `hx-swap="outerHTML"`) sets htmx to swap the whole element (by default it swaps it's children)
-5. `vals=(json!(self))` (alias for `hx-vals`) adds json-serialized todo fields which htmx will form-encode and send with requests
-6. `patch="/"` (alias for `hx-patch`) sets this element to send `PATCH` method requests to `/` when triggered
-7. `delete="/"` (alias for `hx-delete`) sets this element to send `DELETE` method requests to `/` when triggered
-8. `checked[self.done]` adds `checked` attribute if `self.done` is true
+3. `swap-this` (alias for `hx-target="this" hx-swap="outerHTML"`) configures htmx to swap this element and to swap it whole (by default it swaps it's children = `innerHTML`)
+4. `vals=(json!(self))` (alias for `hx-vals`) adds json-serialized todo fields which htmx will form-encode and send with requests
+5. `patch="/"` (alias for `hx-patch`) sets this element to send `PATCH` method requests to `/` when triggered
+6. `delete="/"` (alias for `hx-delete`) sets this element to send `DELETE` method requests to `/` when triggered
+7. `checked[self.done]` adds `checked` attribute if `self.done` is true
 
 Then goes the function that renders the whole page based on provided `content`:
 

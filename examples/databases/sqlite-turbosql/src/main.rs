@@ -36,7 +36,7 @@ impl Render for Todo {
         let task = self.task.clone().unwrap();
         let done = self.done.clone().unwrap();
         html! {
-            $"flex items-center" into="this" swap-full vals=(json!({ "rowid": rowid, "task": task, "done": done})) {
+            $"flex items-center" swap-this vals=(json!({ "rowid": rowid, "task": task, "done": done})) {
                 input type="checkbox" patch="/" checked[done] {}
                 label $"ml-4 text-lg" {(task)}
                 button $"ml-auto" detele="/" {"Delete"}

@@ -27,14 +27,14 @@ pub async fn start(router: Router) -> Result<(), Error> {
             tokio::spawn(async move {
                 loop {
                     match state.next().await {
-                        Some(Ok(ok)) => trace!("TLS acme event: {:?}", ok),
-                        Some(Err(err)) => error!("TLS acme error: {:?}", err),
+                        Some(Ok(ok)) => trace!(target: "server", "TLS acme event: {:?}", ok),
+                        Some(Err(err)) => error!(target: "server", "TLS acme error: {:?}", err),
                         None => tokio::time::sleep(std::time::Duration::from_millis(100)).await,
                     }
                 }
             });
 
-            info!("Starting serving {name} at https://{domain}");
+            info!(target: "server", "Starting serving {name} at https://{domain}");
             axum_server::bind(SocketAddr::from((Ipv6Addr::UNSPECIFIED, 443)))
                 .acceptor(acceptor)
                 .handle(handle)
@@ -47,7 +47,7 @@ pub async fn start(router: Router) -> Result<(), Error> {
                 .await?;
         }
     } else {
-        info!("Starting serving {name} at http://localhost");
+        info!(target: "server", "Starting serving {name} at http://localhost");
         axum_server::bind(SocketAddr::from((Ipv6Addr::UNSPECIFIED, check_port())))
             .handle(handle)
             .serve(router.into_make_service_with_connect_info::<SocketAddr>())

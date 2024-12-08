@@ -18,8 +18,8 @@ where
                 Err(e) => Err(e.into()),
             }
         } else {
-            match Form::<T>::from_request(req, state).await {
-                Ok(Form(params)) => Ok(Vals(params)),
+            match Json::<T>::from_request(req, state).await {
+                Ok(Json(params)) => Ok(Vals(params)),
                 Err(e) => Err(e.into()),
             }
         }

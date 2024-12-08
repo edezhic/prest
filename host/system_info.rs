@@ -64,7 +64,7 @@ impl SystemInfo {
             SYSTEM_INFO.total_disk - disk.available_space().div_ceil(1_000_000) as u32;
 
         let Some(current) = sys.process(SYSTEM_INFO.app_pid) else {
-            error!("Current process not found");
+            error!(target: "system info", "Current process not found");
             return;
         };
 
@@ -84,7 +84,7 @@ impl SystemInfo {
         };
 
         if let Err(e) = stats.save() {
-            warn!("Failed to save system stats: {e}");
+            warn!(target: "system info", "Failed to save system stats: {e}");
         }
     }
 

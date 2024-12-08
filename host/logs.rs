@@ -1,5 +1,6 @@
 use crate::*;
 
+use chrono::NaiveDate;
 use rev_buf_reader::RevBufReader;
 use std::{
     fs::OpenOptions,
@@ -7,6 +8,7 @@ use std::{
     path::PathBuf,
 };
 use tracing::Level;
+use tracing_appender::{non_blocking::WorkerGuard, rolling::RollingFileAppender};
 pub use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::{
     filter::Targets,
@@ -18,6 +20,7 @@ use tracing_subscriber::{
 
 pub const LOGS_INFO_NAME: &str = "info";
 pub const LOGS_TRACES_NAME: &str = "traces";
+pub const TRACES_DATE_FORMAT: &str = "%Y-%m-%d";
 
 state!(LOGS: Logs = {
     let AppConfig {
@@ -38,7 +41,7 @@ state!(LOGS: Logs = {
 });
 
 /// Holds path to the log file
-pub struct Log(PathBuf);
+pub struct Log(pub PathBuf);
 
 /// Holds paths to the log files
 pub struct Logs {
@@ -47,52 +50,54 @@ pub struct Logs {
 }
 
 impl Logs {
-    pub fn write(&self, data: &str, detailed: bool) {
-        let path = match detailed {
-            true => &self.traces.0,
-            false => &self.info.0,
-        };
-
-        let mut f = OpenOptions::new()
-            .append(true)
-            .create(true)
-            .open(path)
-            .expect("Unable to open log for writing");
-
-        f.write_all(data.as_bytes()).expect("Unable to append log");
-        if detailed {
-            f.write_all(b",")
-                .expect("Unable to append comma to the latest trace");
-        }
-    }
-
-    pub fn latest_info(&self, count: usize) -> Vec<String> {
+    pub fn latest_info(&self, offset: usize, count: usize) -> Vec<String> {
         let Ok(file) = OpenOptions::new().read(true).open(&self.info.0) else {
             return vec![];
         };
         let buf = RevBufReader::new(file);
         buf.lines()
+            .skip(offset)
             .take(count)
             .map(|l| l.expect("Could not parse line"))
             .collect()
     }
 
-    pub fn traces(&self) -> String {
-        let Ok(mut file) = OpenOptions::new().read(true).open(&self.traces.0) else {
+    pub fn traces(&self, date: NaiveDate) -> String {
+        let path = format!("{}/{}", self.traces.0.display(), date.format(TRACES_DATE_FORMAT));
+        let Ok(mut file) = OpenOptions::new().read(true).open(path) else {
             return "Failed to open traces file".into();
         };
-        let mut entries = "[".to_owned();
+        let mut entries = String::new();
         if let Err(e) = file.read_to_string(&mut entries) {
             return format!("Failed to read traces file: {e}");
         };
-        entries.push_str("]");
         entries
+        // if entries.len() > 1 {
+        //     // not empty
+        //     entries.pop(); // remove last newline
+        //     entries.pop(); // remove last comma
+        // }
+
+        // entries.push_str("]");
+    }
+
+    pub fn recorded_traces_dates(&self) -> Vec<NaiveDate> {
+        let mut res = vec![];
+        let paths = std::fs::read_dir(&self.traces.0).unwrap();
+        for path in paths {
+            if let Ok(entry) = path {
+                let pathbuf = entry.path();
+                let filename = pathbuf.file_name().unwrap().to_string_lossy();
+                if let Ok(date) = NaiveDate::parse_from_str(&filename, TRACES_DATE_FORMAT) {
+                    res.push(date);
+                }
+            }
+        }
+    res
     }
 }
 
-struct LogWriter {
-    detailed: bool,
-}
+struct LogWriter;
 impl std::io::Write for LogWriter {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         let Ok(log) = std::str::from_utf8(buf) else {
@@ -102,17 +107,21 @@ impl std::io::Write for LogWriter {
             ));
         };
 
-        if self.detailed {
-            LOGS.write(log, self.detailed);
-        } else {
-            let Ok(log) = ansi_to_html::convert(log) else {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    "Not ANSI log",
-                ));
-            };
-            LOGS.write(&log, self.detailed);
-        }
+        let Ok(log) = ansi_to_html::convert(log) else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Not ANSI log",
+            ));
+        };
+
+        let mut f = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(&LOGS.info.0)
+            .expect("Unable to open log for writing");
+
+        f.write_all(log.as_bytes())
+            .expect(&format!("Unable to append info log: {log}"));
         Ok(buf.len())
     }
     fn flush(&mut self) -> std::io::Result<()> {
@@ -124,14 +133,7 @@ struct MakeInfoLogWriter;
 impl<'a> tracing_subscriber::fmt::writer::MakeWriter<'a> for MakeInfoLogWriter {
     type Writer = LogWriter;
     fn make_writer(&'a self) -> Self::Writer {
-        LogWriter { detailed: false }
-    }
-}
-struct MakeTracesLogWriter;
-impl<'a> tracing_subscriber::fmt::writer::MakeWriter<'a> for MakeTracesLogWriter {
-    type Writer = LogWriter;
-    fn make_writer(&'a self) -> Self::Writer {
-        LogWriter { detailed: true }
+        LogWriter
     }
 }
 
@@ -154,6 +156,7 @@ fn info_filter(level: LevelFilter) -> EnvFilter {
 fn traces_filter() -> Targets {
     Targets::new()
         .with_target("sled::tree", Level::INFO)
+        .with_target("sled::context", Level::DEBUG)
         .with_target("sled::pagecache", Level::INFO)
         .with_target("sqlparser::parser", Level::INFO)
         .with_target("sqlparser::dialect", Level::INFO)
@@ -161,14 +164,44 @@ fn traces_filter() -> Targets {
         .with_target("async_io", Level::DEBUG)
         .with_target("polling", Level::DEBUG)
         .with_target("russh", Level::INFO)
+        .with_target("rustls_acme", Level::INFO)
         .with_default(LevelFilter::TRACE)
 }
 
+struct AppenderWithCommas {
+    inner: RollingFileAppender,
+}
+
+impl Write for AppenderWithCommas {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        let Ok(log) = std::str::from_utf8(buf) else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Not UTF-8 log",
+            ));
+        };
+        let mut line = log.to_owned();
+        line.pop(); // remove newline
+        line.push_str(",\n"); // add comma and newline
+        self.inner.write(line.as_bytes())?;
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
 /// Initializes log collection and writing into files
-pub fn init_tracing_subscriber() {
+pub fn init_tracing_subscriber() -> WorkerGuard {
+    let file_appender = tracing_appender::rolling::daily(LOGS.traces.0.clone(), "");
+    let appender_with_commas = AppenderWithCommas {
+        inner: file_appender,
+    };
+    let (non_blocking, guard) = tracing_appender::non_blocking(appender_with_commas);
+
     let traces_layer = fmt::layer()
         .json()
-        .map_writer(move |_| MakeTracesLogWriter)
+        .with_writer(non_blocking)
         .with_filter(traces_filter());
 
     let info_layer = fmt::layer()
@@ -190,7 +223,7 @@ pub fn init_tracing_subscriber() {
     #[cfg(debug_assertions)]
     let registry = registry.with(shell_layer);
 
-    let _ = *LOGS;
+    registry.init();
 
-    registry.init()
+    guard
 }

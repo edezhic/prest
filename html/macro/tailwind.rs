@@ -576,7 +576,13 @@ fn parse_color(class: &str) -> Option<String> {
     let (property, color_class) = class.split_once('-')?;
 
     let property = match property {
-        "text" => "color",
+        "text" => {
+            if size_like(color_class) {
+                return None
+            } else {
+                "color"
+            }
+        }
         "bg" => "background-color",
         "border" => "border-color",
         "accent" => "accent-color",
@@ -1459,7 +1465,12 @@ fn parse_text(class: &str) -> Option<String> {
 
         // If it's neither a color nor a predefined size, it might be an arbitrary value
         if value.starts_with('[') && value.ends_with(']') {
-            return Some(format!("color: {};", &value[1..value.len() - 1]));
+            let v = &value[1..value.len() - 1];
+            if size_like(v) {
+                return Some(format!("font-size: {v};"));
+            } else {
+                return Some(format!("color: {v};"));
+            }
         }
     }
 
@@ -2101,6 +2112,10 @@ fn resolve_conflicts(styles: Vec<String>) -> Vec<String> {
             }
         })
         .collect()
+}
+
+fn size_like(s: &str) -> bool {
+    s.starts_with(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
 }
 
 #[derive(Debug)]

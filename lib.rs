@@ -35,6 +35,7 @@ pub use axum_valid::*;
 pub use chrono::{NaiveDateTime, Utc};
 pub use futures::{
     executor::block_on as await_fut,
+    future::FutureExt,
     stream::{self, Stream, StreamExt, TryStreamExt},
 };
 pub use serde_json::{
@@ -72,7 +73,7 @@ pub use html::*;
 /// Default doctype for HTML
 pub const DOCTYPE: PreEscaped<&'static str> = PreEscaped("<!DOCTYPE html>");
 /// Default favicon
-pub static FAVICON: &[u8] = include_bytes!("favicon.ico");
+pub static FAVICON: &[u8] = include_bytes!("ui/favicon.ico");
 
 #[cfg(host)]
 mod host;

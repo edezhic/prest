@@ -45,7 +45,7 @@ pub(crate) async fn full() -> impl IntoResponse {
     );
 
     html! {
-        $"w-full" get="/admin/schedule_stats" trigger="load delay:5s" into="this" swap-full {
+        $"w-full" get="/admin/schedule_stats" trigger="load delay:10s" swap-this-no-transition {
             $"font-bold text-lg" {"Scheduled jobs stats"}
             $"w-full text-xs md:text-sm font-mono" {
                 @for (name, stats) in jobs_stats {

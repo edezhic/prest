@@ -4,25 +4,21 @@ use crate::*;
 #[macro_export]
 macro_rules! init {
     ($(tables $($table:ident),+)?) => {
-        {
-            let manifest = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml"));
-            let config = APP_CONFIG.init(manifest, env!("CARGO_MANIFEST_DIR"));
-
-            #[cfg(not(target_arch = "wasm32"))] {
-                prest::Lazy::force(&RT);
-                let _ = prest::dotenv();
-                prest::init_tracing_subscriber();
-                prest::Lazy::force(&DB);
-                // initializing here because it starts with the runtime but requires the DB
-                prest::ScheduledJobRecord::migrate();
-                $(
-                    $( $table::prepare_table(); )+
-                )?
-                prest::Lazy::force(&SYSTEM_INFO);
-            }
-
-            prest::info!("Initialized {} v{}", config.name, config.version);
+        let __config = APP_CONFIG.init(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml")), env!("CARGO_MANIFEST_DIR"));
+        #[cfg(not(target_arch = "wasm32"))]
+        let __________ = prest::init_tracing_subscriber();    
+        #[cfg(not(target_arch = "wasm32"))] {
+            prest::Lazy::force(&RT);
+            let _ = prest::dotenv();
+            prest::Lazy::force(&DB);
+            // initializing here because it starts with the runtime but requires the DB
+            prest::ScheduledJobRecord::migrate();
+            $(
+                $( $table::prepare_table(); )+
+            )?
+            prest::Lazy::force(&SYSTEM_INFO);
         }
+        prest::info!(target: "prest", "Initialized {} v{}", __config.name, __config.version);
     };
 }
 

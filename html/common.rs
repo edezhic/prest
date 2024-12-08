@@ -90,6 +90,7 @@ impl<'a> Render for Head<'a> {
 
 /// Renders into a bunch of `<script>` tags with builder-like interface
 pub struct Scripts<'a> {
+    pub default_bundle: bool,
     pub others: Option<Vec<&'a str>>,
     pub inlines: Option<Vec<&'a str>>,
     pub stylesheets: Option<Vec<&'a str>>,
@@ -99,8 +100,10 @@ pub struct Scripts<'a> {
 impl<'a> Default for Scripts<'a> {
     fn default() -> Self {
         Self {
+            default_bundle: true,
             others: None,
-            inlines: Some(vec![include_str!("./htmx_patch.js")]),
+            inlines: None,
+            // inlines: Some(vec![include_str!("./htmx_patch.js")]),
             stylesheets: None,
             hyperscripts: None,
         }
@@ -148,17 +151,12 @@ impl<'a> Scripts<'a> {
 
 impl<'a> Render for Scripts<'a> {
     fn render(&self) -> Markup {
-        #[cfg(debug_assertions)]
-        let htmx_src = "https://unpkg.com/htmx.org@2.0.3/dist/htmx.js";
-        #[cfg(not(debug_assertions))]
-        let htmx_src = "https://unpkg.com/htmx.org@2.0.3/dist/htmx.min.js";
-
         html!(
             @if is_pwa() { script {(REGISTER_SW_SNIPPET)} }
             @if let Some(stylesheets) = &self.stylesheets { @for stylesheet in stylesheets {link href={(stylesheet)} rel="stylesheet"{}}}
-            script src=(htmx_src) crossorigin {}
-            script src="https://unpkg.com/htmx-ext-sse@2.2.0/sse.js" crossorigin {}
-            script src="https://unpkg.com/hyperscript.org@0.9.12" crossorigin {}
+            @if self.default_bundle {
+                script src="/prest.js" {}    
+            }
             @if let Some(srcs) = &self.others { @for src in srcs {
                 script src={(src)} crossorigin {}
             }}

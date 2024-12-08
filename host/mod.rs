@@ -59,7 +59,7 @@ pub trait HostUtils {
     fn run(self);
     fn serve(self);
     fn add_utility_layers(self) -> Self;
-    fn add_default_favicon(self) -> Self;
+    fn add_default_assets(self) -> Self;
     fn add_analytics(self) -> Self;
     fn add_auth(self) -> Self;
 }
@@ -69,7 +69,7 @@ impl HostUtils for Router {
     fn run(self) {
         self.route("/health", get(StatusCode::OK))
             .add_auth()
-            .add_default_favicon()
+            .add_default_assets()
             .add_analytics()
             .nest("/admin", admin::routes())
             .add_utility_layers()
@@ -100,7 +100,11 @@ impl HostUtils for Router {
         #[cfg(not(feature = "traces"))]
         self
     }
-    fn add_default_favicon(mut self) -> Self {
+    fn add_default_assets(mut self) -> Self {
+        embed_build_output_as!(BuiltinAssets);
+        self = self.embed(BuiltinAssets);
+
+        // add default favicon
         let current_resp = RT
             .block_on(async {
                 self.call(Request::get("/favicon.ico").body(Body::empty()).unwrap())
@@ -108,12 +112,11 @@ impl HostUtils for Router {
             })
             .unwrap();
         if current_resp.status() == 404 {
-            self.route("/favicon.ico", get(|| async {
+            self = self.route("/favicon.ico", get(|| async {
                 ([(header::CACHE_CONTROL, "max-age=360000, stale-while-revalidate=8640000, stale-if-error=60480000")], Body::from(FAVICON))
-            }))
-        } else {
-            self
+            }));
         }
+        self
     }
     fn add_utility_layers(self) -> Self {
         use tower_http::catch_panic::CatchPanicLayer;
@@ -136,13 +139,7 @@ impl HostUtils for Router {
 }
 
 fn handle_panic(err: Box<dyn std::any::Any + Send + 'static>) -> Response {
-    let details = if let Some(s) = err.downcast_ref::<String>() {
-        s.clone()
-    } else if let Some(s) = err.downcast_ref::<&str>() {
-        s.to_string()
-    } else {
-        "Unknown panic message".to_string()
-    };
+    let details = get_panic_message(err);
 
     #[cfg(debug_assertions)]
     let body = format!("Panic: {details}");
@@ -155,6 +152,16 @@ fn handle_panic(err: Box<dyn std::any::Any + Send + 'static>) -> Response {
         .status(StatusCode::INTERNAL_SERVER_ERROR)
         .body(Body::from(body))
         .unwrap()
+}
+
+fn get_panic_message(err: Box<dyn std::any::Any + Send + 'static>) -> String {
+    if let Some(s) = err.downcast_ref::<String>() {
+        s.clone()
+    } else if let Some(s) = err.downcast_ref::<&str>() {
+        s.to_string()
+    } else {
+        "Unknown panic".to_string()
+    }
 }
 
 #[allow(dead_code)]
@@ -173,7 +180,13 @@ fn not_htmx_predicate<Body>(req: &Request<Body>) -> bool {
     !req.headers().contains_key("hx-request")
 }
 
-const INTERNAL_PATHS: [&str; 3] = ["/tower-livereload", "/default-view-transition", "/admin"];
+const INTERNAL_PATHS: [&str; 5] = [
+    "/tower-livereload",
+    "/default-view-transition",
+    "/admin",
+    "/sw/health",
+    "/prest.js",
+];
 fn internal_request(request: &Request) -> bool {
     let path = request.uri().path();
     for internal in INTERNAL_PATHS {

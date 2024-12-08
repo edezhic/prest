@@ -96,7 +96,7 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
             let inner = ident("inner");
             let transform = match from_row_transform {
                 FromRowTransform::UuidFromU128 => quote!(let #inner = prest::Uuid::from_u128(#inner);),
-                FromRowTransform::Deserialize => quote!(let #inner = serde_json::from_str(&#inner).unwrap();),
+                FromRowTransform::Deserialize => quote!(let #inner = from_json_str(&#inner).unwrap();),
                 FromRowTransform::AsF32 => quote!(let #inner = #inner as f32;),
                 FromRowTransform::None => quote!(),
             };
@@ -154,7 +154,7 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
         let into_row_fmt = row_value_fmt(col);
 
         let serialize = match custom_type {
-            true => quote!(format!(#into_row_fmt, serde_json::to_string(#name_ident).unwrap())),
+            true => quote!(format!(#into_row_fmt, to_json_string(#name_ident).unwrap())),
             false => quote!(format!(#into_row_fmt)),
         };
 
@@ -225,7 +225,7 @@ fn impl_table(ast: DeriveInput) -> TokenStream2 {
         let fn_arg = if *optional { inner_type } else { field_type };
         let filter_str = format!("{name_str} = {}", row_value_fmt(col));
         let filter = match custom_type {
-            true => quote!(format!(#filter_str, serde_json::to_string(#name_ident).unwrap())),
+            true => quote!(format!(#filter_str, to_json_string(#name_ident).unwrap())),
             false => quote!(format!(#filter_str)),
         };
         let fn_return = match unique {
@@ -656,9 +656,9 @@ fn set_column(column: &Column) -> TokenStream2 {
     let key: Expr = parse_quote!(#name_str);
     let fmt_str = if *list { "'{:?}'" } else { "'{}'" };
     let value = if *custom_type && *optional {
-        quote!(if let Some(v) = &self.#name_ident { format!(#fmt_str, serde_json::to_string(v).unwrap()) } else { "NULL".to_owned() })
+        quote!(if let Some(v) = &self.#name_ident { format!(#fmt_str, to_json_string(v).unwrap()) } else { "NULL".to_owned() })
     } else if *custom_type {
-        quote!(format!(#fmt_str, serde_json::to_string(&self.#name_ident).unwrap()))
+        quote!(format!(#fmt_str, to_json_string(&self.#name_ident).unwrap()))
     } else if *stringy_in_sql && *optional {
         quote!(if let Some(v) = &self.#name_ident { format!(#fmt_str, v.clone()) } else { "NULL".to_owned() })
     } else if *optional {

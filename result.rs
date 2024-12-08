@@ -67,6 +67,8 @@ pub enum Error {
     FormRejection(#[from] axum::extract::rejection::FormRejection),
     #[error(transparent)]
     QueryRejection(#[from] axum::extract::rejection::QueryRejection),
+    #[error(transparent)]
+    JsonRejection(#[from] axum::extract::rejection::JsonRejection),
     #[cfg(host)]
     #[error(transparent)]
     RuSSH(#[from] russh::Error),
@@ -80,6 +82,7 @@ impl IntoResponse for Error {
         match self {
             Error::FormRejection(e) => e.into_response(),
             Error::QueryRejection(e) => e.into_response(),
+            Error::JsonRejection(e) => e.into_response(),
             Error::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
             #[cfg(all(host, feature = "auth"))]
             Error::AxumLogin(_) | Error::AuthBackend(_) | Error::Session(_) | Error::OAuth(_) => {

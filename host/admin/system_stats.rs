@@ -75,7 +75,7 @@ pub(crate) async fn full() -> Result<Markup> {
     let max_cpu = format!("{:.1}", max_cpu);
 
     ok(html!(
-        $"w-full" get="/admin/system" trigger="load delay:30s" into="this" swap-full {
+        $"w-full" get="/admin/system_stats" trigger="load delay:30s" swap-this {
             $"w-full flex gap-4" {
                 $"w-1/2 h-full flex flex-col" {
                     $"font-bold text-lg" {"CPU usage"}
@@ -102,8 +102,6 @@ pub(crate) async fn full() -> Result<Markup> {
             }
             $"w-full h-6" {}
             (disk_stats().await?)
-            $"w-full h-6" {}
-            $"" get="/admin/remote/state" trigger="load" into="this" swap-full {}
         }
     ))
 }
@@ -113,17 +111,7 @@ async fn disk_stats() -> Result<Markup> {
     let total_disk = SYSTEM_INFO.total_disk;
 
     let data_dir = &APP_CONFIG.check().data_dir;
-    let mut info_path = data_dir.clone();
-    info_path.push(LOGS_INFO_NAME);
-    let info_size = std::fs::metadata(info_path)?.len();
-
-    let mut traces_path = data_dir.clone();
-    traces_path.push(LOGS_TRACES_NAME);
-    let traces_size = std::fs::metadata(traces_path)?.len();
-
-    let logs_size = (info_size + traces_size) as f64 / 1_000_000.0;
-    let logs_size = format!("{logs_size:.1} MB");
-
+    
     use std::{fs, io, path::PathBuf};
 
     fn dir_size(path: impl Into<PathBuf>) -> io::Result<u64> {
@@ -141,18 +129,28 @@ async fn disk_stats() -> Result<Markup> {
         dir_size(fs::read_dir(path.into())?)
     }
 
+    let mut info_path = data_dir.clone();
+    info_path.push(LOGS_INFO_NAME);
+    let info_size = std::fs::metadata(info_path)?.len();
+
+    let mut traces_path = data_dir.clone();
+    traces_path.push(LOGS_TRACES_NAME);
+    let traces_size = dir_size(traces_path)?;
+
+    let logs_size = (info_size + traces_size) as f64 / 1_000_000.0;
+    let logs_size = format!("{logs_size:.1} MB");
+
+
     let mut db_path = data_dir.clone();
     db_path.push(DB_DIRECTORY_NAME);
     let db_size = dir_size(db_path)?;
     let db_size = format!("{:.1} MB", db_size as f64 / 1_000_000.0);
 
-    // let app_used_disk = db_size + info_size + traces_size;
-    // let app_used_disk_share = app_used_disk as f64 / total_disk;
     let used_disk = *used_disk as f64 / total_disk as f64 * 100.0;
     let used_disk = format!("{used_disk:.1}%");
     let total_disk = format!("{:.1}", total_disk as f64 / 1000.0);
     ok(html!(
-        $"w-full flex items-center text-xs md:text-sm lg:text-base" {
+        $"w-full flex items-center text-[0.6rem] md:text-sm lg:text-base" {
             $"hidden md:block font-bold" {"Disk usage: "} $"block md:hidden font-bold" {"Disk: "}
             $"w-1"{} div {(used_disk)" of "(total_disk)" GB (""DB: "(db_size)", logs: "(logs_size)")"}
         }

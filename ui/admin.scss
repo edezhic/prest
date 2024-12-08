@@ -1,0 +1,79 @@
+.logs {
+    .filters {
+        width: 100%;
+        margin: 2rem 0;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+
+        @media (max-width: 800px) {
+            font-size: 0.8rem;
+            gap: 2px;
+            margin-top: 0;
+        }
+
+        .target {
+            accent-color: #57534e;
+            background-color: #1c1917;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+
+            @media (max-width: 800px) {
+                width: 100%;
+            }
+        }
+    }
+    .pagination {
+        width: 100%;
+        margin: 2rem 0;
+        display: flex;
+        justify-content: space-around;
+
+        :disabled {
+            opacity: 0.3;
+        }
+    }
+    .log {
+        font-size: 0.8rem;
+        width: 100%;
+        display: grid;
+        grid-template-columns: 6rem 6rem auto auto;
+        border-bottom: 1px solid #7777;
+
+        @media (max-width: 800px) {
+            font-size: 0.4rem;
+            grid-template-columns: 3rem 2.5rem auto auto;
+        }
+
+        .target {
+            white-space: pre-line;
+        }
+
+        .span, .fields {
+            line-break: anywhere;
+
+            &.raw {
+                font-size: 0.6rem;
+            }
+        }
+        
+    }
+
+    .TRACE {
+        color: #cb2bcb;
+    }
+    .DEBUG {
+        color: #4c4cff;
+    }
+    .INFO {
+        color: #0a0;
+    }
+    .WARN {
+        color: #a60;
+    }
+    .ERROR {
+        color: #a00;
+    }
+}

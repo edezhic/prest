@@ -3,6 +3,7 @@
 //! - added utils for easier integration with HTMX
 //! - added utils for common HTML elements: head, scripts
 //! - native axum support and removed support for other frameworks
+//! - support for tailwind classes with inline generated styles
 
 pub use prest_html_macro::html;
 

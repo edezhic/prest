@@ -33,7 +33,7 @@ pub(crate) async fn remote_view() -> Markup {
         Success => "Deployed!",
     };
 
-    html!(span trigger="load delay:1s" get="/admin/remote/state" into="this" swap-full {
+    html!(span trigger="load delay:1s" get="/admin/remote/state" swap-this-no-transition {
         $"font-bold text-lg" {"Remote host"}
         $"flex w-full" {
             $"w-1/4 flex items-center justify-center" {

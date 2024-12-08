@@ -13,14 +13,15 @@ pub use typescript::*;
 #[cfg(feature = "sass")]
 mod sass {
     use std::{fs::write, path::Path};
-    pub fn bundle_sass(path: &str) {
+    pub fn bundle_sass(path: &str) -> anyhow::Result<()> {
         let css = grass::from_path(path, &Default::default())?;
-        let scss_filename = Path::new(path).file_name()?.to_str()?;
+        let scss_filename = Path::new(path).file_name().unwrap().to_str().unwrap();
         let css_filename = scss_filename
             .replace(".scss", ".css")
             .replace(".sass", ".css");
         let out_file = super::out_path(&css_filename);
         write(out_file, css)?;
+        Ok(())
     }
 }
 #[cfg(feature = "sass")]

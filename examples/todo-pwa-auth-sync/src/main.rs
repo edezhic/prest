@@ -24,7 +24,7 @@ impl Todo {
             .unwrap_or(false);
 
         html! {
-            $"flex justify-between items-center" sse-swap=(self.id) swap-full vals=(json!(self)) {
+            $"flex justify-between items-center" sse-swap=(self.id) vals=(json!(self)) {
                 input type="checkbox" patch="/todos" disabled[!owned] checked[self.done] {}
                 label $"ml-4 text-lg" {(self.task)}
                 button $"ml-auto" delete="/todos" disabled[!owned] {"Delete"}

@@ -27,7 +27,7 @@ pub(crate) async fn full() -> impl IntoResponse {
     }
 
     html! {
-        a get="/admin/schedule_stats" trigger="load" into="this" swap-full {}
+        a get="/admin/schedule_stats" trigger="load" swap-this {}
         $"font-bold text-lg" {"Routes stats (total hits: "(total_path_hits)"*)"}
         $"hidden md:block italic text-xs" {"*only counts requests to the server, static pages like blog's are served primarily by the Service Worker and aren't reflected here"}
         table $"w-full text-xs md:text-sm font-mono" {

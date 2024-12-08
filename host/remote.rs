@@ -21,30 +21,30 @@ pub(crate) async fn upload_and_activate(binary_path: &str) -> Result {
     let deployment = DeploymentInfo::new();
     let package = deployment.package();
 
-    info!("Initiated remote update for {package}");
+    info!(target:"remote", "initiated update for {package}");
     let mut conn = remote.conn().await?;
 
-    info!("Uploading the binary");
+    info!(target:"remote", "uploading the binary");
     remote.set_state(DeploymentState::Uploading).await;
     conn.upload(binary_path, &deployment).await?;
-    info!("Upload finished successfully");
+    info!(target:"remote", "upload finished successfully");
 
     match conn.find_current_deployment(&deployment.pkg_name).await? {
         Some(p) => {
             let pid = p.pid.unwrap();
             conn.kill_process(pid).await?;
             while conn.check_process(pid).await? {
-                info!("Stopping current deployment...");
+                info!(target:"remote", "stopping current deployment...");
                 conn.kill_process(pid).await?;
                 sleep(Duration::from_millis(1000)).await;
             }
-            info!("Stopped current process")
+            info!(target:"remote", "stopped current process")
         }
-        None => warn!("No current deployment found"),
+        None => warn!(target:"remote", "no current deployment found"),
     }
 
     conn.activate_deployment(&deployment).await?;
-    info!("Started new {package} process");
+    info!(target:"remote", "started new {package} process");
 
     remote.sync_deployments().await?;
 
@@ -71,8 +71,13 @@ impl RemoteHost {
             env::var("SSH_PASSWORD").ok(),
         ) {
             (Some(addr), Some(user), Some(password)) => {
-                SshSession::connect(&addr, &user, &password).await?;
-                info!("Connected to the remote host at {addr}");
+                match SshSession::connect(&addr, &user, &password).await {
+                    Ok(_) => info!(target: "remote", "established connection with {addr}"),
+                    Err(e) => {
+                        warn!(target: "remote", "failed to connect to {addr} : {e}");
+                        return Ok(None);
+                    }
+                }
                 (addr, user, password)
             }
             _ => return Ok(None),
@@ -227,7 +232,7 @@ impl client::Handler for Client {
 
     async fn check_server_key(
         &mut self,
-        _server_public_key: &key::PublicKey,
+        _server_public_key: &PublicKey,
     ) -> Result<bool, Self::Error> {
         Ok(true)
     }
@@ -344,7 +349,7 @@ impl SshSession {
                     [pid, cmd] => match DeploymentInfo::from(cmd, Some(pid)) {
                         Ok(p) => Some(p),
                         Err(e) => {
-                            warn!("Invalid process info: {e}");
+                            warn!(target:"remote", "Invalid process info: {e}");
                             None
                         }
                     },
@@ -397,7 +402,7 @@ impl SshSession {
             .filter_map(|line| match DeploymentInfo::from(line, None) {
                 Ok(p) => Some(p),
                 Err(e) => {
-                    warn!("Invalid deployment file: {e}");
+                    warn!(target:"remote", "invalid deployment file: {e}");
                     None
                 }
             })

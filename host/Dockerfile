@@ -1,4 +1,4 @@
-FROM rust:1.80.1-bookworm
+FROM rust:1.83-bookworm
 RUN apt-get update
 RUN apt install -y gcc-x86-64-linux-gnu
 ENV CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/x86_64-linux-gnu-gcc

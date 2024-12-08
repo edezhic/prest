@@ -4,10 +4,12 @@ use core::{
     pin::Pin,
     task::{ready, Context, Poll},
 };
+use host::get_panic_message;
 use pin_project_lite::pin_project;
 use std::{
     boxed::Box,
     future::Future,
+    panic::AssertUnwindSafe,
     sync::atomic::{AtomicBool, AtomicUsize, Ordering},
 };
 use tokio::time::sleep;
@@ -45,7 +47,12 @@ impl PrestRuntime {
         Fut: Future<Output = ()> + Send + 'static,
     {
         RT.spawn(async {
-            ScheduledJobFuture::from(fut, span!("once job")).await;
+            if let Err(e) = AssertUnwindSafe(ScheduledJobFuture::from(fut, span!("once job")))
+                .catch_unwind()
+                .await
+            {
+                error!(target:"runtime", "Panicked in `once` job: {}", get_panic_message(e));
+            }
         });
     }
 
@@ -55,9 +62,14 @@ impl PrestRuntime {
         Fut: Future<Output = Result> + Send + 'static,
     {
         RT.spawn(async {
-            if let Err(e) = ScheduledJobFuture::from(fut, span!("try once job")).await {
-                error!("{e}");
-            }
+            match AssertUnwindSafe(ScheduledJobFuture::from(fut, span!("try once job")))
+                .catch_unwind()
+                .await
+            {
+                Err(e) => error!(target:"runtime", "Panicked in `try_once` with: {}", get_panic_message(e)),
+                Ok(Err(e)) => error!(target:"runtime", "{e}"),
+                Ok(Ok(())) => (),
+            };
         });
     }
 
@@ -71,21 +83,21 @@ impl PrestRuntime {
         for handle in self.server_handles.read().unwrap().iter() {
             handle.graceful_shutdown(Some(std::time::Duration::from_secs(1)))
         }
-        debug!("Sent graceful shutdown signals for servers");
+        debug!(target:"runtime", "Sent graceful shutdown signals for servers");
 
         // awaiting currently running scheduled tasks
         while RT.running_scheduled_tasks.load(Ordering::SeqCst) > 0 {
             std::thread::sleep(std::time::Duration::from_millis(10));
             continue;
         }
-        debug!("Awaited scheduled tasks completion");
+        debug!(target:"runtime", "Awaited scheduled tasks completion");
 
         // flushing dirty db writes
         #[cfg(feature = "db")]
         DB.flush();
-        debug!("Flushed the DB");
+        debug!(target:"runtime", "Flushed the DB");
 
-        warn!("Finished shutdown procedures");
+        warn!(target:"runtime", "Finished shutdown procedures");
     }
 
     pub fn shutting_down(&self) -> bool {
@@ -103,11 +115,11 @@ impl PrestRuntime {
         match tokio_signal::unix::signal(tokio_signal::unix::SignalKind::terminate()) {
             Ok(mut sigterm) => {
                 sigterm.recv().await;
-                warn!("Received shutdown(SIGTERM) signal, initiating");
+                warn!(target:"runtime", "Received shutdown(SIGTERM) signal, initiating");
                 RT.shutdown();
             }
             Err(err) => {
-                error!("Error listening for shutdown(SIGTERM) signal: {}", err);
+                error!(target:"runtime", "Error listening for shutdown(SIGTERM) signal: {}", err);
             }
         }
     }
@@ -140,11 +152,11 @@ impl ScheduledJobRecord {
             end: None,
             error: None,
         };
-        trace!("Starting job {name} at {}", stat.start);
+        trace!(target:"runtime", job = %name, start = %stat.start);
         let stat_clone = stat.clone();
         RT.spawn_blocking(move || {
             if let Err(e) = stat_clone.save() {
-                error!("Failed to record start of the scheduled job stat {stat_clone:?} : {e}");
+                error!(target:"runtime", "Failed to record start of the scheduled job stat {stat_clone:?} : {e}");
             }
         });
         stat
@@ -153,16 +165,16 @@ impl ScheduledJobRecord {
     pub fn end(mut self, error: Option<String>) {
         let end = Utc::now().naive_utc();
 
-        trace!("Ended job {} at {end}", self.name);
+        trace!(target:"runtime", job = %self.name, end = %end);
 
         if let Err(e) = self.update_end(Some(end)) {
-            error!("Failed to record end of the scheduled job stat {self:?} : {e}");
+            error!(target:"runtime", "Failed to record end of the scheduled job stat {self:?} : {e}");
         }
 
         if let Some(e) = error {
-            error!("Scheduled job {} error: {e}", self.name);
+            error!(target:"runtime", "Scheduled job {} error: {e}", self.name);
             if let Err(upd_e) = self.update_error(Some(e.clone())) {
-                error!("Failed to record error {e} of the scheduled job stat {self:?} : {upd_e}");
+                error!(target:"runtime", "Failed to record error {e} of the scheduled job stat {self:?} : {upd_e}");
             }
         }
     }
@@ -194,7 +206,13 @@ impl<T: RepeatableJob> Schedulable<()> for T {
     {
         RT.spawn(async move {
             while self.should_proceed().await {
-                ScheduledJobFuture::from(func(), span!("repeatable job")).await;
+                if let Err(e) =
+                    AssertUnwindSafe(ScheduledJobFuture::from(func(), span!("repeatable job")))
+                        .catch_unwind()
+                        .await
+                {
+                    error!(target:"runtime", "Panicked in repeatable job: {}", get_panic_message(e));
+                }
             }
         });
     }
@@ -208,7 +226,19 @@ impl<T: RepeatableJob> Schedulable<()> for T {
         RT.spawn(async move {
             while self.should_proceed().await {
                 let stat = ScheduledJobRecord::start(job_name);
-                ScheduledJobFuture::from(func(), span!("repeatable job", job = job_name)).await;
+                if let Err(e) = AssertUnwindSafe(ScheduledJobFuture::from(
+                    func(),
+                    span!("repeatable job", job = job_name),
+                ))
+                .catch_unwind()
+                .await
+                {
+                    error!(
+                        target:"runtime", 
+                        "Panicked in scheduled job {job_name}: {}",
+                        get_panic_message(e)
+                    );
+                }
                 stat.end(None);
             }
         });
@@ -224,8 +254,13 @@ impl<T: RepeatableJob, E: std::fmt::Display + 'static> Schedulable<Result<(), E>
     {
         RT.spawn(async move {
             while self.should_proceed().await {
-                if let Err(e) = ScheduledJobFuture::from(func(), span!("repeatable job")).await {
-                    error!("Repeatable job error: {e}");
+                match AssertUnwindSafe(ScheduledJobFuture::from(func(), span!("repeatable job")))
+                    .catch_unwind()
+                    .await
+                {
+                    Err(e) => error!(target:"runtime", "Panicked in repeatable job with: {}", get_panic_message(e)),
+                    Ok(Err(e)) => error!(target:"runtime", "Repeatable job error: {e}"),
+                    Ok(Ok(())) => (),
                 }
             }
         });
@@ -240,11 +275,21 @@ impl<T: RepeatableJob, E: std::fmt::Display + 'static> Schedulable<Result<(), E>
         RT.spawn(async move {
             while self.should_proceed().await {
                 let stat = ScheduledJobRecord::start(job_name);
-                let err = ScheduledJobFuture::from(func(), span!("repeatable job", job = job_name))
-                    .await
-                    .err()
-                    .map(|e| e.to_string());
-                stat.end(err);
+                match AssertUnwindSafe(ScheduledJobFuture::from(
+                    func(),
+                    span!("repeatable job", job = job_name),
+                ))
+                .catch_unwind()
+                .await
+                {
+                    Err(e) => error!(
+                        target:"runtime",
+                        "Panicked in scheduled job {job_name} with: {}",
+                        get_panic_message(e)
+                    ),
+                    Ok(Err(e)) => stat.end(Some(e.to_string())),
+                    Ok(Ok(())) => stat.end(None),
+                }
             }
         });
     }

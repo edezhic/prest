@@ -71,7 +71,7 @@ async fn delete_todo(Vals(todo): Vals<Todo>) {
 impl Render for Todo {
     fn render(&self) -> Markup {
         html! {
-            $"flex items-center" into="this" swap-full vals=(json!(self)) {
+            $"flex items-center" swap-this vals=(json!(self)) {
                 input type="checkbox" patch="/" checked[self.done] {}
                 label $"ml-4 text-lg" {(self.task)}
                 button $"ml-auto" detele="/" {"Delete"}

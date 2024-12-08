@@ -9,7 +9,7 @@ markdown = "1.0.0-alpha.16"
 toml = "0.8.8"
 
 [build-dependencies]
-prest-build = { version = "0.2", path = "../../build" }
+prest-build = { version = "0.3", path = "../../build" }
 
 [package.metadata]
 domain = "prest.blog"

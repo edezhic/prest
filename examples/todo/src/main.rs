@@ -1,6 +1,6 @@
 use prest::*;
 
-#[derive(Debug, Table, Default, Serialize, Deserialize)]
+#[derive(Table, Serialize, Deserialize)]
 struct Todo {
     #[serde(default = "Uuid::now_v7")]
     pub id: Uuid,
@@ -12,7 +12,7 @@ struct Todo {
 impl Render for Todo {
     fn render(&self) -> Markup {
         html! {
-            $"flex justify-between items-center" into="this" swap-full vals=(json!(self)) {
+            $"flex justify-between items-center" swap-this vals=(json!(self)) {
                 input type="checkbox" patch="/" checked[self.done] {}
                 label $"ml-4 text-lg" {(self.task)}
                 button $"ml-auto" delete="/" {"Delete"}

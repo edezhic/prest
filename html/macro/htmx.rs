@@ -7,6 +7,7 @@ pub fn check_attr_name_alias(name: &str) -> &str {
         "delete" => "hx-delete",
         "into" => "hx-target",
         "vals" => "hx-vals",
+        "swap" => "hx-swap",
         "trigger" => "hx-trigger",
         "include" => "hx-include",
         "boost" => "hx-boost",
@@ -19,6 +20,8 @@ pub fn check_attr_name_alias(name: &str) -> &str {
 
 pub fn check_attr_shorthand(name: &str) -> Option<&str> {
     match name {
+        "swap-this" => Some(r#"hx-target="this""#),
+        "swap-this-no-transition" => Some(r#"hx-target="this" hx-swap="transition:false""#),
         "swap-inner" => Some(r#"hx-swap="innerHTML""#),
         "swap-full" => Some(r#"hx-swap="outerHTML""#),
         "swap-textContent" => Some(r#"hx-swap="textContent""#),
@@ -28,6 +31,7 @@ pub fn check_attr_shorthand(name: &str) -> Option<&str> {
         "swap-afterend" => Some(r#"hx-swap="afterend""#),
         "swap-delete" => Some(r#"hx-swap="delete""#),
         "swap-none" => Some(r#"hx-swap="none""#),
+        "replace-url" => Some(r#"hx-replace-url="true""#),
         _ => None,
     }
 }

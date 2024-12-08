@@ -85,7 +85,7 @@ async fn list() -> Markup {
     };
     
     html!(@for (index, todo) in my_todos.iter().enumerate() {
-        $"flex justify-between items-center" into="#list" swap-full {
+        $"flex justify-between items-center" into="#list" {
             input type="checkbox" get=(format!("/toggle/{index}")) checked[todo.done] {}
             label $"ml-4 text-lg" {(todo.task)}
             button $"ml-auto" get=(format!("/delete/{index}")) {"Delete"}

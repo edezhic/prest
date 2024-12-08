@@ -83,7 +83,7 @@ impl DbAccess for Lazy<Db> {
             Memory(_) => (),
             Persistent(sled) => {
                 if let Err(e) = sled.tree.flush() {
-                    error!("flushing DB failed with: {e}");
+                    error!(target:"db", "flushing DB failed with: {e}");
                 }
             }
         }
