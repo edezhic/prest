@@ -49,23 +49,23 @@ impl SystemInfo {
         };
         RT.every(60)
             .seconds()
-            .schedule("System info record", || async {
-                SYSTEM_INFO.record().await
-            });
+            .spawn(|| async { SYSTEM_INFO.record().await });
         host
     }
-    pub async fn record(&self) {
+    pub async fn record(&self) -> Result {
         self.refresh().await;
         let sys = SYSTEM_INFO.system.read().await;
 
         let disks = Disks::new_with_refreshed_list();
-        let disk = disks.list().first().unwrap();
+        let Some(disk) = disks.list().first() else {
+            return Err(e!("Disk not found"));
+        };
         *SYSTEM_INFO.used_disk.write().await =
             SYSTEM_INFO.total_disk - disk.available_space().div_ceil(1_000_000) as u32;
 
         let Some(current) = sys.process(SYSTEM_INFO.app_pid) else {
             error!(target: "system info", "Current process not found");
-            return;
+            return Err(e!("Current process not found"));
         };
 
         let app_ram = current.memory().div_ceil(1_048_576) as u32;
@@ -86,6 +86,7 @@ impl SystemInfo {
         if let Err(e) = stats.save() {
             warn!(target: "system info", "Failed to save system stats: {e}");
         }
+        Ok(())
     }
 
     pub async fn refresh(&self) {
