@@ -659,7 +659,7 @@ fn set_column(column: &Column) -> TokenStream2 {
         quote!(if let Some(v) = &self.#name_ident { format!(#fmt_str, to_json_string(v).unwrap()) } else { "NULL".to_owned() })
     } else if *custom_type {
         quote!(format!(#fmt_str, to_json_string(&self.#name_ident).unwrap()))
-    } else if *stringy_in_sql && *optional {
+    } else if (*stringy_in_sql || *stringy_expr_node) && *optional {
         quote!(if let Some(v) = &self.#name_ident { format!(#fmt_str, v.clone()) } else { "NULL".to_owned() })
     } else if *optional {
         quote!(if let Some(v) = &self.#name_ident { v.clone() } else { "NULL".to_owned() })
