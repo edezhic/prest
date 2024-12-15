@@ -190,11 +190,9 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ allow custom trace filters (array in init!() macro?)
 + multiple remotes
-+ db dumps/recovery?
-+ upgrade scraping example?
-+ more interactive frontend tools? include npm-compatible package manager?
++ db dumps/recovery
++ upgrade scraping example
 + consider last scheduled jobs after server restart 
 + replace sql strings with AST nodes in Table macro
 

@@ -26,7 +26,7 @@ pub use auth::*;
 mod logs;
 #[cfg(feature = "traces")]
 use logs::*;
-pub use logs::{init_tracing_subscriber, LOGS_INFO_NAME, LOGS_TRACES_NAME};
+pub use logs::{init_tracing_subscriber, LOGS_INFO_NAME, LOGS_TRACES_NAME, TRACE, DEBUG, INFO, WARN, ERROR};
 
 #[cfg(feature = "traces")]
 pub mod analytics;
@@ -43,13 +43,13 @@ pub use tokio::{
     signal as tokio_signal,
     sync::{Mutex, OnceCell, RwLock},
     task::{block_in_place, JoinSet},
-    time::sleep,
+    time::{sleep, timeout},
 };
 
-// #[cfg(feature = "db")]
-// mod shared_sled_storage;
 #[cfg(feature = "db")]
-pub(crate) use gluesql_sled_storage::SledStorage as PersistentStorage;
+mod shared_sled_storage;
+#[cfg(feature = "db")]
+pub(crate) use shared_sled_storage::SharedSledStorage as PersistentStorage;
 
 state!(RT: PrestRuntime = { PrestRuntime::init() });
 state!(IS_REMOTE: bool = { env::var("DEPLOYED_TO_REMOTE").is_ok() });

@@ -18,6 +18,12 @@ use tracing_subscriber::{
     EnvFilter, Layer,
 };
 
+pub const TRACE: Level = Level::TRACE;
+pub const DEBUG: Level = Level::DEBUG;
+pub const INFO: Level = Level::INFO;
+pub const WARN: Level = Level::WARN;
+pub const ERROR: Level = Level::ERROR;
+
 pub const LOGS_INFO_NAME: &str = "info";
 pub const LOGS_TRACES_NAME: &str = "traces";
 pub const TRACES_DATE_FORMAT: &str = "%Y-%m-%d";
@@ -72,13 +78,6 @@ impl Logs {
             return format!("Failed to read traces file: {e}");
         };
         entries
-        // if entries.len() > 1 {
-        //     // not empty
-        //     entries.pop(); // remove last newline
-        //     entries.pop(); // remove last comma
-        // }
-
-        // entries.push_str("]");
     }
 
     pub fn recorded_traces_dates(&self) -> Vec<NaiveDate> {
@@ -137,8 +136,8 @@ impl<'a> tracing_subscriber::fmt::writer::MakeWriter<'a> for MakeInfoLogWriter {
     }
 }
 
-fn info_filter(level: LevelFilter) -> EnvFilter {
-    EnvFilter::builder()
+fn info_filter(level: LevelFilter, targets: &[(&str, Level)]) -> EnvFilter {
+    let mut default = EnvFilter::builder()
         .with_default_directive(level.into())
         .from_env()
         .unwrap()
@@ -150,10 +149,15 @@ fn info_filter(level: LevelFilter) -> EnvFilter {
         .add_directive("rustls=info".parse().unwrap())
         .add_directive("reqwest=info".parse().unwrap())
         .add_directive("russh=info".parse().unwrap())
-        .add_directive("sled=info".parse().unwrap())
+        .add_directive("sled=info".parse().unwrap());
+
+    for (target, level) in targets {
+        default = default.add_directive(format!("{target}={level}").parse().unwrap());
+    }
+    default
 }
 
-fn traces_filter() -> Targets {
+fn traces_filter(targets: &[(&str, Level)]) -> Targets {
     Targets::new()
         .with_target("sled::tree", Level::INFO)
         .with_target("sled::context", Level::DEBUG)
@@ -165,6 +169,12 @@ fn traces_filter() -> Targets {
         .with_target("polling", Level::DEBUG)
         .with_target("russh", Level::INFO)
         .with_target("rustls_acme", Level::INFO)
+        .with_target("hyper_util", Level::INFO)
+        .with_target("rustls", Level::INFO)
+        .with_target("reqwest::connect", Level::INFO)
+        .with_target("tokio_tungstenite", Level::INFO)
+        .with_target("tungstenite", Level::INFO)
+        .with_targets(targets.to_vec())
         .with_default(LevelFilter::TRACE)
 }
 
@@ -192,7 +202,7 @@ impl Write for AppenderWithCommas {
 }
 
 /// Initializes log collection and writing into files
-pub fn init_tracing_subscriber() -> WorkerGuard {
+pub fn init_tracing_subscriber(filters: &[(&str, Level)]) -> WorkerGuard {
     let file_appender = tracing_appender::rolling::daily(LOGS.traces.0.clone(), "");
     let appender_with_commas = AppenderWithCommas {
         inner: file_appender,
@@ -202,19 +212,19 @@ pub fn init_tracing_subscriber() -> WorkerGuard {
     let traces_layer = fmt::layer()
         .json()
         .with_writer(non_blocking)
-        .with_filter(traces_filter());
+        .with_filter(traces_filter(filters));
 
     let info_layer = fmt::layer()
         .with_timer(ChronoUtc::new("%m/%d %k:%M:%S".to_owned()))
         .with_file(false)
         .with_target(false)
         .map_writer(move |_| MakeInfoLogWriter)
-        .with_filter(info_filter(LevelFilter::INFO));
+        .with_filter(info_filter(LevelFilter::INFO, filters));
 
     #[cfg(debug_assertions)]
     let shell_layer = fmt::layer()
-        .with_timer(ChronoUtc::new("%k:%M:%S".to_owned()))
-        .with_filter(info_filter(LevelFilter::DEBUG));
+        .with_timer(ChronoUtc::new("%k:%M:%S%.3f".to_owned()))
+        .with_filter(info_filter(LevelFilter::DEBUG, filters));
 
     let registry = tracing_subscriber::registry()
         .with(traces_layer)

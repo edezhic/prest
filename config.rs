@@ -3,10 +3,14 @@ use crate::*;
 /// Starting point for prest apps that performs basic setup
 #[macro_export]
 macro_rules! init {
-    ($(tables $($table:ident),+)?) => {
+    ($(tables $($table:ident),+)? $(; log filters: $(($filter:literal, $level:ident)),+)? ) => { //$(except $($exc:literal),+)?) => {
         let __config = APP_CONFIG.init(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml")), env!("CARGO_MANIFEST_DIR"));
         #[cfg(not(target_arch = "wasm32"))]
-        let __________ = prest::init_tracing_subscriber();    
+        let __________ = prest::init_tracing_subscriber(&[
+            $(
+                $( ($filter, $level), )+
+            )?
+        ]);    
         #[cfg(not(target_arch = "wasm32"))] {
             prest::Lazy::force(&RT);
             let _ = prest::dotenv();

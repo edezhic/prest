@@ -44,7 +44,7 @@ state!(DB: Db = {
                 .cache_capacity(100_000_000)
                 .flush_every_ms(Some(100));
 
-            let storage = PersistentStorage::try_from(config).unwrap();
+            let storage = PersistentStorage::new(config).unwrap();
             Persistent(storage)
         }
         #[cfg(sw)]
@@ -81,8 +81,8 @@ impl DbAccess for Lazy<Db> {
         #[cfg(not(target_arch = "wasm32"))]
         match DB.copy() {
             Memory(_) => (),
-            Persistent(sled) => {
-                if let Err(e) = sled.tree.flush() {
+            Persistent(store) => {
+                if let Err(e) = store.flush() {
                     error!(target:"db", "flushing DB failed with: {e}");
                 }
             }
