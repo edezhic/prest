@@ -1,2 +1,3 @@
-ui/admin/** linguist-vendored
+ui/default.css linguist-vendored
 ui/default-bundle/** linguist-vendored
+ui/admin/** linguist-vendored

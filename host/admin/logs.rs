@@ -24,8 +24,8 @@ pub(crate) async fn info(Path(offset): Path<usize>) -> Markup {
 
     let maybe_more = logs.len() > 0;
 
-    html! { 
-        @for log in logs {p style="margin:0 !important"{(log)}} 
+    html! {
+        @for log in logs {p style="margin:0 !important"{(log)}}
         @if maybe_more {
             $"w-8 mx-auto" get=(format!("/admin/latest_info/{}", offset + PER_PAGE)) trigger="revealed" into="this" swap="outerHTML transition:false" {(LOADER_SVG)}
         }
@@ -36,7 +36,7 @@ pub(crate) async fn traces_explorer() -> Markup {
     let today = Utc::now().format(TRACES_DATE_FORMAT);
     let mut available_dates = LOGS.recorded_traces_dates();
     available_dates.sort_by(|a, b| b.cmp(a));
-    
+
     html! {
         a _=(format!("on load call loadTraces('{today}') then remove me")) {}
         select $"bg-stone-900 accent-stone-600 px-2 py-1" _="on every change call loadTraces(event.target.value)" {

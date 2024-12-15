@@ -10,7 +10,7 @@ macro_rules! init {
             $(
                 $( ($filter, $level), )+
             )?
-        ]);    
+        ]);
         #[cfg(not(target_arch = "wasm32"))] {
             prest::Lazy::force(&RT);
             let _ = prest::dotenv();

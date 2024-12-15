@@ -234,7 +234,7 @@ impl<T: RepeatableJob> Schedulable<()> for T {
                 .await
                 {
                     error!(
-                        target:"runtime", 
+                        target:"runtime",
                         "Panicked in scheduled job {job_name}: {}",
                         get_panic_message(e)
                     );

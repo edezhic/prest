@@ -2,7 +2,9 @@ use anyhow::{Error, Result};
 use std::{collections::HashMap, sync::Arc};
 use swc_bundler::{Bundler, Hook, Load, ModuleData, ModuleRecord};
 use swc_common::{
-    comments::SingleThreadedComments, errors::{ColorConfig, Handler}, FileName, Mark, SourceMap, Span, GLOBALS
+    comments::SingleThreadedComments,
+    errors::{ColorConfig, Handler},
+    FileName, Mark, SourceMap, Span, GLOBALS,
 };
 use swc_ecma_ast::*;
 use swc_ecma_codegen::{
@@ -40,7 +42,7 @@ fn swc_run(main: &str, minify: bool) -> Result<String, Error> {
 
         let top_level_mark = Mark::new();
         let unresolved_mark = Mark::new();
-        
+
         let loader = Loader {
             srcmap: source_map_rc.clone(),
             top_level_mark,
@@ -98,9 +100,9 @@ fn swc_run(main: &str, minify: bool) -> Result<String, Error> {
                 &minify_extra_options,
             )
             .expect_module();
-            bundle.module.visit_mut_with(&mut fixer(None));    
+            bundle.module.visit_mut_with(&mut fixer(None));
         }
-        
+
         module_to_code(&bundle.module, source_map_rc)
     });
     Ok(code)
@@ -157,7 +159,8 @@ impl Load for Loader {
                 verbatim_module_syntax: true,
                 ..Default::default()
             };
-            let mut pass = swc_ecma_transforms_typescript::typescript(config, Mark::new(), Mark::new());
+            let mut pass =
+                swc_ecma_transforms_typescript::typescript(config, Mark::new(), Mark::new());
             program.mutate(&mut pass);
             module = program.expect_module();
         }

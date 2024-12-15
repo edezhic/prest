@@ -181,7 +181,7 @@ where
         let this = self.project();
         let _guard = this.span.enter();
         let result = ready!(this.inner.poll(cx));
-        
+
         match result {
             Ok(res) => {
                 if !*this.internal_req {
@@ -193,7 +193,7 @@ where
                         this.req_path.take().unwrap(),
                     );
                 }
-                
+
                 Poll::Ready(Ok(res))
             }
             Err(err) => Poll::Ready(Err(err)),

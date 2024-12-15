@@ -578,7 +578,7 @@ fn parse_color(class: &str) -> Option<String> {
     let property = match property {
         "text" => {
             if size_like(color_class) {
-                return None
+                return None;
             } else {
                 "color"
             }

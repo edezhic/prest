@@ -14,7 +14,8 @@ pub use typescript::*;
 mod sass {
     use std::{fs::write, path::Path};
     pub fn bundle_sass(path: &str) -> anyhow::Result<()> {
-        let css = grass::from_path(path, &Default::default())?;
+        let opts = grass::Options::default().style(grass::OutputStyle::Compressed);
+        let css = grass::from_path(path, &opts)?;
         let scss_filename = Path::new(path).file_name().unwrap().to_str().unwrap();
         let css_filename = scss_filename
             .replace(".scss", ".css")

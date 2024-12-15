@@ -111,7 +111,7 @@ async fn disk_stats() -> Result<Markup> {
     let total_disk = SYSTEM_INFO.total_disk;
 
     let data_dir = &APP_CONFIG.check().data_dir;
-    
+
     use std::{fs, io, path::PathBuf};
 
     fn dir_size(path: impl Into<PathBuf>) -> io::Result<u64> {
@@ -139,7 +139,6 @@ async fn disk_stats() -> Result<Markup> {
 
     let logs_size = (info_size + traces_size) as f64 / 1_000_000.0;
     let logs_size = format!("{logs_size:.1} MB");
-
 
     let mut db_path = data_dir.clone();
     db_path.push(DB_DIRECTORY_NAME);

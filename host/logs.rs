@@ -69,7 +69,11 @@ impl Logs {
     }
 
     pub fn traces(&self, date: NaiveDate) -> String {
-        let path = format!("{}/{}", self.traces.0.display(), date.format(TRACES_DATE_FORMAT));
+        let path = format!(
+            "{}/{}",
+            self.traces.0.display(),
+            date.format(TRACES_DATE_FORMAT)
+        );
         let Ok(mut file) = OpenOptions::new().read(true).open(path) else {
             return "Failed to open traces file".into();
         };
@@ -92,7 +96,7 @@ impl Logs {
                 }
             }
         }
-    res
+        res
     }
 }
 

@@ -26,7 +26,9 @@ pub use auth::*;
 mod logs;
 #[cfg(feature = "traces")]
 use logs::*;
-pub use logs::{init_tracing_subscriber, LOGS_INFO_NAME, LOGS_TRACES_NAME, TRACE, DEBUG, INFO, WARN, ERROR};
+pub use logs::{
+    init_tracing_subscriber, DEBUG, ERROR, INFO, LOGS_INFO_NAME, LOGS_TRACES_NAME, TRACE, WARN,
+};
 
 #[cfg(feature = "traces")]
 pub mod analytics;
