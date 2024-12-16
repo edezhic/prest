@@ -145,8 +145,7 @@ fn info_filter(level: LevelFilter, targets: &[(&str, Level)]) -> EnvFilter {
         .with_default_directive(level.into())
         .from_env()
         .unwrap()
-        .add_directive("sqlparser::parser=info".parse().unwrap())
-        .add_directive("sqlparser::dialect=info".parse().unwrap())
+        .add_directive("sqlparser=info".parse().unwrap())
         .add_directive("tower_sessions_core=info".parse().unwrap())
         .add_directive("h2=info".parse().unwrap())
         .add_directive("hyper=info".parse().unwrap())
@@ -178,6 +177,7 @@ fn traces_filter(targets: &[(&str, Level)]) -> Targets {
         .with_target("reqwest::connect", Level::INFO)
         .with_target("tokio_tungstenite", Level::INFO)
         .with_target("tungstenite", Level::INFO)
+        .with_target("h2", Level::INFO)
         .with_targets(targets.to_vec())
         .with_default(LevelFilter::TRACE)
 }
