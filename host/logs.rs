@@ -221,7 +221,6 @@ pub fn init_tracing_subscriber(filters: &[(&str, Level)]) -> WorkerGuard {
     let info_layer = fmt::layer()
         .with_timer(ChronoUtc::new("%m/%d %k:%M:%S".to_owned()))
         .with_file(false)
-        .with_target(false)
         .map_writer(move |_| MakeInfoLogWriter)
         .with_filter(info_filter(LevelFilter::INFO, filters));
 
