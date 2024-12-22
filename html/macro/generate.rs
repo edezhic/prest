@@ -108,9 +108,9 @@ impl Generator {
 
     fn element(&self, name: TokenStream, attrs: Vec<Attr>, body: ElementBody, build: &mut Builder) {
         use rand::Rng;
-        let styles_id: u64 = rand::thread_rng().gen();
-        let styles_id = format!("id{}", hex::encode(styles_id.to_be_bytes()));
-        let scoped_styles = scoped_styles(&styles_id, &attrs);
+        let styles_class: u32 = rand::thread_rng().gen();
+        let styles_class = format!("styles{}", hex::encode(styles_class.to_be_bytes()));
+        let scoped_styles = scoped_styles(&styles_class, &attrs);
         if let Some(scoped_styles) = &scoped_styles {
             if name.to_string() != "html" {
                 build.push_str("<style>");
@@ -120,7 +120,7 @@ impl Generator {
         }
         build.push_str("<");
         self.name(name.clone(), build);
-        self.attrs(&styles_id, attrs, build);
+        self.attrs(&styles_class, attrs, build);
         build.push_str(">");
         if let Some(scoped_styles) = scoped_styles {
             if name.to_string() == "html" {
@@ -141,14 +141,15 @@ impl Generator {
         let name = &name_to_string(name);
         if let Some(longhand) = htmx::check_attr_shorthand(name) {
             build.push_str(longhand);
+        } else if let Some(aliased) = htmx::check_attr_name_alias(name) {
+            build.push_str(aliased);
         } else {
-            let name = htmx::check_attr_name_alias(name);
             build.push_escaped(name);
         }
     }
 
-    fn attrs(&self, styles_id: &str, attrs: Vec<Attr>, build: &mut Builder) {
-        let attrs = desugar_attrs(styles_id, attrs);
+    fn attrs(&self, styles_class: &str, attrs: Vec<Attr>, build: &mut Builder) {
+        let attrs = desugar_attrs(styles_class, attrs);
         for NamedAttr { name, attr_type } in attrs {
             match attr_type {
                 AttrType::Normal { value } => {
@@ -261,7 +262,7 @@ fn desugar_attrs(styles_id: &str, attrs: Vec<Attr>) -> Vec<NamedAttr> {
     };
 
     if let Some(_) = scoped {
-        ids.push(Markup::Literal {
+        classes_static.push(Markup::Literal {
             content: styles_id.to_owned(),
             span: SpanRange::call_site(),
         })

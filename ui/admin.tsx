@@ -157,9 +157,11 @@ const formatFields = (fields: Attrs) => {
         if (fields.start) return `STARTED ${fields.job}`
         else return `FINISHED ${fields.job}`
     }
-
     if (Object.keys(fields).length === 2 && fields.latency && fields.code) {
         return `${fields.code} in ${fields.latency} ms`
+    }
+    if (fields["log.target"] && fields["log.module_path"] && fields["log.file"] && fields.message) {
+        return `${fields.message}`
     }
     return <div className="raw">{JSON.stringify(fields)}</div>
 }
@@ -172,6 +174,9 @@ const formatSpan = (span?: Attrs) => {
     }
     if (span?.name === "http" && span?.method && span?.uri) {
         return `-> ${span.method} ${span.uri}`
+    }
+    if (Object.keys(span).length === 1 && span.name) {
+        return span.name
     }
     return <div className="raw">{JSON.stringify(span)}</div>
 }

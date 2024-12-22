@@ -14,3 +14,4 @@ proc-macro = true
 syn = { version = "2", default-features = false, features = ["derive", "parsing", "proc-macro", "printing"] }
 quote = "1"
 proc-macro2 = "1"
+gluesql-core = "0.16.3"

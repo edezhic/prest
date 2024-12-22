@@ -135,7 +135,7 @@ struct AuthForm {
     next: Option<String>,
 }
 
-async fn login(mut auth: Auth, Vals(form): Vals<AuthForm>) -> impl IntoResponse {
+async fn login(mut auth: Auth, Vals(form): Vals<AuthForm>) -> Result<Response> {
     let AuthForm {
         username,
         email,
@@ -146,50 +146,50 @@ async fn login(mut auth: Auth, Vals(form): Vals<AuthForm>) -> impl IntoResponse 
 
     let user = if signup {
         let new = if let Some(username) = username {
-            if User::find_by_username(&username).is_some() {
-                return StatusCode::CONFLICT.into_response();
+            if User::find_by_username(&username)?.is_some() {
+                return Ok(StatusCode::CONFLICT.into_response());
             }
             User::from_username_password(username, password)
         } else if let Some(email) = email {
-            if User::find_by_email(&email).is_some() {
-                return StatusCode::CONFLICT.into_response();
+            if User::find_by_email(&email)?.is_some() {
+                return Ok(StatusCode::CONFLICT.into_response());
             }
             User::from_email_password(email, password)
         } else {
-            return StatusCode::BAD_REQUEST.into_response();
+            return Ok(StatusCode::BAD_REQUEST.into_response());
         };
         let Ok(_) = new.save() else {
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+            return Ok(StatusCode::INTERNAL_SERVER_ERROR.into_response());
         };
         new
     } else {
         if let Some(username) = username {
             let credentials = Credentials::UsernamePassword { username, password };
             let Ok(Some(user)) = auth.authenticate(credentials).await else {
-                return StatusCode::UNAUTHORIZED.into_response();
+                return Ok(StatusCode::UNAUTHORIZED.into_response());
             };
             user
         } else if let Some(email) = email {
             let credentials = Credentials::EmailPassword { email, password };
             let Ok(Some(user)) = auth.authenticate(credentials).await else {
-                return StatusCode::UNAUTHORIZED.into_response();
+                return Ok(StatusCode::UNAUTHORIZED.into_response());
             };
             user
         } else {
-            return StatusCode::BAD_REQUEST.into_response();
+            return Ok(StatusCode::BAD_REQUEST.into_response());
         }
     };
 
     if auth.login(&user).await.is_err() {
         #[cfg(debug_assertions)]
-        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+        return Ok(StatusCode::INTERNAL_SERVER_ERROR.into_response());
         #[cfg(not(debug_assertions))]
-        return StatusCode::UNAUTHORIZED.into_response();
+        return Ok(StatusCode::UNAUTHORIZED.into_response());
     }
     if let Some(next) = next {
-        Redirect::to(&next).into_response()
+        Ok(Redirect::to(&next).into_response())
     } else {
-        Redirect::to("/").into_response()
+        Ok(Redirect::to("/").into_response())
     }
 }
 
@@ -319,6 +319,8 @@ use thiserror::Error;
 pub enum AuthError {
     #[error("User not found: {0}")]
     UserNotFound(String),
+    #[error("Failed to load: {0}")]
+    DbError(String),
 }
 
 #[async_trait]
@@ -340,7 +342,11 @@ impl AuthnBackend for Db {
                 let Ok(email) = GOOGLE_CLIENT.get_email(code, nonce).await else {
                     return Ok(None); // TODO an error here
                 };
-                match User::find_by_email(&email) {
+                let maybe_user = match User::find_by_email(&email) {
+                    Ok(v) => v,
+                    Err(e) => return Err(AuthError::DbError(format!("User load error: {e}"))),
+                };
+                match maybe_user {
                     Some(user) => Ok(Some(user)),
                     None => {
                         let user = User::from_email(email);
@@ -351,7 +357,12 @@ impl AuthnBackend for Db {
                 }
             }
             Credentials::UsernamePassword { username, password } => {
-                let Some(user) = User::find_by_username(&username) else {
+                let maybe_user = match User::find_by_username(&username) {
+                    Ok(v) => v,
+                    Err(e) => return Err(AuthError::DbError(format!("User load error: {e}"))),
+                };
+
+                let Some(user) = maybe_user else {
                     return Ok(None); // TODO an error here
                 };
                 let Some(pw_hash) = &user.password_hash else {
@@ -363,7 +374,12 @@ impl AuthnBackend for Db {
                 Ok(Some(user))
             }
             Credentials::EmailPassword { email, password } => {
-                let Some(user) = User::find_by_email(&email) else {
+                let maybe_user = match User::find_by_email(&email) {
+                    Ok(v) => v,
+                    Err(e) => return Err(AuthError::DbError(format!("User load error: {e}"))),
+                };
+
+                let Some(user) = maybe_user else {
                     return Ok(None); // TODO an error here
                 };
                 let Some(pw_hash) = &user.password_hash else {
@@ -381,7 +397,11 @@ impl AuthnBackend for Db {
         &self,
         user_id: &axum_login::UserId<Self>,
     ) -> std::result::Result<Option<Self::User>, Self::Error> {
-        Ok(User::find_by_id(user_id))
+        let maybe_user = match User::find_by_id(user_id) {
+            Ok(v) => v,
+            Err(e) => return Err(AuthError::DbError(format!("User load error: {e}"))),
+        };
+        Ok(maybe_user)
     }
 }
 
@@ -442,7 +462,15 @@ impl SessionStore for Db {
     }
 
     async fn load(&self, session_id: &Id) -> SessionResult<Option<Record>> {
-        let search = SessionRow::find_by_id(&session_id.0);
+        let search = match SessionRow::find_by_id(&session_id.0) {
+            Ok(v) => v,
+            Err(e) => {
+                return Err(SessionError::Backend(format!(
+                    "Failed to load session: {e}"
+                )))
+            }
+        };
+
         let Some(session_row) = search else {
             return Ok(None);
         };
@@ -453,7 +481,7 @@ impl SessionStore for Db {
     }
 
     async fn delete(&self, session_id: &Id) -> SessionResult<()> {
-        match SessionRow::delete_by_key(&session_id.0) {
+        match SessionRow::delete_by_pkey(&session_id.0) {
             Ok(_) => Ok(()),
             Err(e) => Err(SessionError::Backend(format!(
                 "Session deletion error: {e}"

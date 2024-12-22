@@ -1,8 +1,8 @@
 use crate::*;
 use std::collections::HashMap;
 
-pub(crate) async fn full() -> impl IntoResponse {
-    let jobs_records = ScheduledJobRecord::find_all();
+pub(crate) async fn full() -> Result<Markup> {
+    let jobs_records = ScheduledJobRecord::find_all()?;
 
     #[derive(Default)]
     struct ScheduledJobStat {
@@ -44,7 +44,7 @@ pub(crate) async fn full() -> impl IntoResponse {
         },
     );
 
-    html! {
+    Ok(html! {
         $"w-full" get="/admin/schedule_stats" trigger="load delay:10s" swap-this-no-transition {
             $"font-bold text-lg" {"Scheduled jobs stats"}
             $"w-full text-xs md:text-sm font-mono" {
@@ -57,5 +57,5 @@ pub(crate) async fn full() -> impl IntoResponse {
                 }
             }
         }
-    }
+    })
 }

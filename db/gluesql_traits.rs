@@ -195,7 +195,7 @@ impl Index for Db {
         _table_name: &str,
         _index_name: &str,
         _asc: Option<bool>,
-        _cmp_value: Option<(&IndexOperator, DbValue)>,
+        _cmp_value: Option<(&IndexOperator, sql::Value)>,
     ) -> GResult<RowIter> {
         match self {
             Memory(s) => {
@@ -234,7 +234,7 @@ impl IndexMut for Db {
 
 type ObjectName = String;
 use std::collections::HashMap;
-type _MetaIter = Box<dyn Iterator<Item = GResult<(ObjectName, HashMap<String, DbValue>)>>>;
+type _MetaIter = Box<dyn Iterator<Item = GResult<(ObjectName, HashMap<String, sql::Value>)>>>;
 
 #[async_trait(?Send)]
 impl Metadata for Db {

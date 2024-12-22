@@ -35,7 +35,7 @@ lazy_static! {
     };
 }
 
-pub fn compile(input: &str, element_id: &str) -> (Option<String>, Option<String>) {
+pub fn compile(input: &str, styles_class: &str) -> (Option<String>, Option<String>) {
     let classes: Vec<&str> = input.split_whitespace().collect();
     let mut compiled_styles: HashMap<String, Vec<String>> = HashMap::new();
     let mut inline_styles = Vec::new();
@@ -97,9 +97,9 @@ pub fn compile(input: &str, element_id: &str) -> (Option<String>, Option<String>
     let mut complex_styles = if compiled_styles.is_empty() && container_sizes.is_empty() {
         None
     } else {
-        let mut styles = nest_styles(compiled_styles, element_id);
+        let mut styles = nest_styles(compiled_styles, styles_class);
         if !container_sizes.is_empty() {
-            styles.push_str(&generate_container_styles(element_id, &container_sizes));
+            styles.push_str(&generate_container_styles(styles_class, &container_sizes));
         }
         Some(styles)
     };
@@ -107,7 +107,7 @@ pub fn compile(input: &str, element_id: &str) -> (Option<String>, Option<String>
     if let Some(ref mut styles) = complex_styles {
         if let Some(inline) = inline_styles {
             // Merge styles to avoid inline ones overriding complex ones
-            *styles = format!("#{element_id} {{ {inline} }} {styles}");
+            *styles = format!(".{styles_class} {{ {inline} }} {styles}");
             inline_styles = None;
         }
     }
@@ -115,8 +115,8 @@ pub fn compile(input: &str, element_id: &str) -> (Option<String>, Option<String>
     (inline_styles, complex_styles)
 }
 
-fn generate_container_styles(element_id: &str, sizes: &HashSet<&str>) -> String {
-    let mut styles = format!("#{} {{ width: 100%; }}\n", element_id);
+fn generate_container_styles(styles_class: &str, sizes: &HashSet<&str>) -> String {
+    let mut styles = format!(".{} {{ width: 100%; }}\n", styles_class);
 
     let mut sorted_sizes: Vec<&&str> = sizes.iter().collect();
     sorted_sizes.sort_by(|a, b| {
@@ -135,14 +135,14 @@ fn generate_container_styles(element_id: &str, sizes: &HashSet<&str>) -> String 
         if size == "default" {
             for (_breakpoint, (min_width, max_width)) in CONTAINER_STYLES.iter() {
                 styles.push_str(&format!(
-                    "@media (min-width: {}) {{ #{} {{ max-width: {}; }} }}\n",
-                    min_width, element_id, max_width
+                    "@media (min-width: {}) {{ .{} {{ max-width: {}; }} }}\n",
+                    min_width, styles_class, max_width
                 ));
             }
         } else if let Some((min_width, max_width)) = CONTAINER_STYLES.get(size) {
             styles.push_str(&format!(
-                "@media (min-width: {}) {{ #{} {{ max-width: {}; }} }}\n",
-                min_width, element_id, max_width
+                "@media (min-width: {}) {{ .{} {{ max-width: {}; }} }}\n",
+                min_width, styles_class, max_width
             ));
         }
     }
@@ -1936,7 +1936,7 @@ fn parse_arbitrary_value(class: &str) -> Option<String> {
     }
 }
 
-fn nest_styles(styles: HashMap<String, Vec<String>>, element_id: &str) -> String {
+fn nest_styles(styles: HashMap<String, Vec<String>>, styles_class: &str) -> String {
     let mut nested: HashMap<String, NestedStyles> = HashMap::new();
 
     let mut styles: Vec<(String, Vec<String>)> = styles.into_iter().collect();
@@ -1959,7 +1959,7 @@ fn nest_styles(styles: HashMap<String, Vec<String>>, element_id: &str) -> String
         insert_nested(&mut nested, &parts, styles);
     }
 
-    format_nested_styles(&nested, element_id, "")
+    format_nested_styles(&nested, styles_class, "")
 }
 
 fn insert_nested(nested: &mut HashMap<String, NestedStyles>, parts: &[&str], styles: Vec<String>) {
@@ -2030,7 +2030,7 @@ impl NestedStyles {
 
 fn format_nested_styles(
     styles: &HashMap<String, NestedStyles>,
-    element_id: &str,
+    styles_class: &str,
     parent_selector: &str,
 ) -> String {
     let mut result = String::new();
@@ -2038,11 +2038,11 @@ fn format_nested_styles(
     for (selector, content) in styles {
         let current_selector = if parent_selector.is_empty() {
             if selector.is_empty() {
-                format!("#{}", element_id)
+                format!(".{}", styles_class)
             } else if selector.starts_with(':') {
-                format!("#{}{}", element_id, selector)
+                format!(".{}{}", styles_class, selector)
             } else {
-                format!("#{}", element_id)
+                format!(".{}", styles_class)
             }
         } else if selector.starts_with('@') {
             parent_selector.to_string()
@@ -2075,10 +2075,10 @@ fn format_nested_styles(
                     result += &format!(
                         "{} {{\n{}}}\n",
                         selector,
-                        format_nested_styles(nested, element_id, &current_selector)
+                        format_nested_styles(nested, styles_class, &current_selector)
                     );
                 } else {
-                    result += &format_nested_styles(nested, element_id, &current_selector);
+                    result += &format_nested_styles(nested, styles_class, &current_selector);
                 }
             }
         }

@@ -18,15 +18,20 @@ use tracing_subscriber::{
     EnvFilter, Layer,
 };
 
+/// [`Level::TRACE`] shorthand for [`init!`] macro
 pub const TRACE: Level = Level::TRACE;
+/// [`Level::DEBUG`] shorthand for [`init!`] macro
 pub const DEBUG: Level = Level::DEBUG;
+/// [`Level::INFO`] shorthand for [`init!`] macro
 pub const INFO: Level = Level::INFO;
+/// [`Level::WARN`] shorthand for [`init!`] macro
 pub const WARN: Level = Level::WARN;
+/// [`Level::ERROR`] shorthand for [`init!`] macro
 pub const ERROR: Level = Level::ERROR;
 
-pub const LOGS_INFO_NAME: &str = "info";
-pub const LOGS_TRACES_NAME: &str = "traces";
-pub const TRACES_DATE_FORMAT: &str = "%Y-%m-%d";
+pub(crate) const LOGS_INFO_NAME: &str = "info";
+pub(crate) const LOGS_TRACES_NAME: &str = "traces";
+pub(crate) const TRACES_DATE_FORMAT: &str = "%Y-%m-%d";
 
 state!(LOGS: Logs = {
     let AppConfig {
@@ -86,11 +91,15 @@ impl Logs {
 
     pub fn recorded_traces_dates(&self) -> Vec<NaiveDate> {
         let mut res = vec![];
-        let paths = std::fs::read_dir(&self.traces.0).unwrap();
+        let paths =
+            std::fs::read_dir(&self.traces.0).expect("Traces are written to a valid directory");
         for path in paths {
             if let Ok(entry) = path {
                 let pathbuf = entry.path();
-                let filename = pathbuf.file_name().unwrap().to_string_lossy();
+                let filename = pathbuf
+                    .file_name()
+                    .expect("Trace dir file entries must have a name")
+                    .to_string_lossy();
                 if let Ok(date) = NaiveDate::parse_from_str(&filename, TRACES_DATE_FORMAT) {
                     res.push(date);
                 }
@@ -162,11 +171,8 @@ fn info_filter(level: LevelFilter, targets: &[(&str, Level)]) -> EnvFilter {
 
 fn traces_filter(targets: &[(&str, Level)]) -> Targets {
     Targets::new()
-        .with_target("sled::tree", Level::INFO)
-        .with_target("sled::context", Level::DEBUG)
-        .with_target("sled::pagecache", Level::INFO)
-        .with_target("sqlparser::parser", Level::INFO)
-        .with_target("sqlparser::dialect", Level::INFO)
+        .with_target("sled", Level::INFO)
+        .with_target("sqlparser", Level::INFO)
         .with_target("prest::host::traces", Level::DEBUG)
         .with_target("async_io", Level::DEBUG)
         .with_target("polling", Level::DEBUG)

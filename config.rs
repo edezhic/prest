@@ -49,7 +49,7 @@ pub trait AppConfigAccess {
 
 impl AppConfigAccess for std::sync::OnceLock<AppConfig> {
     fn init(&self, manifest: &str, manifest_dir: &str) -> &AppConfig {
-        let parsed = manifest.parse::<prest::TomlTable>().unwrap();
+        let parsed = manifest.parse::<toml::Table>().unwrap();
 
         let name = parsed["package"]["name"]
             .as_str()

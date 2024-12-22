@@ -1,12 +1,12 @@
 use crate::*;
 use chrono::{TimeDelta, Utc};
-use host::system_info::SystemStat;
+use host::{system_info::SystemStat, LOGS_INFO_NAME, LOGS_TRACES_NAME};
 
 pub(crate) async fn full() -> Result<Markup> {
     const MAX_COUNT: usize = 100;
     let max = Utc::now().naive_utc();
     let min = max - TimeDelta::try_hours(24).unwrap();
-    let records = SystemStat::find_in_range_timestamp(&min, &max);
+    let records = SystemStat::find_in_range_timestamp(&min, &max)?;
 
     let count = records.len();
 
@@ -27,7 +27,7 @@ pub(crate) async fn full() -> Result<Markup> {
                     },
                 );
                 chunked.push(SystemStat {
-                    timestamp: stats.get(0).unwrap().timestamp,
+                    timestamp: stats[0].timestamp,
                     app_cpu: chunk.0 / chunk_size as f32,
                     other_cpu: chunk.1 / chunk_size as f32,
                     app_ram: chunk.2 / chunk_size as u32,
@@ -84,9 +84,7 @@ pub(crate) async fn full() -> Result<Markup> {
                         span $"hidden lg:block mr-1"{","}
                         span{"max used: "(max_cpu)"%"}
                     }
-                    $"h-24 flex border border-neutral-700" {
-                        @for record in cpu {(record)}
-                    }
+                    $"h-24 flex border border-neutral-700" {(cpu)}
                 }
                 $"w-1/2 h-full flex flex-col" {
                     $"font-bold text-lg" {"RAM usage"}
@@ -95,9 +93,7 @@ pub(crate) async fn full() -> Result<Markup> {
                         span $"hidden lg:block mr-1"{","}
                         span{"max used: "(max_ram)}
                     }
-                    $"h-24 flex border border-neutral-700" {
-                        @for record in ram {(record)}
-                    }
+                    $"h-24 flex border border-neutral-700" {(ram)}
                 }
             }
             $"w-full h-6" {}

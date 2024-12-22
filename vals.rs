@@ -1,6 +1,6 @@
 use crate::*;
 
-/// Utility that deserializes from either [`Query`] or [`Form`] based on request method
+/// Utility that deserializes from either [`Query`] (GET) or [`Json`] (others) based on request method
 pub struct Vals<T>(pub T);
 #[async_trait]
 impl<T, S> FromRequest<S> for Vals<T>
@@ -11,7 +11,7 @@ where
     type Rejection = Error;
 
     async fn from_request(req: Request<Body>, state: &S) -> Result<Self> {
-        if req.method() == Method::GET {
+        if req.method() == Method::GET || req.method() == Method::HEAD {
             let (mut parts, _) = req.into_parts();
             match Query::<T>::from_request_parts(&mut parts, state).await {
                 Ok(Query(params)) => Ok(Vals(params)),

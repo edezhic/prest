@@ -4,7 +4,7 @@ import "./default-bundle/hyperscript.js";
 
 defineSse(htmx);
 
-// By default DELETE also uses url params which is quite unintuitive
+// By default DELETE also uses url params which is quite unintuitive and allows deleting stuff using malicious links
 htmx.config.methodsThatUseUrlParams = ["get"];
 
 // Enable view transitions by default
@@ -14,6 +14,14 @@ htmx.config.defaultSwapStyle = "outerHTML";
 
 // Register prest-adapter extension in the page
 document.body.setAttribute('hx-ext', (document.body.getAttribute('hx-ext') || '') + ', json-enc-custom');
+
+function reset(selectors) {
+    document.querySelectorAll(selectors).forEach((el) => {
+        if (el.value) el.value = "";
+        if (el.checked) el.checked = false;
+    })
+
+}
 
 // slightly modified copy of https://github.com/Emtyloc/json-enc-custom/blob/main/json-enc-custom.js
 // --- its even standartized!!1 https://www.w3.org/TR/html-json-forms/
@@ -107,10 +115,8 @@ function setValueFromPath(context, step, value) {
     if (step.last) {
         try {
             const json_v = JSON.parse(value);
-            console.log("json:", json_v)
             context[step.key] = json_v;
         } catch(e) {
-            console.log("err:", e);
             context[step.key] = value;
         }
     }

@@ -106,7 +106,7 @@ fn render_item(uuid: String, todo: Todo) -> Markup {
 
 async fn page(content: Markup) -> Markup {
     html! { html { (Head::with_title("With Redis"))
-        body $"container" into="div" style="margin-top: 16px;" {
+        body $"container" target="div" style="margin-top: 16px;" {
             form put="/" after-request="this.reset()" {
                 label for="task" {"Task description:"}
                 input type="text" name="task" {}

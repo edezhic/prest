@@ -29,7 +29,7 @@ pub(crate) fn build_linux_binary() -> Result<String> {
 
     prepare_docker_builder(&target_path)?;
 
-    info!("Starting release build for deployment");
+    info!(target: "builder", "starting release build for deployment");
     match std::process::Command::new("docker")
         .current_dir(workspace_path)
         .arg("run")
@@ -60,7 +60,7 @@ pub(crate) fn build_linux_binary() -> Result<String> {
         )),
         Ok(s) => Err(e!("Failed to build the linux binary: {s}")),
         Err(e) => {
-            error!("{e}");
+            error!(target:"builder", "{e}");
             Err(e!("Failed to start the docker builder image"))
         }
     }
@@ -90,7 +90,7 @@ fn prepare_docker_builder(target_dir: &str) -> Result {
             .stdout(std::io::stdout())
             .status()
         {
-            error!("{e}");
+            error!(target:"builder", "{e}");
             return Err(e!("Failed to build the linux binary"));
         }
     }

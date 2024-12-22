@@ -3328,8 +3328,11 @@ var htmx = (function() {
       if (elt.type === 'button' || elt.type === 'submit' || elt.tagName === 'image' || elt.tagName === 'reset' || elt.tagName === 'file') {
         return false
       }
-      // INCLUDE ANYWAY FOR PROPER DESERIALIZATION
-      if ( /* elt.type === 'checkbox' || */ elt.type === 'radio') {
+      if (elt.type === 'checkbox') {
+        // PREST: patch value and include it in any case for proper deserialization
+        elt.value = elt.checked;
+      } 
+      if (elt.type === 'radio') {
         return elt.checked
       }
       return true

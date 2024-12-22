@@ -4,6 +4,13 @@ mod content;
 pub use content::{ExampleCategory::*, EXAMPLES, INTERNALS, PREST_VERSION, README, RUST};
 
 pub fn routes() -> Router {
+    // pre-init content
+    let _ = *EXAMPLES;
+    let _ = *INTERNALS;
+    let _ = *README;
+    let _ = *RUST;
+    let _ = *PREST_VERSION;
+
     let mut router = route("/", get(README.clone()))
         .route("/internals", get(INTERNALS.clone()))
         .route("/rust", get(RUST.clone()));
@@ -21,21 +28,20 @@ async fn page(content: Markup) -> Markup {
     html!((DOCTYPE) html $"bg-stone-800 font-sans text-[#bbc4d4]" _="on click remove .open from #menu" {
         (Head::with_title("Prest Blog"))
 
-        body $"max-w-screen-md lg:max-w-screen-lg md:mx-auto"
-            hx-boost="true" hx-swap="innerHTML show:window:top" into="main" {
+        body $"max-w-screen-md lg:max-w-screen-lg md:mx-auto" boost="true" swap="innerHTML show:window:top" target="main" {
             nav $"bg-stone-900 top-4 mb-4 p-5 shadow-lg rounded-full grid grid-cols-3 items-center sticky z-10" {
                 $"flex gap-6" {
-                    a $"hover:text-white" href="https://github.com/edezhic/prest" {(include_html!("../icons/github.svg"))}
-                    a $"hover:text-white" href="https://docs.rs/prest" {(include_html!("../icons/docs.svg"))}
+                    a $"hover:text-white" href="https://github.com/edezhic/prest" {(include_html!("icons/github.svg"))}
+                    a $"hover:text-white" href="https://docs.rs/prest" {(include_html!("icons/docs.svg"))}
                 }
 
-                a $"font-bold text-center hover:text-white" href="/" {"PREST"}
+                a $"font-mono font-bold text-center hover:text-white" href="/" {"PREST"}
 
                 $"flex justify-end" {
-                    a $"hover:text-white mr-2 lg:mr-6" href="/admin" boost="false" {(include_html!("../icons/admin.svg"))}
+                    a $"hover:text-white mr-2 lg:mr-6" href="/admin" boost="false" {(include_html!("icons/admin.svg"))}
 
                     @if is_pwa() {
-                        div $"mr-2 lg:mr-6 font-bold text-sm" get="/sw/health" swap="none transition:false" trigger="every 3s delay:3s"
+                        div $"mr-2 lg:mr-6 font-bold text-sm" get="/sw/health" swap="none transition:false" trigger="load delay:3s"
                         _="on htmx:afterRequest
                             if event.detail.successful set my.style.color to '#059669'
                             else set my.style.color to '#991b1b' 
@@ -49,7 +55,7 @@ async fn page(content: Markup) -> Markup {
                         }
                     }
 
-                    div #"menu" $"absolute bg-stone-950 z-20 top-8 px-4 truncate shadow-xl rounded-xl w-52" {
+                    div #menu $"absolute bg-stone-950 z-20 top-8 px-4 truncate shadow-xl rounded-xl w-52" {
                         style {"
                             #menu { max-height: 0px } #menu.open { max-height: 1000px } 
                             #menu a { display: flex; align-items: center; padding: 0.25rem 0 0.25rem 0.5rem; border-radius: 1rem; }
@@ -74,8 +80,13 @@ async fn page(content: Markup) -> Markup {
                 main a { text-decoration: underline } 
                 main h3 { font-size: 2em } 
                 main ul, main ol { list-style: circle }
+                main h4 {
+                    font-size: 2rem;
+                    font-weight: 100;
+                    padding-top: 1rem;
+                }
                 code { font-size: 13px !important }
-                "#}
+            "#}
 
             main history-elt _="on load or htmx:afterSwap call format_content()"
                 $"opacity-80 mx-auto p-4 gap-3 flex flex-col text-sm lg:text-base leading-loose"
@@ -85,15 +96,14 @@ async fn page(content: Markup) -> Markup {
                 $"font-mono" {"v"(*PREST_VERSION)}
                 $"text-sm" {"made by Egor Dezhic"}
                 $"flex gap-3"{
-                    a href="https://twitter.com/eDezhic" {(include_html!("../icons/twitter.svg"))}
-                    a href="mailto:edezhic@gmail.com" {(include_html!("../icons/email.svg"))}
+                    a href="https://twitter.com/eDezhic" {(include_html!("icons/twitter.svg"))}
+                    a href="mailto:edezhic@gmail.com" {(include_html!("icons/email.svg"))}
                 }
             }
 
             (Scripts::default()
-                .css("https://unpkg.com/prismjs@1.29.0/themes/prism-tomorrow.min.css")
-                .include("https://unpkg.com/prismjs@1.29.0/components/prism-core.min.js")
-                .include("https://unpkg.com/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js")
+                .include("/prism.js")
+                .css("/prism-tomorrow.css")
                 .hyperscript("
                     def format_content()
                         call Prism.highlightAll()

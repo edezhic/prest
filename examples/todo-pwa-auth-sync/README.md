@@ -8,7 +8,7 @@ Until now we've changed the state of the clients only based on their requests an
 
 {src/main.rs}
 
-We're using the htmx's `sse` extension which allows us to easily swap events payloads into the right places based on their names. It starts with the `hx-ext="sse"` and `sse-connect="/todos/subscribe"` attributes which activate the extension and connect to the specified route to listen for events. Then `sse-swap="EVENT_NAME"` attributes can be used on it and its children to listen to events with specified names and swap if got any. In this case we're using `add` to append and todo's `id` as names to make sure events reach the right places.
+We're using the htmx's `sse` extension which allows us to easily swap events payloads into the right places based on their names. It comes with the default prest bundle so all you need is to set `sse="/todos/subscribe"` attribute which connects to the specified route to listen for events. Then `sse-swap="EVENT_NAME"` attributes can be used on it and its children to listen to events with specified names and swap if got any. In this case we're using `add` to append and todo's `id` as names to make sure events reach the right places.
 
 Now we have an installable collaborative real-time full-stack app! No react or another frontend framework involved and without even writing js. This is the end(for now) of the tutorials series, but you can also check out other examples from the menu.
 

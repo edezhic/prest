@@ -32,7 +32,7 @@ struct DeleteTodo {
 fn main() {
     route(
         "/",
-        get(|| async { html!(@for todo in Todos::find().all(&*DB).await.unwrap() {(todo)}) })
+        get(|| async { Todos::find().all(&*DB).await.unwrap().render() })
             .put(|Vals(NewTodo { task }): Vals<NewTodo>| async move {
                 todos::ActiveModel {
                     uuid: ActiveValue::Set(Uuid::now_v7()),
@@ -87,12 +87,12 @@ impl Render for todos::Model {
 async fn page(content: Markup) -> Markup {
     html! { html data-theme="dark" {
         (Head::with_title("With SeaORM Postgres"))
-        body."max-w-screen-sm mx-auto mt-12" into="div" {
-            form $"flex gap-4 justify-center" put="/" into="#list" swap-beforeend after-request="this.reset()" {
+        body $"max-w-screen-sm mx-auto mt-12" target="div" {
+            form $"flex gap-4 justify-center" put="/" into-end-of="#list" after-request="this.reset()" {
                 input $"border rounded-md" type="text" name="task" {}
                 button type="submit" {"Add"}
             }
-            div #"list" $"w-full" {(content)}
+            div #list $"w-full" {(content)}
             (Scripts::default())
         }
     }}

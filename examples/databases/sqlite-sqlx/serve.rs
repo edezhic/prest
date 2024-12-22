@@ -36,7 +36,7 @@ fn main() {
 async fn get_todos() -> Markup {
     let q = "select * from todos";
     let todos = query_as::<Sqlite, Todo>(q).fetch_all(&*DB).await.unwrap();
-    html!(@for todo in todos {(todo)})
+    todos.render()
 }
 
 async fn add_todo(Vals(todo): Vals<Todo>) -> Markup {
@@ -80,11 +80,11 @@ impl Render for Todo {
 async fn page(content: Markup) -> Markup {
     html! { html { (Head::with_title("With SQLx SQLite"))
         body $"max-w-screen-sm mx-auto mt-12" {
-            form $"flex gap-4 justify-center" put="/" into="#list" swap-beforeend after-request="this.reset()" {
+            form $"flex gap-4 justify-center" put="/" into-end-of="#list" after-request="this.reset()" {
                 input $"border rounded-md" type="text" name="task" {}
                 button type="submit" {"Add"}
             }
-            div #"list" $"w-full" {(content)}
+            div #list $"w-full" {(content)}
             (Scripts::default())
         }
     }}

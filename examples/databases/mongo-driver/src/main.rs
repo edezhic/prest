@@ -33,7 +33,7 @@ fn main() {
                 .try_collect()
                 .await
                 .unwrap();
-            html!(@for todo in todos {(todo)})
+            todos.render()
         })
         .put(|Vals(Todo { task, .. }): Vals<Todo>| async move {
             let new_todo = Todo {
@@ -79,11 +79,11 @@ impl Render for Todo {
 async fn page(content: Markup) -> Markup {
     html! { html { (Head::with_title("With Mongo"))
         body $"max-w-screen-sm mx-auto mt-12" {
-            form $"flex gap-4 justify-center" put="/" into="#list" swap-beforeend after-request="this.reset()" {
+            form $"flex gap-4 justify-center" put="/" into-end-of="#list" after-request="this.reset()" {
                 input $"border rounded-md" type="text" name="task" {}
                 button type="submit" {"Add"}
             }
-            div #"list" $"w-full" {(content)}
+            div #list $"w-full" {(content)}
             (Scripts::default())
         }
     }}

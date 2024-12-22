@@ -94,7 +94,7 @@ impl Parser {
             // Literal
             TokenTree::Literal(literal) => {
                 self.advance();
-                self.literal(literal)
+                self.literal(literal, false)
             }
             // Special form
             TokenTree::Punct(ref punct) if punct.as_char() == '@' => {
@@ -196,7 +196,10 @@ impl Parser {
     }
 
     /// Parses a literal string.
-    fn literal(&mut self, literal: Literal) -> ast::Markup {
+    ///
+    /// If `allow_int_literal` is `true`, then integer literals (like `123`) will be accepted and
+    /// returned.
+    fn literal(&mut self, literal: Literal, allow_int_literal: bool) -> ast::Markup {
         match Lit::new(literal.clone()) {
             Lit::Str(lit_str) => {
                 return ast::Markup::Literal {
@@ -206,6 +209,12 @@ impl Parser {
             }
             // Boolean literals are idents, so `Lit::Bool` is handled in
             // `markup`, not here.
+            Lit::Int(lit_int) if allow_int_literal => {
+                return ast::Markup::Literal {
+                    content: lit_int.to_string(),
+                    span: SpanRange::single_span(literal.span()),
+                };
+            }
             Lit::Int(..) | Lit::Float(..) => {
                 emit_error!(literal, r#"literal must be double-quoted: `"{}"`"#, literal);
             }
@@ -718,27 +727,32 @@ impl Parser {
     /// Parses an identifier, without dealing with namespaces.
     fn try_name(&mut self) -> Option<TokenStream> {
         let mut result = Vec::new();
-        match self.peek() {
-            Some(token @ TokenTree::Ident(_)) | Some(token @ TokenTree::Literal(_)) => {
-                self.advance();
-                result.push(token);
-            }
-            _ => return None,
-        };
-        let mut expect_ident = false;
+        let mut expect_ident_or_literal = true;
         loop {
-            expect_ident = match self.peek() {
+            expect_ident_or_literal = match self.peek() {
                 Some(TokenTree::Punct(ref punct)) if punct.as_char() == '-' => {
                     self.advance();
                     result.push(TokenTree::Punct(punct.clone()));
                     true
                 }
-                Some(TokenTree::Ident(ref ident)) if expect_ident => {
+                Some(token @ TokenTree::Ident(_)) if expect_ident_or_literal => {
                     self.advance();
-                    result.push(TokenTree::Ident(ident.clone()));
+                    result.push(token);
                     false
                 }
-                _ => break,
+                Some(TokenTree::Literal(ref literal)) if expect_ident_or_literal => {
+                    self.literal(literal.clone(), true);
+                    self.advance();
+                    result.push(TokenTree::Literal(literal.clone()));
+                    false
+                }
+                _ => {
+                    if result.is_empty() {
+                        return None;
+                    } else {
+                        break;
+                    }
+                }
             };
         }
         Some(result.into_iter().collect())

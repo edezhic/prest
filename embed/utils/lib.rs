@@ -66,7 +66,11 @@ pub fn get_files<'patterns>(
         .filter(|e| e.file_type().is_file())
         // respect includes and excludes
         .filter_map(move |e| {
-            let rel_path = path_to_str(e.path().strip_prefix(&folder_path).unwrap());
+            let rel_path = path_to_str(
+                e.path()
+                    .strip_prefix(&folder_path)
+                    .expect("Paths should be convertible to strings"),
+            );
             let full_canonical_path =
                 path_to_str(std::fs::canonicalize(e.path()).expect("Could not get canonical path"));
 

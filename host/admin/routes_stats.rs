@@ -1,7 +1,7 @@
 use crate::{analytics::RouteStat, *};
 
-pub(crate) async fn full() -> impl IntoResponse {
-    let routes_stats = RouteStat::find_all();
+pub(crate) async fn full() -> Result<Markup> {
+    let routes_stats = RouteStat::find_all()?;
     let mut total_path_hits = 0;
 
     type Stats = Vec<(Markup, Markup, u64, Markup)>;
@@ -26,7 +26,7 @@ pub(crate) async fn full() -> impl IntoResponse {
         }
     }
 
-    html! {
+    Ok(html! {
         a get="/admin/schedule_stats" trigger="load" swap-this {}
         $"font-bold text-lg" {"Routes stats (total hits: "(total_path_hits)"*)"}
         $"hidden md:block italic text-xs" {"*only counts requests to the server, static pages like blog's are served primarily by the Service Worker and aren't reflected here"}
@@ -51,5 +51,5 @@ pub(crate) async fn full() -> impl IntoResponse {
                 }
             }
         }
-    }
+    })
 }

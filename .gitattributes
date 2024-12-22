@@ -1,3 +1,4 @@
 ui/default.css linguist-vendored
 ui/default-bundle/** linguist-vendored
 ui/admin/** linguist-vendored
+examples/blog/src/ui/** linguist-vendored

@@ -26,16 +26,15 @@ pub use auth::*;
 mod logs;
 #[cfg(feature = "traces")]
 use logs::*;
-pub use logs::{
-    init_tracing_subscriber, DEBUG, ERROR, INFO, LOGS_INFO_NAME, LOGS_TRACES_NAME, TRACE, WARN,
-};
+pub use logs::{init_tracing_subscriber, DEBUG, ERROR, INFO, TRACE, WARN};
 
-#[cfg(feature = "traces")]
-pub mod analytics;
+#[cfg(all(feature = "traces", feature = "db"))]
+pub(crate) mod analytics;
 
 #[cfg(feature = "webview")]
 mod webview;
 
+pub use async_io::block_on as await_blocking;
 pub use directories::*;
 pub use dotenvy::dotenv;
 pub use tokio::{
@@ -49,12 +48,12 @@ pub use tokio::{
 };
 
 #[cfg(feature = "db")]
-mod shared_sled_storage;
+mod sled;
 #[cfg(feature = "db")]
-pub(crate) use shared_sled_storage::SharedSledStorage as PersistentStorage;
+pub(crate) use sled::SharedSledStorage as PersistentStorage;
 
 state!(RT: PrestRuntime = { PrestRuntime::init() });
-state!(IS_REMOTE: bool = { env::var("DEPLOYED_TO_REMOTE").is_ok() });
+state!((crate) IS_REMOTE: bool = { env::var("DEPLOYED_TO_REMOTE").is_ok() });
 
 /// Utility trait to use Router as the host
 pub trait HostUtils {
@@ -70,22 +69,26 @@ pub trait HostUtils {
 impl HostUtils for Router {
     #[cfg(not(feature = "webview"))]
     fn run(self) {
+        #[cfg(feature = "auth")]
+        let admin = admin::routes().layer(axum::middleware::from_fn(check_admin));
+        #[cfg(not(feature = "auth"))]
+        let admin = admin::routes();
         self.route("/health", get(StatusCode::OK))
             .add_auth()
             .add_default_assets()
             .add_analytics()
-            .nest("/admin", admin::routes())
+            .nest("/admin", admin)
             .add_utility_layers()
             .serve()
     }
     #[cfg(feature = "webview")]
     fn run(self) {
         std::thread::spawn(|| self.read_env().add_default_favicon().serve());
-        webview::init_webview(&localhost(&check_port())).unwrap();
+        webview::init_webview(&localhost(&check_port())).expect("Webview must initialize");
     }
     fn serve(self) {
         RT.block_on(async move { server::start(self).await })
-            .unwrap();
+            .expect("Server should stop gracefully");
     }
 
     fn add_auth(self) -> Self {
@@ -110,10 +113,14 @@ impl HostUtils for Router {
         // add default favicon
         let current_resp = RT
             .block_on(async {
-                self.call(Request::get("/favicon.ico").body(Body::empty()).unwrap())
-                    .await
+                self.call(
+                    Request::get("/favicon.ico")
+                        .body(Body::empty())
+                        .expect("Proper request"),
+                )
+                .await
             })
-            .unwrap();
+            .expect("Should be infallible");
         if current_resp.status() == 404 {
             self = self.route("/favicon.ico", get(|| async {
                 ([(header::CACHE_CONTROL, "max-age=360000, stale-while-revalidate=8640000, stale-if-error=60480000")], Body::from(FAVICON))
@@ -138,6 +145,15 @@ impl HostUtils for Router {
             .layer(tower_http::normalize_path::NormalizePathLayer::trim_trailing_slash());
 
         self.layer(host_services)
+    }
+}
+
+#[cfg(feature = "auth")]
+async fn check_admin(user: User, request: Request, next: Next) -> Result<Response> {
+    if user.is_admin() {
+        Ok(next.run(request).await)
+    } else {
+        Err(Error::Unauthorized)
     }
 }
 

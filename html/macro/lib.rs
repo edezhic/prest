@@ -19,7 +19,7 @@ use quote::quote;
 /// Compose HTML templates right inside of Rust code with ease.
 ///
 /// As of now it is almost identical to the original so check out the [maud book](https://maud.lambda.xyz/) for details
-/// the only new feature is $"..." notation for styles based on tailwind classes
+/// but it also supports $"..." notation for styles based on tailwind classes and some htmx aliases
 #[proc_macro]
 #[proc_macro_error]
 pub fn html(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -29,8 +29,8 @@ pub fn html(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 fn expand(input: TokenStream) -> TokenStream {
     let output_ident = TokenTree::Ident(Ident::new("__maud_output", Span::mixed_site()));
     // Heuristic: the size of the resulting markup tends to correlate with the
-    // code size of the template itself
-    let size_hint = input.to_string().len();
+    // code size of the template itself, but also styles, loops and htmx aliases so multiply it
+    let size_hint = input.to_string().len() * 3;
     let markups = parse::parse(input);
     let stmts = generate::generate(markups, output_ident.clone());
     quote!({

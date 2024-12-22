@@ -11,11 +11,11 @@ struct Todo {
 fn main() {
     route(
         "/",
-        get(|| async { html!(@for todo in select!(Vec<Todo>).unwrap() {(todo)}) })
+        get(|| async { select!(Vec<Todo>).unwrap().render() })
             .put(|Vals(mut todo): Vals<Todo>| async move {
                 todo.done = Some(false);
                 todo.insert().unwrap();
-                html!(@for todo in select!(Vec<Todo>).unwrap() {(todo)})
+                select!(Vec<Todo>).unwrap().render()
             })
             .patch(|Vals(mut todo): Vals<Todo>| async move {
                 todo.done = Some(!todo.done.unwrap());
@@ -48,11 +48,11 @@ impl Render for Todo {
 async fn page(content: Markup) -> Markup {
     html! { html { (Head::with_title("With Turbosql SQLite"))
         body $"max-w-screen-sm mx-auto mt-12" {
-            form $"flex gap-4 justify-center" put="/" into="#list" swap-beforeend after-request="this.reset()" {
+            form $"flex gap-4 justify-center" put="/" into-end-of="#list" after-request="this.reset()" {
                 input $"border rounded-md" type="text" name="task" {}
                 button type="submit" {"Add"}
             }
-            div #"list" $"w-full" {(content)}
+            div #list $"w-full" {(content)}
             (Scripts::default())
         }
     }}

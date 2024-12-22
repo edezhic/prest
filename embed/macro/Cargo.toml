@@ -1,6 +1,6 @@
 [package]
 name = "prest-embed-macro"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "fork of embed macro from rust-embed"
 license = "MIT OR Apache-2.0"
@@ -11,7 +11,7 @@ path = "lib.rs"
 proc-macro = true
 
 [dependencies]
-prest-embed-utils = { path = "../utils", version = "0.1.0" }
+prest-embed-utils = { path = "../utils", version = "0.2" }
 syn = { version = "2", default-features = false, features = ["derive", "parsing", "proc-macro", "printing"] }
 quote = "1"
 proc-macro2 = "1"

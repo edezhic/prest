@@ -19,7 +19,10 @@ pub trait Embed {
     fn get(file_path: &str) -> Option<EmbeddedFile>;
     fn get_content(file_path: &str) -> Option<String> {
         if let Some(file) = Self::get(file_path) {
-            Some(std::str::from_utf8(&file.data).unwrap().to_owned())
+            Some(match std::str::from_utf8(&file.data) {
+                Ok(content) => content.to_owned(),
+                Err(e) => format!("Invalid UTF-8 content: {e}"),
+            })
         } else {
             None
         }
@@ -43,15 +46,15 @@ impl EmbedRoutes for Router {
     }
 }
 
-fn file_handler<T: Embed + ?Sized>(path: &str, headers: HeaderMap) -> Response {
+fn file_handler<T: Embed + ?Sized>(path: &str, headers: HeaderMap) -> Result<Response> {
     let Some(asset) = T::get(&path) else {
-        return StatusCode::NOT_FOUND.into_response();
+        return Ok(StatusCode::NOT_FOUND.into_response());
     };
 
     let asset_etag = hex::encode(asset.metadata.sha256_hash());
     if let Some(request_etag) = headers.get(header::IF_NONE_MATCH) {
         if request_etag.as_bytes() == asset_etag.as_bytes() {
-            return StatusCode::NOT_MODIFIED.into_response();
+            return Ok(StatusCode::NOT_MODIFIED.into_response());
         }
     }
 
@@ -66,11 +69,10 @@ fn file_handler<T: Embed + ?Sized>(path: &str, headers: HeaderMap) -> Response {
         );
     }
 
-    response
+    Ok(response
         .header(header::ETAG, asset_etag)
         .header(header::CONTENT_TYPE, asset.metadata.mimetype())
-        .body(Body::from(asset.data))
-        .unwrap()
+        .body(Body::from(asset.data))?)
 }
 
 /// Shorthand to embed build artifacts like PWA assets and others

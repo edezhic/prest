@@ -32,13 +32,13 @@ fn main() {
         .route(
             "/todos",
             get(|auth: Auth| async move {
-                html!(
+                ok(html!(
                     @if let Some(user) = auth.user {
-                        form put="/todos" into="#list" swap-beforeend after-request="this.reset()" {
+                        form put="/todos" into-end-of="#list" after-request="this.reset()" {
                             input $"border rounded-md" type="text" name="task" {}
                             button $"ml-4" type="submit" {"Add"}
                         }
-                        div #"list" $"w-full" {@for todo in Todo::find_by_owner(&user.id) {(todo)}}
+                        div #list $"w-full" {(Todo::find_by_owner(&user.id)?)}
                     } @else {
                         @if *WITH_GOOGLE_AUTH {
                             a $"p-4 border rounded-md" href=(GOOGLE_LOGIN_ROUTE) {"Login with Google"}
@@ -51,7 +51,7 @@ fn main() {
                             button $"ml-4" type="submit" {"Sign in / Sign up"}
                         }
                     }
-                )
+                ))
             })
                 .put(|user: User, Vals(mut todo): Vals<Todo>| async move {
                     todo.owner = user.id;

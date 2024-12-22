@@ -43,13 +43,13 @@ async fn into_page(content: Markup) -> impl IntoResponse {
     let page = html! {(DOCTYPE) html $"bg-stone-800 font-sans text-gray-300" {
         (Head::with_title("Prest Admin"))
         body $"max-w-screen-md lg:max-w-screen-lg md:mx-auto" {
-            nav replace-url swap="innerHTML" $"bg-stone-900 my-4 p-5 shadow-lg rounded-full items-center flex gap-6 w-min mx-auto" {
+            nav replace-url into="main" $"bg-stone-900 my-4 p-5 shadow-lg rounded-full items-center flex gap-6 w-min mx-auto" {
                 a href="/" boost="false" {(home_svg())}
-                button get="/admin" into="main" {div $"w-6" {(ADMIN_SVG)}}
-                button get="/admin/analytics" into="main" {div $"w-6" {(ANALYTICS_SVG)}}
-                button get="/admin/traces" into="main" {div $"w-6" {(LOGS_SVG)}}
+                button get="/admin" {div $"w-6" {(ADMIN_SVG)}}
+                button get="/admin/analytics" {div $"w-6" {(ANALYTICS_SVG)}}
+                button get="/admin/traces" {div $"w-6" {(LOGS_SVG)}}
                 @if DB_SCHEMA.tables().len() > 0 {
-                    button get="/admin/db" into="main" {div $"w-6" {(DB_SVG)}}
+                    button get="/admin/db" {div $"w-6" {(DB_SVG)}}
                 }
             }
             main $"opacity-80 mx-auto p-4 gap-8 flex flex-col text-sm lg:text-base leading-loose" {

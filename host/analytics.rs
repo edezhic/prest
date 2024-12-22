@@ -7,7 +7,7 @@ use tracing::Span;
 
 /// Describes collected stats for some path
 #[derive(Debug, Table, Serialize, Deserialize)]
-pub struct RouteStat {
+pub(crate) struct RouteStat {
     pub path: String,
     pub method_hits_and_latency: HashMap<String, (u64, f64)>,
     pub is_asset: bool,
@@ -16,7 +16,7 @@ pub struct RouteStat {
 impl RouteStat {
     pub fn record(req_method: Method, path: String, latency: f64) {
         let req_method = req_method.to_string();
-        if let Some(mut stats) = RouteStat::find_by_path(&path) {
+        if let Ok(Some(mut stats)) = RouteStat::find_by_path(&path) {
             let entry = stats.method_hits_and_latency.entry(req_method).or_default();
 
             let updated_hits = entry.0 + 1;
@@ -78,7 +78,7 @@ fn record_response_metrics(
 
 /// Layer that collects analytics
 #[derive(Clone)]
-pub struct AnalyticsLayer;
+pub(crate) struct AnalyticsLayer;
 
 impl AnalyticsLayer {
     pub fn init() -> Self {
@@ -98,7 +98,7 @@ impl<S> Layer<S> for AnalyticsLayer {
 /// Underlying middleware that powers [`AnalyticsLayer`]
 #[doc(hidden)]
 #[derive(Clone)]
-pub struct AnalyticsMiddleware<S> {
+pub(crate) struct AnalyticsMiddleware<S> {
     inner: S,
 }
 
@@ -159,7 +159,7 @@ fn make_span(request: &Request) -> Span {
 }
 
 pin_project! {
-    pub struct ResponseFuture<F> {
+    pub(crate) struct ResponseFuture<F> {
         #[pin]
         pub(crate) inner: F,
         pub(crate) span: Span,
@@ -189,8 +189,8 @@ where
                         &res,
                         this.start.elapsed(),
                         this.span,
-                        this.req_method.take().unwrap(),
-                        this.req_path.take().unwrap(),
+                        this.req_method.take().expect("Request must have a method"),
+                        this.req_path.take().expect("Request must have a path"),
                     );
                 }
 

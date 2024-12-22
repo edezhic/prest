@@ -24,11 +24,11 @@ impl Render for Todo {
 async fn into_page(content: Markup) -> Markup {
     html! {(DOCTYPE) html {(Head::with_title("Todo app"))
         body $"max-w-screen-sm px-8 mx-auto mt-12 flex flex-col items-center" {
-            form put="/" into="#list" swap-beforeend after-request="this.reset()" {
+            form put="/" into-end-of="#list" after-request="this.reset()" {
                 input $"border rounded-md" type="text" name="task" {}
                 button $"ml-4" type="submit" {"Add"}
             }
-            div #"list" $"w-full" {(content)}
+            div #list $"w-full" {(content)}
             (Scripts::default())
         }
     }}
@@ -38,7 +38,7 @@ fn main() {
     init!(tables Todo);
     route(
         "/",
-        get(|| async { html!(@for todo in Todo::find_all() {(todo)}) })
+        get(|| async { ok(Todo::find_all()?.render()) })
             .put(|todo: Vals<Todo>| async move { ok(todo.save()?.render()) })
             .delete(|todo: Vals<Todo>| async move { ok(todo.remove()?) })
             .patch(|Vals(mut todo): Vals<Todo>| async move {

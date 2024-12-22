@@ -17,6 +17,7 @@ pub use tokio_schedule::Job as RepeatableJob;
 use tokio_schedule::{every, Every};
 use tracing::{trace_span as span, Span};
 
+/// Wrapper around [`tokio::runtime::Runtime`] that manages schedule and graceful shutdown
 pub struct PrestRuntime {
     pub inner: Runtime,
     pub running_scheduled_tasks: AtomicUsize,
@@ -26,7 +27,7 @@ pub struct PrestRuntime {
 
 impl PrestRuntime {
     pub fn init() -> Self {
-        let inner = Runtime::new().unwrap();
+        let inner = Runtime::new().expect("Prest should be able to initialize inner tokio runtime");
         #[cfg(unix)]
         inner.spawn(async { RT.listen_shutdown() });
         PrestRuntime {

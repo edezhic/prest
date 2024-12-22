@@ -39,7 +39,7 @@ fn main() {
         .route(
             "/todos",
             get(|auth: Auth| async move {
-                html!(
+                ok(html!(
                     @if auth.user.is_some() {
                         form put="/todos" swap-none after-request="this.reset()" {
                             input $"border rounded-md" type="text" name="task" {}
@@ -53,10 +53,10 @@ fn main() {
                             button $"ml-4" type="submit" {"Sign in / Sign up"}
                         }
                     }
-                    div #"todos" $"w-full" hx-ext="sse" sse-connect="/todos/subscribe" sse-swap="add" swap-beforeend {
-                        @for item in Todo::find_all() {(item.render_for(&auth.user))}
+                    div #"todos" $"w-full" sse="/todos/subscribe" sse-msg="add" swap-beforeend {
+                        @for item in Todo::find_all()? {(item.render_for(&auth.user))}
                     }
-                )
+                ))
             })
                 .put(|user: User, Vals(mut todo): Vals<Todo>| async move {
                     todo.owner = user.id;

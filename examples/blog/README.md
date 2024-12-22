@@ -9,4 +9,3 @@ Built from repo's markdown files as a proof-of-concept for prest and maintained 
 {src/lib.rs}
 
 {src/content.rs}
-

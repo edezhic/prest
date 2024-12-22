@@ -1,6 +1,6 @@
 use crate::*;
 
-/// Basic Result alias with [`enum@prest::Error`]`
+/// Basic Result alias with [`enum@prest::Error`]
 pub type Result<T = (), E = Error> = std::result::Result<T, E>;
 
 /// Utility for type inference that allows using `?` operator in closure handlers
@@ -27,6 +27,10 @@ pub enum Error {
     ChronoParse(#[from] chrono::ParseError),
     #[error(transparent)]
     UuidParse(#[from] uuid::Error),
+    #[error(transparent)]
+    SerdeJson(#[from] serde_json::Error),
+    #[error(transparent)]
+    HttpError(#[from] http::Error),
     #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),
     #[cfg(all(host, feature = "auth"))]
@@ -97,6 +101,7 @@ impl IntoResponse for Error {
     }
 }
 
+/// Provides shorthand to map errs into [`prest::Error`] using `.somehow()`
 pub trait Somehow<T, E> {
     fn somehow(self) -> Result<T, Error>;
 }
@@ -110,6 +115,7 @@ where
     }
 }
 
+/// Shorthand to create formatted [`prest::Error`] values like `e!("{x:?}")`
 #[macro_export]
 macro_rules! e {
     ($($tokens:tt),+) => {

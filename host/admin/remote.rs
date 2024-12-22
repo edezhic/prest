@@ -70,14 +70,14 @@ pub(crate) async fn start_deploy() -> impl IntoResponse {
         return Err(e!("Not ready to start deploy"));
     }
 
-    info!("Initiated deployment");
+    info!(target: "remote", "initiated deployment");
     remote.set_state(DeploymentState::Building).await;
 
     RT.try_once(async {
         if let Ok(Ok(binary_path)) = tokio::task::spawn_blocking(build_linux_binary).await {
             if let Err(e) = upload_and_activate(&binary_path).await {
                 remote.set_state(DeploymentState::Failure).await;
-                error!("Failed to update the server: {e}");
+                error!(target: "remote", "failed to update the server: {e}");
             } else {
                 remote.sync_deployments().await?;
                 remote.set_state(DeploymentState::Success).await;
@@ -97,14 +97,15 @@ pub(crate) async fn activate_deployment(Vals(deployment): Vals<DeploymentInfo>) 
         return Err(e!("No remote connection"));
     };
 
-    if let Some(d) = remote
+    if let Some(pid) = remote
         .deployments
         .read()
         .await
         .iter()
-        .find(|d| d.pid.is_some())
+        .filter_map(|d| d.pid)
+        .next()
     {
-        remote.conn().await?.kill_process(d.pid.unwrap()).await?;
+        remote.conn().await?.kill_process(pid).await?;
     }
 
     remote

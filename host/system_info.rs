@@ -32,7 +32,10 @@ impl SystemInfo {
         sys.refresh_memory();
 
         let disks = Disks::new_with_refreshed_list();
-        let disk = disks.list().first().unwrap();
+        let disk = disks
+            .list()
+            .first()
+            .expect("System must have at least one disk");
         let total_disk = disk.total_space().div_ceil(1_000_000) as u32;
         let used_disk = total_disk - disk.available_space().div_ceil(1_000_000) as u32;
         let used_disk = RwLock::new(used_disk);

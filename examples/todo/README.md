@@ -1,4 +1,4 @@
-Simple CRUD app with a database, partial rendering and decent styles. Every rust crate starts with the `toml` manifest:
+Simple CRUD app with persistent data and partial rendering. Every rust crate starts with the `toml` manifest:
 
 {Cargo.toml}
 
@@ -20,7 +20,7 @@ Since this is a quite unusal templating solution and used together with [HTMX](h
 
 1. if the tag is not specified, like the parent tag of a todo, then it's rendered as a `div`
 2. `$"..."` works somewhat like class html attribute in tailwind but `html!` macro converts them into embedded css
-3. `swap-this` (alias for `hx-target="this" hx-swap="outerHTML"`) configures htmx to swap this element and to swap it whole (by default it swaps it's children = `innerHTML`)
+3. `swap-this` (alias for `hx-target="this"`) configures htmx to swap this element and to swap it whole
 4. `vals=(json!(self))` (alias for `hx-vals`) adds json-serialized todo fields which htmx will form-encode and send with requests
 5. `patch="/"` (alias for `hx-patch`) sets this element to send `PATCH` method requests to `/` when triggered
 6. `delete="/"` (alias for `hx-delete`) sets this element to send `DELETE` method requests to `/` when triggered

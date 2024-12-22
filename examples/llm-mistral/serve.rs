@@ -66,17 +66,17 @@ async fn history(in_progress: bool) -> Markup {
     html!(
         (PreEscaped(content))
         @if in_progress {
-            ins get="/more" into="div" trigger="load"{}
+            ins get="/more" target="div" trigger="load"{}
             span {"loading..."}
             br{}
-            button get="/" into="body" {"Pause"}
+            button get="/" target="body" {"Pause"}
         }
         @else {
-            form post="/prompt" into="div"  {
+            form post="/prompt" target="div"  {
                 input type="text" name="content" placeholder="Prompt" required {}
                 button type="submit" {(btn)}
             }
         }
-        button get="/reset" into="body" {"Reset"}
+        button get="/reset" target="body" {"Reset"}
     )
 }

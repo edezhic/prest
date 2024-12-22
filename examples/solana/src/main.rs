@@ -85,7 +85,7 @@ async fn list() -> Markup {
     };
     
     html!(@for (index, todo) in my_todos.iter().enumerate() {
-        $"flex justify-between items-center" into="#list" {
+        $"flex justify-between items-center" target="#list" {
             input type="checkbox" get=(format!("/toggle/{index}")) checked[todo.done] {}
             label $"ml-4 text-lg" {(todo.task)}
             button $"ml-auto" get=(format!("/delete/{index}")) {"Delete"}
@@ -96,11 +96,11 @@ async fn list() -> Markup {
 async fn into_page(content: Markup) -> Markup {
     html! {(DOCTYPE) html {(Head::with_title("With Solana storage"))
         body $"max-w-screen-sm px-8 mx-auto mt-12 flex flex-col items-center" {
-            form method="POST" into="#list" after-request="this.reset()" {
+            form method="POST" target="#list" after-request="this.reset()" {
                 input $"border rounded-md" type="text" name="task" {}
                 button $"ml-4" type="submit" {"Add"}
             }
-            div #"list" $"w-full" {(content)}
+            div #list $"w-full" {(content)}
             (Scripts::default())
         }
     }}

@@ -30,13 +30,13 @@ fn main() {
         .route(
             "/todos",
             get(|| async {
-                html!(
-                    form put="/todos" into="#list" swap-beforeend after-request="this.reset()" {
+                ok(html!(
+                    form put="/todos" into-end-of="#list" after-request="this.reset()" {
                         input $"border rounded-md" type="text" name="task" {}
                         button $"ml-4" type="submit" {"Add"}
                     }
-                    div #"list" $"w-full" {@for todo in Todo::find_all() {(todo)}}
-                )
+                    div #list $"w-full" {(Todo::find_all()?)}
+                ))
             })
             .put(|todo: Vals<Todo>| async move { ok(todo.save()?.render()) })
             .delete(|todo: Vals<Todo>| async move { ok(todo.remove()?) })

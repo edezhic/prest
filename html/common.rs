@@ -152,7 +152,10 @@ impl<'a> Render for Scripts<'a> {
     fn render(&self) -> Markup {
         html!(
             @if is_pwa() { script {(REGISTER_SW_SNIPPET)} }
-            @if let Some(stylesheets) = &self.stylesheets { @for stylesheet in stylesheets {link href={(stylesheet)} rel="stylesheet"{}}}
+            @if let Some(stylesheets) = &self.stylesheets { @for stylesheet in stylesheets {
+                link rel="preload" href={(stylesheet)} as="style" onload="this.onload=null;this.rel='stylesheet'" {}
+                noscript { link rel="stylesheet" href={(stylesheet)} {}}
+            }}
             @if self.default_bundle {
                 script src="/prest.js" {}
             }

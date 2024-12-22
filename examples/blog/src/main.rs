@@ -17,17 +17,14 @@ struct Inner {
 
 fn main() {
     init!(tables Todo);
-    // pre-init lazy statics
-    let _ = *blog::EXAMPLES;
-    let _ = *blog::INTERNALS;
-    let _ = *blog::README;
-    let _ = *blog::RUST;
-    let _ = *blog::PREST_VERSION;
 
     // prepare table to showcase in the admin panel
     Todo {
         id: Uuid::now_v7(),
-        custom: Default::default(),
+        custom: Inner {
+            a: "' delete * from users;".to_owned(),
+            b: Default::default(),
+        },
         done: false,
     }
     .save()

@@ -113,6 +113,14 @@ impl<T: Render> Render for Option<T> {
     }
 }
 
+impl<T: Render> Render for Vec<T> {
+    fn render_to(&self, w: &mut String) {
+        for v in self.iter() {
+            T::render_to(v, w);
+        }
+    }
+}
+
 macro_rules! impl_render_with_display {
     ($($ty:ty)*) => {
         $(

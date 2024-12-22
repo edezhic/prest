@@ -31,11 +31,11 @@ pub use axum_htmx::{
     HxRedirect, HxRefresh, HxReplaceUrl, HxRequest, HxReselect, HxResponseTrigger, HxReswap,
     HxRetarget, HxTarget, HxTrigger, HxTriggerName, SwapOption,
 };
-pub use axum_valid::*;
+
 pub use chrono::{NaiveDateTime, Utc};
 pub use futures::{
-    executor::block_on as await_fut,
-    future::FutureExt,
+    executor::block_on as await_blocking,
+    future::{join_all, FutureExt},
     stream::{self, Stream, StreamExt, TryStreamExt},
 };
 pub use serde_json::{
@@ -43,7 +43,6 @@ pub use serde_json::{
 };
 pub use std::sync::LazyLock as Lazy;
 pub use std::{convert::Infallible, env, sync::Arc};
-pub use toml::{Table as TomlTable, Value as TomlValue};
 pub use tower::{self, BoxError, Layer, Service, ServiceBuilder};
 pub use tracing::{debug, error, info, trace, warn};
 pub use uuid::Uuid;
@@ -73,7 +72,7 @@ pub use html::*;
 /// Default doctype for HTML
 pub const DOCTYPE: PreEscaped<&'static str> = PreEscaped("<!DOCTYPE html>");
 /// Default favicon
-pub static FAVICON: &[u8] = include_bytes!("ui/favicon.ico");
+pub(crate) static FAVICON: &[u8] = include_bytes!("ui/favicon.ico");
 
 #[cfg(host)]
 mod host;
@@ -109,6 +108,7 @@ pub fn is_pwa() -> bool {
     }
 }
 
+/// Shorthand for `PreEscaped(include_str!(...))``
 #[macro_export]
 macro_rules! include_html {
     ($path: tt) => {

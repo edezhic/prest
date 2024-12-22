@@ -22,16 +22,18 @@ pub(crate) fn db_routes() -> Router {
                 get(|| async {
                     let rows = table
                         .get_all()
-                        .await
+                        .await?
                         .into_iter()
                         .map(|row| view_row(table, row));
-                    html!(
-                        table $"w-full font-mono text-[0.5rem] lg:text-sm" {
+                    ok(html!(
+                        table #(table.name()) .table-editor $"w-full font-mono text-[0.5rem] lg:text-sm" {
                             @let columns = table.schema().iter().map(|c| (c.name, c.rust_type));
                             @for (name, rust_type) in columns {th {(name)" ("(rust_type)")"}}
+                            th #actions $"w-[70px]" {}
+                            (create_form(table))
                             @for row in rows {(row)}
                         }
-                    )
+                    ))
                 }),
             )
             .route(
@@ -41,9 +43,14 @@ pub(crate) fn db_routes() -> Router {
                     ok(edit_row(table, row))
                 }),
             )
+            .route(table.relative_path(), put(|req: Request| async {
+                let id = table.save(req).await?;
+                let row = table.get_row_by_id(id).await?;
+                ok(view_row(table, row))
+            }))
             .route(
                 table.relative_path(),
-                post(|req: Request| async {
+                patch(|req: Request| async {
                     let id = table.save(req).await?;
                     let row = table.get_row_by_id(id).await?;
                     ok(view_row(table, row))
@@ -57,83 +64,105 @@ pub(crate) fn db_routes() -> Router {
     router
 }
 
+fn create_form(table: &dyn TableSchemaTrait) -> Markup {
+    let schema = table.schema();
+    let key_selector = key_selector(table, None);
+
+    let cells = schema.iter().map(|schema| {
+        html!(
+            td .create { (column_input(schema, None, &key_selector)) }
+        )
+    });
+
+    html!(tr #(key_selector) {
+        @for cell in cells {(cell)}
+        td .actions put-after={"#"(key_selector)} include={"."(key_selector)} { div {
+            button put=(table.full_path()) after-request={"reset('."(key_selector)"')"} {(DONE_SVG)}
+        }}
+    })
+}
+
 fn view_row(table: &dyn TableSchemaTrait, values: Vec<String>) -> Markup {
     let schema = table.schema();
-    let key_selector = format!("a{}", values[0].clone());
+    let key_selector = key_selector(table, Some(&values));
 
-    let cells: Vec<_> = std::iter::zip(schema, &values)
-        .map(|(schema, value)| view_cell(schema, value))
-        .collect();
+    let cells = values.iter().map(|value| html! {td ."view" {(value)}});
 
     let id = std::iter::zip(schema, &values)
-        .find(|(col, _)| col.key)
+        .find(|(col, _)| col.pkey)
         .map(|(_, v)| v)
         .expect("Some column must be primary key");
     let edit_url = format!("{}/{id}", table.full_path());
 
-    html!(tr #(key_selector) ."relative" {
+    html!(tr #(key_selector) {
         @for cell in cells {(cell)}
-        td $"flex justify-around items-center" {
-            button $"w-6 hover:text-gray-50" get=(edit_url) into=(format!("#{key_selector}")) {(EDIT_SVG)}
-        }
+        td .actions { div {
+            button get=(edit_url) target={"#"(key_selector)} {(EDIT_SVG)}
+        }}
     })
-}
-
-fn view_cell(_schema: &ColumnSchema, value: &String) -> Markup {
-    html! {td $"text-center" {(value)}}
-}
-
-fn edit_cell(schema: &ColumnSchema, value: &String, key_selector: &String) -> Markup {
-    let input_type = column_input_type(schema);
-
-    let checked = match value.as_str() {
-        "true" => true,
-        _ => false,
-    };
-
-    let onchange = match input_type {
-        "checkbox" => Some("this.value = this.checked ? 'true' : 'false'"),
-        _ => None,
-    };
-
-    html! {
-        td $"text-center" {
-            input
-                $"bg-stone-900 accent-stone-600 px-2 py-1"
-                .(key_selector)
-                onchange=[(onchange)]
-                type=(input_type)
-                name=(schema.name)
-                value=(value)
-                readonly[schema.key]
-                checked[checked] {}
-        }
-    }
 }
 
 fn edit_row(table: &dyn TableSchemaTrait, values: Vec<String>) -> Markup {
     let schema = table.schema();
-    let key_selector = format!("key{}", values[0].clone());
-    let inputs_classname = format!(".{key_selector}");
+    let key_selector = key_selector(table, Some(&values));
 
-    let cells: Vec<_> = std::iter::zip(schema, &values)
-        .map(|(schema, value)| edit_cell(schema, value, &key_selector))
-        .collect();
+    let cells = std::iter::zip(schema, &values).map(|(schema, value)| {
+        html!(
+            td .edit {
+                (column_input(schema, Some(value), &key_selector))
+                @if schema.pkey {
+                    (value)
+                }
+            }
+        )
+    });
 
-    html!(tr #(key_selector) ."relative" {
+    html!(tr #(key_selector) {
         @for cell in cells {(cell)}
-        td $"flex justify-around items-center" into=(format!("#{key_selector}")) include=(inputs_classname) {
-            button $"w-6 hover:text-gray-50" post=(table.full_path()) {(DONE_SVG)}
-            button $"w-6 hover:text-gray-50" delete=(table.full_path()) {(DELETE_SVG)}
-        }
+        td .actions target={"#"(key_selector)} include={"."(key_selector)} { div {
+            button patch=(table.full_path()) {(DONE_SVG)}
+            button hx-confirm="are you sure you want to delete?" delete=(table.full_path()) {(DELETE_SVG)}
+        }}
     })
 }
 
+fn column_input(schema: &ColumnSchema, value: Option<&str>, key_selector: &String) -> Markup {
+    let input_type = if value.is_some() && schema.pkey {
+        "hidden"
+    } else {
+        column_input_type(schema)
+    };
+
+    let checked = value.filter(|v| *v == "true").is_some();
+
+    html! {
+        input
+            .(key_selector)
+            type=(input_type)
+            name=(schema.name)
+            value=[value]
+            checked[checked] {}
+    }
+}
+
+fn key_selector(table: &dyn TableSchemaTrait, values: Option<&Vec<String>>) -> String {
+    if let Some(values) = values {
+        let pkey_index = table
+            .schema()
+            .iter()
+            .position(|c| c.pkey)
+            .expect("Some column must be the primary key");
+        format!("key{}", values[pkey_index].clone())
+    } else {
+        format!("new_{}", table.name())
+    }
+}
+
 fn column_input_type(column: &ColumnSchema) -> &str {
-    match column.glue_type {
-        "BOOLEAN" => "checkbox",
-        t if t.starts_with("UINT") || t.starts_with("INT") || t.starts_with("F") => "number",
-        "U64" | "U8" | "F64" => "number",
+    let singular = !column.list && !column.optional;
+    match column.sql_type {
+        "BOOLEAN" if singular => "checkbox",
+        _ if column.numeric && singular => "number",
         "TEXT" | _ => "text",
     }
 }

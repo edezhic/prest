@@ -31,7 +31,7 @@ pub(crate) async fn upload_and_activate(binary_path: &str) -> Result {
 
     match conn.find_current_deployment(&deployment.pkg_name).await? {
         Some(p) => {
-            let pid = p.pid.unwrap();
+            let pid = p.pid.expect("Current deployment must have pid");
             conn.kill_process(pid).await?;
             while conn.check_process(pid).await? {
                 info!(target:"remote", "stopping current deployment...");
@@ -380,7 +380,8 @@ impl SshSession {
             .find_prest_processes()
             .await?
             .iter()
-            .find(|p| p.pid.is_some() && p.pid.unwrap() == pid)
+            .filter_map(|p| p.pid)
+            .find(|process_pid| *process_pid == pid)
             .is_some())
     }
 

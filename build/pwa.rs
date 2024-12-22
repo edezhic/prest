@@ -19,6 +19,11 @@ pub struct PWAOptions<'a> {
     pub icons: Vec<Icon<'a>>,
     pub debug_pwa: bool,
 }
+impl PWAOptions<'_> {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
 impl Default for PWAOptions<'_> {
     fn default() -> Self {
         Self {

@@ -6,13 +6,15 @@ pub type SseItem = Result<SseEvent, Infallible>;
 
 // use stream::{Map, TryStream};
 
+/// SseEvent wrapper which holds
 #[derive(Clone)]
-pub struct SseEventWrapper<T: Clone + Send> {
+pub(crate) struct SseEventWrapper<T: Clone + Send> {
     pub event_name: String,
     pub data: T,
 }
 
 // unsafe impl<T: Clone + Send> Send for SseEventWrapper<T> {}
+/// Broadcasting singleton for SSE (check out todo sync example)
 pub struct SseBroadcast<T: Clone + Send> {
     sender: Sender<SseEventWrapper<T>>,
     receiver: Receiver<SseEventWrapper<T>>,
@@ -26,9 +28,9 @@ impl<T: Clone + Send> Default for SseBroadcast<T> {
 }
 
 impl<T: Clone + Send> SseBroadcast<T> {
-    pub fn stream(&self) -> Receiver<SseEventWrapper<T>> {
-        self.receiver.new_receiver()
-    }
+    // pub(crate) fn stream(&self) -> Receiver<SseEventWrapper<T>> {
+    //     self.receiver.new_receiver()
+    // }
 
     pub async fn send<E: Into<String>>(&self, event_name: E, data: T) -> Result {
         self.sender
@@ -42,6 +44,7 @@ impl<T: Clone + Send> SseBroadcast<T> {
     }
 }
 
+/// Utility to `stream_and_render` [`SseBroadcast`]s
 pub trait SseBroadcastExt<T: Clone + Send> {
     fn stream_and_render<F>(&self, f: F) -> Response
     where
