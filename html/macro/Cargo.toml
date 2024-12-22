@@ -20,7 +20,7 @@ proc-macro-error = { version = "1.0.0", default-features = false }
 lazy_static = "1.4.0"
 rand = "0.8"
 hex = "0.4"
-regex = "*"
+regex = "1"
 
 [lib]
 path = "lib.rs"
