@@ -3,5 +3,5 @@ name = "sqlite-turbosql"
 edition = "2021"
 
 [dependencies]
-prest = { path = "../../../", version = "0.4" }
+prest = "0.4"
 turbosql = "0.9"

@@ -3,5 +3,5 @@ name = "redis-driver"
 edition = "2021"
 
 [dependencies]
-prest = { path = "../../../", version = "0.4" }
+prest = "0.4"
 redis = "0.23.3"

@@ -3,9 +3,9 @@ name = "todo-pwa"
 edition = "2021"
 
 [dependencies]
-prest = { path = "../../", version = "0.4" }
+prest = "0.4"
 wasm-bindgen = "0.2"
 
 [build-dependencies]
-prest-build = { version = "0.3", path = "../../build" }
+prest-build = "0.3"
 

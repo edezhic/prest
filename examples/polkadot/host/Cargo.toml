@@ -28,7 +28,7 @@ std = [
 
 [dependencies]
 runtime = { path = "../runtime" }
-#prest = { path = "../../", version = "0.4" }
+#prest = "0.4"
 
 getrandom = { version = "0.2", features = ["js"] }
 

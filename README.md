@@ -229,7 +229,6 @@ Core `prest-build` function is to build some of your routes into a WASM-based Se
 
 ```toml
 [dependencies]
-...
 wasm-bindgen = "0.2"
 ```
 
@@ -279,15 +278,13 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ prepare v0.4 release
-+ [rust-i18n](https://github.com/longbridgeapp/rust-i18n) or another i18n solution
++ move `DB_SCHEMA` into `DB`
 + schema changes validations, automigrations like turbosql
-+ auth improvements
-+ optimize shared sled storage, maybe add replication and/or backup+import
++ add replication and/or backup+import
++ [rust-i18n](https://github.com/longbridgeapp/rust-i18n) or another i18n solution
++ auth upgrades - simpler UX + DX, support more providers/methods
 + subdomains and multiple-services on single machine support
 + `axum-valid`-like integration for `Vals` or smth alike
-+ rewrite state macro using syn etc for flexibility
-+ move `DB_SCHEMA` into `DB`
 
 Some ideas are more complex/crazy but interesting:
 + example with a built-in minimalistic polkadot chain - customizable + optionally distributed + optionally public DB
