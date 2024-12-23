@@ -48,9 +48,9 @@ pub use tokio::{
 };
 
 #[cfg(feature = "db")]
-mod sled_storage;
+mod sled;
 #[cfg(feature = "db")]
-pub(crate) use sled_storage::SharedSledStorage as PersistentStorage;
+pub(crate) use sled::SharedSledStorage as PersistentStorage;
 
 state!(RT: PrestRuntime = { PrestRuntime::init() });
 state!((crate) IS_REMOTE: bool = { env::var("DEPLOYED_TO_REMOTE").is_ok() });
