@@ -1,6 +1,6 @@
 [package]
 name = "prest-db-macro"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 authors = ["edezhic@gmail.com"]
 description = "macro that derives Table trait to work with gluesql db"

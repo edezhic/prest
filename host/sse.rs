@@ -2,7 +2,7 @@ use crate::*;
 use async_broadcast::{broadcast, Receiver, Sender};
 pub use axum::response::sse::{Event as SseEvent, KeepAlive as SseKeepAlive, Sse};
 /// Alias for Server Sent Events event
-pub type SseItem = Result<SseEvent, Infallible>;
+pub type SseItem = Result<SseEvent, std::convert::Infallible>;
 
 // use stream::{Map, TryStream};
 
@@ -67,7 +67,7 @@ impl<T: Clone + Send + 'static + std::marker::Sync> SseBroadcastExt<T> for SseBr
             SseEvent::default().event(event_name).data(rendered.0)
         });
 
-        Sse::new(stream.map(Ok::<axum::response::sse::Event, Infallible>))
+        Sse::new(stream.map(Ok::<axum::response::sse::Event, std::convert::Infallible>))
             .keep_alive(SseKeepAlive::default())
             .into_response()
     }

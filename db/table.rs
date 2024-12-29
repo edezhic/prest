@@ -2,7 +2,12 @@ use crate::*;
 
 use gluesql::core::ast_builder::{DeleteNode, InsertNode, SelectNode, UpdateNode};
 
+/// Describes [`Table`]-derived columns schema
+#[doc(hidden)]
+pub type ColumnSchemas = &'static [ColumnSchema];
+
 /// Describes [`Table`]-derived column schema
+#[doc(hidden)]
 #[derive(Debug, Clone, Copy)]
 pub struct ColumnSchema {
     pub name: &'static str,
@@ -17,38 +22,13 @@ pub struct ColumnSchema {
     pub comparable: bool,
 }
 
-/// Describes [`Table`]-derived columns schema
-pub type ColumnsSchema = &'static [ColumnSchema];
-
-/// Describes [`Table`]-derived table schema
-#[derive(Debug, Clone)]
-
-pub struct TableSchema {
-    pub name: &'static str,
-    pub columns: ColumnsSchema,
-}
-
-/// Describes a collection of [`Table`]-derived schemas
-pub struct DbSchema(pub std::sync::RwLock<Vec<&'static dyn TableSchemaTrait>>);
-impl DbSchema {
-    fn init() -> Self {
-        Self(std::sync::RwLock::new(vec![]))
-    }
-    pub fn add_table(&self, schema: &'static dyn TableSchemaTrait) {
-        self.0.write().unwrap().push(schema);
-    }
-    pub fn tables(&self) -> Vec<&dyn TableSchemaTrait> {
-        self.0.read().unwrap().clone()
-    }
-}
-
-state!(DB_SCHEMA: DbSchema = { DbSchema::init() });
+pub type TableSchema = &'static dyn TableSchemaTrait;
 
 /// Derived interface to access schemas of derived [`Table`]s
 #[async_trait]
 pub trait TableSchemaTrait: Sync {
     fn name(&self) -> &'static str;
-    fn schema(&self) -> ColumnsSchema;
+    fn columns(&self) -> ColumnSchemas;
     fn relative_path(&self) -> &'static str;
     fn full_path(&self) -> &'static str;
     async fn get_all(&self) -> Result<Vec<Vec<String>>>;
@@ -58,24 +38,23 @@ pub trait TableSchemaTrait: Sync {
 }
 
 /// Derived interface to interact with structs as tables of their values
-pub trait Table: Sized {
+#[async_trait]
+pub trait Table: Sized + Send {
     const TABLE_NAME: &'static str;
-    const TABLE_SCHEMA: ColumnsSchema;
-    const KEY: &'static str;
-    type Key: std::fmt::Display;
+    const COLUMN_SCHEMAS: ColumnSchemas;
 
-    fn migrate();
-    fn prepare_table();
+    type Key: std::fmt::Display + Send + Clone;
+
+    fn schema() -> TableSchema;
+
     fn into_row(&self) -> Result<sql::ExprList<'static>>;
     fn from_row(row: Vec<sql::Value>) -> Result<Self>;
-    fn get_pkey(&self) -> &Self::Key;
-    fn save(&self) -> Result<&Self>;
-
-    fn pkey_filter<'a, 'b>(pkey: &'a Self::Key) -> sql::ExprNode<'b>;
-
     fn from_rows(rows: Vec<Vec<sql::Value>>) -> Result<Vec<Self>> {
         rows.into_iter().map(Self::from_row).collect()
     }
+
+    fn get_pkey(&self) -> &Self::Key;
+    fn pkey_filter<'a, 'b>(pkey: &'a Self::Key) -> sql::ExprNode<'b>;
 
     fn select() -> SelectNode<'static> {
         sql::table(Self::TABLE_NAME).select()
@@ -93,32 +72,40 @@ pub trait Table: Sized {
         sql::table(Self::TABLE_NAME).update()
     }
 
-    fn find_all() -> Result<Vec<Self>> {
-        Self::from_rows(Self::select().rows()?)
+    async fn save(&self) -> Result<&Self>;
+
+    async fn select_all() -> Result<Vec<Self>> {
+        Self::from_rows(Self::select().rows().await?)
     }
 
-    fn insert_self(&self) -> Result {
-        Self::insert().values(vec![self.into_row()?]).exec()?;
+    async fn insert_self(&self) -> Result {
+        Self::insert().values(vec![self.into_row()?]).exec().await?;
         OK
     }
 
-    fn find_by_pkey(pkey: &Self::Key) -> Result<Option<Self>> {
-        let mut rows = Self::select().filter(Self::pkey_filter(pkey)).rows()?;
+    async fn select_by_pkey(pkey: Self::Key) -> Result<Option<Self>> {
+        let mut rows = Self::select()
+            .filter(Self::pkey_filter(&pkey))
+            .rows()
+            .await?;
         match rows.pop() {
             Some(row) => Ok(Some(Self::from_row(row)?)),
             None => Ok(None),
         }
     }
 
-    fn delete_by_pkey(pkey: &Self::Key) -> Result {
-        let payload = Self::delete().filter(Self::pkey_filter(pkey)).exec()?;
+    async fn delete_by_pkey(pkey: Self::Key) -> Result {
+        let payload = Self::delete()
+            .filter(Self::pkey_filter(&pkey))
+            .exec()
+            .await?;
         match payload {
             sql::Payload::Delete(_) => OK,
             _ => return Err(e!("Couldn't delete item with pkey = {pkey}")),
         }
     }
 
-    fn remove(&self) -> Result {
-        Self::delete_by_pkey(&self.get_pkey())
+    async fn remove(&self) -> Result {
+        Self::delete_by_pkey(self.get_pkey().clone()).await
     }
 }

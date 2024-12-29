@@ -15,20 +15,19 @@ struct Inner {
     b: NaiveDateTime,
 }
 
-fn main() {
-    init!(tables Todo);
-
-    // prepare table to showcase in the admin panel
+#[init]
+async fn main() -> Result {
+    // example table with data to showcase in the admin panel
     Todo {
         id: Uuid::now_v7(),
         custom: Inner {
-            a: "' delete * from users;".to_owned(),
+            a: "v5 release".to_owned(),
             b: Default::default(),
         },
         done: false,
     }
     .save()
-    .expect("should save");
-
-    blog::routes().embed(BuiltAssets).run()
+    .await?;
+    
+    blog::routes().embed(BuiltAssets).run().await
 }

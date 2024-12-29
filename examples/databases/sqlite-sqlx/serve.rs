@@ -21,7 +21,8 @@ fn new_uuid() -> String {
     Uuid::now_v7().to_string()
 }
 
-fn main() {
+#[init]
+async fn main() -> Result {
     route(
         "/",
         get(get_todos)
@@ -31,6 +32,7 @@ fn main() {
     )
     .wrap_non_htmx(page)
     .run()
+    .await
 }
 
 async fn get_todos() -> Markup {

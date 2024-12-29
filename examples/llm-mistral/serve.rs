@@ -9,7 +9,8 @@ struct Prompt {
     pub content: String,
 }
 
-fn main() {
+#[init]
+async fn main() -> Result {
     info!("Initializing LLM...");
     let _ = *LLM;
 
@@ -45,6 +46,7 @@ fn main() {
             }),
         )
         .run()
+        .await
 }
 
 async fn page() -> Markup {

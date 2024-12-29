@@ -3,4 +3,4 @@ name = "todo"
 edition = "2021"
 
 [dependencies]
-prest = "0.4"
+prest = "0.5"

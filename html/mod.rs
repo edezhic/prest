@@ -18,6 +18,7 @@ use core::fmt::{self, Arguments, Display, Write};
 use std::{borrow::Cow, boxed::Box, string::String, sync::Arc};
 
 /// Wrapper of a buffer that escapes HTML chars when it is written using [`fmt::Write`]
+#[doc(hidden)]
 pub struct Escaper<'a>(&'a mut String);
 
 impl<'a> Escaper<'a> {

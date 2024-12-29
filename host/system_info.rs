@@ -5,7 +5,7 @@ use sysinfo::{
 
 /// Describes collected stats for system resources
 #[derive(Debug, Table, Serialize, Deserialize)]
-pub struct SystemStat {
+pub(crate) struct SystemStat {
     pub timestamp: NaiveDateTime,
     pub app_cpu: f32,
     pub other_cpu: f32,
@@ -13,7 +13,7 @@ pub struct SystemStat {
     pub other_ram: u32,
 }
 
-state!(SYSTEM_INFO: SystemInfo = { SystemInfo::init() });
+state!(SYSTEM_INFO: SystemInfo = async { SystemInfo::init().await });
 
 pub struct SystemInfo {
     pub system: RwLock<System>,
@@ -25,8 +25,7 @@ pub struct SystemInfo {
 }
 
 impl SystemInfo {
-    pub fn init() -> Self {
-        SystemStat::migrate();
+    pub async fn init() -> Self {
         let mut sys =
             System::new_with_specifics(RefreshKind::new().with_cpu(CpuRefreshKind::everything()));
         sys.refresh_memory();
@@ -40,7 +39,7 @@ impl SystemInfo {
         let used_disk = total_disk - disk.available_space().div_ceil(1_000_000) as u32;
         let used_disk = RwLock::new(used_disk);
 
-        let ram = sys.total_memory().div_ceil(1_048_576);
+        let ram = sys.total_memory().div_ceil(1_000_000);
 
         let host = SystemInfo {
             app_pid: Pid::from_u32(std::process::id()),
@@ -86,7 +85,7 @@ impl SystemInfo {
             other_ram,
         };
 
-        if let Err(e) = stats.save() {
+        if let Err(e) = stats.save().await {
             warn!(target: "system info", "Failed to save system stats: {e}");
         }
         Ok(())

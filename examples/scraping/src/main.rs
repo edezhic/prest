@@ -8,10 +8,9 @@ struct Story {
     pub content: String,
 }
 
-fn main() {
-    init!(tables Story; log filters: ("html5ever", INFO), ("selectors", INFO));
-
-    RT.spawn(scrape(
+#[init(log_filters=[("html5ever", "info"), ("selectors", "info")])]
+async fn main() -> Result {
+    spawn(scrape(
         "https://apnews.com",
         Selector::parse(".Page-content .PageList-items-item a").unwrap(),
         Selector::parse("h1.Page-headline").unwrap(),
@@ -22,7 +21,7 @@ fn main() {
         "/",
         get(|| async {
             ok(html!(html {(Head::with_title("With scraping"))
-                body { @for story in Story::find_all()? {
+                body { @for story in Story::select_all().await? {
                     div $"my-2" {
                         h3 {(story.title)}
                         div $"text-sm" {(format!("{:.150}...", story.content))}
@@ -32,6 +31,7 @@ fn main() {
         }),
     )
     .run()
+    .await
 }
 
 async fn scrape(
@@ -39,7 +39,7 @@ async fn scrape(
     links_selector: Selector,
     title_selector: Selector,
     content_selector: Selector,
-) -> AnyhowResult<()> {
+) -> Somehow {
     let text = fetch(url).await?.text().await?;
 
     let links = get_links(text, &links_selector);
@@ -52,16 +52,15 @@ async fn scrape(
         .into_iter()
         .filter_map(|resp| resp.ok());
 
-    let errors: Vec<Error> = join_all(responses.map(|resp| resp.text()))
+    let stories: Vec<Story> = join_all(responses.map(|resp| resp.text()))
         .await
         .into_iter()
         .filter_map(|text| text.ok())
         .map(|text| get_content(text, &title_selector, &content_selector))
-        .filter_map(|s| s.save().err())
         .collect();
 
-    if !errors.is_empty() {
-        warn!("Parsing errors: {errors:?}");
+    for story in stories {
+        story.save().await?;
     }
 
     Ok(())

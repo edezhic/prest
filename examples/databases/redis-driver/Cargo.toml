@@ -3,5 +3,5 @@ name = "redis-driver"
 edition = "2021"
 
 [dependencies]
-prest = "0.4"
+prest = "0.5"
 redis = "0.23.3"

@@ -14,12 +14,13 @@ mod transaction;
 
 use {
     self::snapshot::Snapshot,
-    crate::{host::await_blocking, warn, Arc, Result, RwLock},
+    super::SYSTEM_INFO,
+    crate::{warn, Arc, Result, RwLock},
     error::{err_into, tx_err_into},
     gluesql::core::{
         data::Schema,
         error::{Error as GlueError, Result as GlueResult},
-        store::{CustomFunction, CustomFunctionMut, Metadata, Transaction},
+        store::{CustomFunction, CustomFunctionMut, Metadata},
     },
     sled::{
         transaction::{
@@ -40,8 +41,31 @@ const DEFAULT_TX_TIMEOUT: u128 = 60 * 1000;
 
 const SCHEMA_PREFIX: &'static str = "schema/";
 
+#[derive(Clone, Debug)]
+pub struct SharedSledStorage {
+    #[allow(private_interfaces)]
+    pub state: Arc<RWSledStorage>, // Combined Mutex for state and Notify for signaling
+}
+
+/// Lock and Notify
+#[derive(Debug)]
+pub(crate) struct RWSledStorage {
+    pub db: RwLock<SledStorage>,
+    pub in_progress: AtomicBool,
+    notify: Notify,
+}
+
 #[derive(Debug, Clone)]
-enum State {
+pub(crate) struct SledStorage {
+    pub tree: Db,
+    pub id_offset: u64,
+    pub state: State,
+    /// transaction timeout in milliseconds
+    pub tx_timeout: Option<u128>,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) enum State {
     Idle,
     Transaction {
         txid: u64,
@@ -50,37 +74,15 @@ enum State {
     },
 }
 
-#[derive(Debug, Clone)]
-struct SledStorage {
-    pub tree: Db,
-    pub id_offset: u64,
-    pub state: State,
-    /// transaction timeout in milliseconds
-    pub tx_timeout: Option<u128>,
-}
-
 type ExportData<T> = (u64, Vec<(Vec<u8>, Vec<u8>, T)>);
-
-/// Lock and Notify
-#[derive(Debug)]
-struct RWSledStorage {
-    pub db: RwLock<SledStorage>,
-    in_progress: AtomicBool,
-    notify: Notify,
-}
-
-#[derive(Clone, Debug)]
-pub struct SharedSledStorage {
-    #[allow(private_interfaces)]
-    pub state: Arc<RWSledStorage>, // Combined Mutex for state and Notify for signaling
-}
 
 impl SharedSledStorage {
     pub fn new(db_path: std::path::PathBuf) -> crate::Result<Self> {
+        let total_ram_mbs = SYSTEM_INFO.ram;
         let sled_config = sled::Config::default()
             .path(db_path)
-            .cache_capacity(100_000_000)
-            .flush_every_ms(Some(100));
+            // use up to 20% ram for cache
+            .cache_capacity(total_ram_mbs.div_ceil(5));
 
         let tree = sled_config.open().map_err(err_into)?;
         let id_offset = get_id_offset(&tree)?;
@@ -150,6 +152,7 @@ impl SharedSledStorage {
         self.state.db.blocking_write().tree.flush()
     }
 
+    #[allow(dead_code)]
     pub fn export(&self) -> Result<ExportData<impl Iterator<Item = Vec<Vec<u8>>>>> {
         let storage = self.state.db.blocking_write();
         let id_offset = storage.id_offset + storage.tree.generate_id()?;
@@ -158,6 +161,7 @@ impl SharedSledStorage {
         Ok((id_offset, data))
     }
 
+    #[allow(dead_code)]
     pub fn import(&mut self, export: ExportData<impl Iterator<Item = Vec<Vec<u8>>>>) -> Result<()> {
         let mut storage = self.state.db.blocking_write();
         let (new_id_offset, data) = export;
@@ -189,7 +193,7 @@ fn get_id_offset(tree: &Db) -> GlueResult<u64> {
         .unwrap_or(Ok(0))
 }
 
-fn fetch_schema(
+pub(crate) fn fetch_schema(
     tree: &TransactionalTree,
     table_name: &str,
 ) -> ConflictTxResult<(String, Option<Snapshot<Schema>>), GlueError> {
@@ -207,13 +211,3 @@ fn fetch_schema(
 impl Metadata for SharedSledStorage {}
 impl CustomFunction for SharedSledStorage {}
 impl CustomFunctionMut for SharedSledStorage {}
-impl Drop for SharedSledStorage {
-    fn drop(&mut self) {
-        // if there is an active transaction, rollback
-        if self.state.in_progress.load(Ordering::Acquire) {
-            if let Err(err) = await_blocking(async { self.rollback().await }) {
-                warn!(target: "storage", "error rolling back transaction: {:?}", err);
-            }
-        }
-    }
-}

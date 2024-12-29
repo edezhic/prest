@@ -9,11 +9,8 @@ use hf_hub::{api::sync::Api, Repo};
 use prest::*;
 use tokenizers::Tokenizer;
 
-pub fn init() -> AnyhowResult<Mistral> {
-    init_with_opts(Default::default())
-}
-
-pub fn init_with_opts(cfg: MistralConfig) -> AnyhowResult<Mistral> {
+pub fn init() -> Somehow<Mistral> {
+    let cfg = MistralConfig::default();
     let start = std::time::Instant::now();
     info!("started initializing the model...");
     let repo = Repo::model("lmz/candle-mistral".to_owned());
@@ -22,7 +19,7 @@ pub fn init_with_opts(cfg: MistralConfig) -> AnyhowResult<Mistral> {
     let tokenizer = Tokenizer::from_file(tokenizer_filename).unwrap();
     let eos_token = *tokenizer.get_vocab(true).get("</s>").unwrap();
     let logits_processor = LogitsProcessor::new(cfg.seed, cfg.temperature, cfg.top_p);
-    let weights_filename = repo_api.get("model-q4k.gguf")?;
+    let weights_filename = repo_api.get("model-q4k.gguf").unwrap();
     let mistral_cfg = QMistralCfg::config_7b_v0_1(true);
     let weights = VarBuilder::from_gguf(&weights_filename, &Device::Cpu)?;
     let model = QMistral::new(&mistral_cfg, weights)?;
@@ -72,11 +69,11 @@ pub struct Mistral {
 }
 
 impl Mistral {
-    pub fn prompt(&mut self, text: &str) -> Result {
+    pub fn prompt(&mut self, text: &str) -> Result<(), Error> {
         self.history += text;
-        self.tokens.append(&mut self.encode(text)?);
+        self.tokens.append(&mut self.encode(text));
         self.processed = self.tokens.len();
-        OK
+        Ok(())
     }
     pub fn more(&mut self) -> bool {
         let next_token = self.predict().unwrap();
@@ -85,7 +82,7 @@ impl Mistral {
         self.try_decode();
         return next_token != self.eos_token;
     }
-    fn predict(&mut self) -> AnyhowResult<u32> {
+    fn predict(&mut self) -> Somehow<u32> {
         let Mistral {
             tokens,
             current_ctx,
@@ -100,13 +97,12 @@ impl Mistral {
         let next_token = self.logits_processor.sample(&logits)?;
         Ok(next_token)
     }
-    fn encode(&self, input: &str) -> AnyhowResult<Vec<u32>> {
-        Ok(self
-            .tokenizer
+    fn encode(&self, input: &str) -> Vec<u32> {
+        self.tokenizer
             .encode(input, true)
             .unwrap()
             .get_ids()
-            .to_vec())
+            .to_vec()
     }
     fn try_decode(&mut self) {
         let Mistral {

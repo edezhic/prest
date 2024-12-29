@@ -12,21 +12,22 @@ mod runtime;
 pub use runtime::*;
 
 mod system_info;
+pub(crate) use system_info::SystemStat;
 pub use system_info::SYSTEM_INFO;
 
 mod sse;
 pub use sse::*;
 
 #[cfg(feature = "auth")]
-mod auth;
+pub(crate) mod auth;
 #[cfg(feature = "auth")]
 pub use auth::*;
 
 #[cfg(feature = "traces")]
-mod logs;
+#[doc(hidden)]
+pub mod logs;
 #[cfg(feature = "traces")]
 use logs::*;
-pub use logs::{init_tracing_subscriber, DEBUG, ERROR, INFO, TRACE, WARN};
 
 #[cfg(all(feature = "traces", feature = "db"))]
 pub(crate) mod analytics;
@@ -34,71 +35,99 @@ pub(crate) mod analytics;
 #[cfg(feature = "webview")]
 mod webview;
 
-pub use async_io::block_on as await_blocking;
-pub use directories::*;
+pub fn await_blocking<F, R>(f: F) -> R
+where
+    F: std::future::Future<Output = R>,
+{
+    tokio::task::block_in_place(move || tokio::runtime::Handle::current().block_on(f))
+}
+
+pub(crate) use directories::*;
+#[doc(hidden)]
 pub use dotenvy::dotenv;
 pub use tokio::{
-    io,
-    net::ToSocketAddrs,
-    runtime::{Builder as RuntimeBuilder, Handle as RuntimeHandle, Runtime, RuntimeFlavor},
-    signal as tokio_signal,
-    sync::{Mutex, OnceCell, RwLock},
+    spawn,
+    sync::{Mutex, RwLock},
     task::{block_in_place, JoinSet},
     time::{sleep, timeout},
 };
 
-#[cfg(feature = "db")]
-mod sled;
-#[cfg(feature = "db")]
-pub(crate) use sled::SharedSledStorage as PersistentStorage;
-
-state!(RT: PrestRuntime = { PrestRuntime::init() });
-state!((crate) IS_REMOTE: bool = { env::var("DEPLOYED_TO_REMOTE").is_ok() });
-
-/// Utility trait to use Router as the host
-pub trait HostUtils {
-    /// Init env vars, DB, auth, tracing, other utils and start the server
-    fn run(self);
-    fn serve(self);
-    fn add_utility_layers(self) -> Self;
-    fn add_default_assets(self) -> Self;
-    fn add_analytics(self) -> Self;
-    fn add_auth(self) -> Self;
+#[doc(hidden)]
+pub mod _host {
+    pub use tokio::runtime::{
+        Builder as RuntimeBuilder, Handle as RuntimeHandle, Runtime, RuntimeFlavor,
+    };
 }
 
+#[cfg(feature = "db")]
+pub(crate) mod sled;
+#[cfg(feature = "db")]
+pub(crate) use sled::SharedSledStorage as PersistentStorage;
+use tower::Service;
+
+state!(RT: PrestRuntime = { PrestRuntime::init() });
+state!((crate) IS_REMOTE: bool = { env_var("DEPLOYED_TO_REMOTE").is_ok() });
+
+/// Utility trait to use Router as the host
+#[async_trait]
+pub trait HostUtils: Sized {
+    /// Init env vars, DB, auth, tracing, other utils and start the server
+    async fn run(self) -> Result;
+    async fn serve(self) -> Result;
+    fn add_utility_layers(self) -> Self;
+    async fn add_default_assets(self) -> Self;
+    fn add_analytics(self) -> Self;
+    fn add_auth(self) -> Result<Self>;
+}
+
+#[async_trait]
 impl HostUtils for Router {
     #[cfg(not(feature = "webview"))]
-    fn run(self) {
+    async fn run(self) -> Result {
         #[cfg(feature = "auth")]
-        let admin = admin::routes().layer(axum::middleware::from_fn(check_admin));
+        let admin = admin::routes()
+            .await
+            .layer(axum::middleware::from_fn(check_admin));
         #[cfg(not(feature = "auth"))]
-        let admin = admin::routes();
+        let admin = admin::routes().await;
         self.route("/health", get(StatusCode::OK))
-            .add_auth()
+            .add_auth()?
             .add_default_assets()
+            .await
             .add_analytics()
             .nest("/admin", admin)
             .add_utility_layers()
             .serve()
+            .await?;
+        OK
     }
     #[cfg(feature = "webview")]
-    fn run(self) {
-        std::thread::spawn(|| self.read_env().add_default_favicon().serve());
+    async fn run(self) {
+        std::thread::spawn(|| {
+            RT.block_on(async {
+                self.add_default_assets()
+                    .await
+                    .add_utility_layers()
+                    .serve()
+                    .await
+                    .expect("Server should shutdown gracefully")
+            })
+        });
         webview::init_webview(&localhost(&check_port())).expect("Webview must initialize");
+        OK
     }
-    fn serve(self) {
-        RT.block_on(async move { server::start(self).await })
-            .expect("Server should stop gracefully");
+    async fn serve(self) -> Result {
+        server::start(self).await
     }
 
-    fn add_auth(self) -> Self {
+    fn add_auth(self) -> Result<Self> {
         #[cfg(feature = "auth")]
         {
-            let (auth_layer, auth_routes) = auth::init_auth_module();
-            self.merge(auth_routes).layer(auth_layer)
+            let (auth_layer, auth_routes) = auth::init_auth_module()?;
+            Ok(self.merge(auth_routes).layer(auth_layer))
         }
         #[cfg(not(feature = "auth"))]
-        self
+        Ok(self)
     }
     fn add_analytics(self) -> Self {
         #[cfg(feature = "traces")]
@@ -106,20 +135,20 @@ impl HostUtils for Router {
         #[cfg(not(feature = "traces"))]
         self
     }
-    fn add_default_assets(mut self) -> Self {
-        embed_build_output_as!(BuiltinAssets);
+    async fn add_default_assets(mut self) -> Self {
+        #[derive(Embed)]
+        #[folder = "$OUT_DIR"]
+        pub struct BuiltinAssets;
         self = self.embed(BuiltinAssets);
 
         // add default favicon
-        let current_resp = RT
-            .block_on(async {
-                self.call(
-                    Request::get("/favicon.ico")
-                        .body(Body::empty())
-                        .expect("Proper request"),
-                )
-                .await
-            })
+        let current_resp = self
+            .call(
+                Request::get("/favicon.ico")
+                    .body(Body::empty())
+                    .expect("Proper request"),
+            )
+            .await
             .expect("Should be infallible");
         if current_resp.status() == 404 {
             self = self.route("/favicon.ico", get(|| async {
@@ -130,7 +159,8 @@ impl HostUtils for Router {
     }
     fn add_utility_layers(self) -> Self {
         use tower_http::catch_panic::CatchPanicLayer;
-        let host_services = ServiceBuilder::new().layer(CatchPanicLayer::custom(handle_panic));
+        let host_services =
+            tower::ServiceBuilder::new().layer(CatchPanicLayer::custom(handle_panic));
         #[cfg(debug_assertions)]
         let host_services = host_services
             .layer(tower_livereload::LiveReloadLayer::new().request_predicate(not_htmx_predicate));
@@ -187,7 +217,7 @@ fn get_panic_message(err: Box<dyn std::any::Any + Send + 'static>) -> String {
 const DEFAULT_REQUEST_BODY_LIMIT: usize = 10_000_000;
 #[allow(dead_code)]
 fn request_body_limit() -> usize {
-    if let Ok(v) = env::var("REQUEST_BODY_LIMIT") {
+    if let Ok(v) = env_var("REQUEST_BODY_LIMIT") {
         v.parse::<usize>().unwrap_or(DEFAULT_REQUEST_BODY_LIMIT)
     } else {
         DEFAULT_REQUEST_BODY_LIMIT
@@ -199,13 +229,7 @@ fn not_htmx_predicate<Body>(req: &Request<Body>) -> bool {
     !req.headers().contains_key("hx-request")
 }
 
-const INTERNAL_PATHS: [&str; 5] = [
-    "/tower-livereload",
-    "/default-view-transition",
-    "/admin",
-    "/sw/health",
-    "/prest.js",
-];
+const INTERNAL_PATHS: [&str; 2] = ["/tower-livereload", "/sw/health"];
 fn internal_request(request: &Request) -> bool {
     let path = request.uri().path();
     for internal in INTERNAL_PATHS {

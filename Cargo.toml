@@ -1,7 +1,7 @@
 [package]
 name = "prest"
 description = "Progressive RESTful framework"
-version = "0.4.1"
+version = "0.5.0"
 edition = "2021"
 resolver = "2" 
 license = "MIT OR Apache-2.0"
@@ -19,6 +19,7 @@ members = [
     "build", 
     "db/macro", 
     "html/macro",
+    "init",
     "embed/macro", 
     "embed/utils", 
     "serde_derive_fork",
@@ -42,13 +43,13 @@ traces = ["tracing-subscriber", "tracing-appender", "tracing-web", "ansi-to-html
 webview = ["wry", "tao"]
 
 [dependencies]
-prest-embed-macro = { path = "embed/macro", version = "0.2.0", optional = true }
+prest-embed-macro = { path = "embed/macro", version = "0.3.0", optional = true }
 prest-embed-utils = { path = "embed/utils", version = "0.2.0", optional = true }
 prest-html-macro = { path = "html/macro", version = "0.3.0", optional = true }
-prest-db-macro = { path = "db/macro", version = "0.3.0", optional = true }
+prest-db-macro = { path = "db/macro", version = "0.4.0", optional = true }
+prest-init-macro = { path = "init", version = "0.1.0" }
 prest-serde-derive-fork = { path = "serde_derive_fork", version = "1.0.216" }
 
-anyhow = "1.0.94"
 thiserror = "2"
 async-trait = "0.1.81"
 itoa = "1"
@@ -62,7 +63,6 @@ chrono = "0.4"
 time = { version = "0.3", features = ["wasm-bindgen"] } 
 hex = { version = "0.4", optional = true }
 axum-htmx = { version = "0.6", features = ["serde"] }
-toml = "0.8"
 semver = { version = "1.0", features = ["serde"] }
 ansi-to-html = { version = "0.2", optional = true }
 pin-project-lite = "0.2"
@@ -90,7 +90,6 @@ tao = { version = "0.24", default-features = false, features = [ "rwh_05" ], opt
 tokio_schedule = "0.3.1"
 directories = "5.0"
 sled = "0.34.7"
-async-io = "2"
 russh = "0.48"
 russh-keys = "0.48.1"
 russh-sftp = "2.0.6"

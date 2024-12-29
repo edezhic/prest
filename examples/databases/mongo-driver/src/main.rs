@@ -22,7 +22,8 @@ pub struct Todo {
     pub done: bool,
 }
 
-fn main() {
+#[init]
+async fn main() -> Result {
     route(
         "/",
         get(|| async {
@@ -62,6 +63,7 @@ fn main() {
     )
     .wrap_non_htmx(page)
     .run()
+    .await
 }
 
 impl Render for Todo {

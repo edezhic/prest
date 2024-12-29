@@ -14,7 +14,7 @@ pub use prest_embed_utils::*;
 use std::borrow::Cow;
 
 /// Derived trait for structs that embed files
-pub trait Embed {
+pub trait EmbeddedStruct {
     fn iter() -> __Filenames;
     fn get(file_path: &str) -> Option<EmbeddedFile>;
     fn get_content(file_path: &str) -> Option<String> {
@@ -30,12 +30,11 @@ pub trait Embed {
 }
 
 /// Convenience trait that generates routes for the embedded files
-#[doc(hidden)]
 pub trait EmbedRoutes {
-    fn embed<T: Embed>(self, _: T) -> Self;
+    fn embed<T: EmbeddedStruct>(self, _: T) -> Self;
 }
 impl EmbedRoutes for Router {
-    fn embed<T: Embed>(mut self, _: T) -> Self {
+    fn embed<T: EmbeddedStruct>(mut self, _: T) -> Self {
         for path in T::iter() {
             self = self.route(
                 &format!("/{path}"),
@@ -46,7 +45,7 @@ impl EmbedRoutes for Router {
     }
 }
 
-fn file_handler<T: Embed + ?Sized>(path: &str, headers: HeaderMap) -> Result<Response> {
+fn file_handler<T: EmbeddedStruct + ?Sized>(path: &str, headers: HeaderMap) -> Result<Response> {
     let Some(asset) = T::get(&path) else {
         return Ok(StatusCode::NOT_FOUND.into_response());
     };

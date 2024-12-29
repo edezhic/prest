@@ -34,17 +34,18 @@ async fn into_page(content: Markup) -> Markup {
     }}
 }
 
-fn main() {
-    init!(tables Todo);
+#[init]
+async fn main() -> Result {
     route(
         "/",
-        get(|| async { ok(Todo::find_all()?.render()) })
-            .put(|todo: Vals<Todo>| async move { ok(todo.save()?.render()) })
-            .delete(|todo: Vals<Todo>| async move { ok(todo.remove()?) })
+        get(|| async { ok(Todo::select_all().await?.render()) })
+            .put(|todo: Vals<Todo>| async move { ok(todo.save().await?.render()) })
+            .delete(|todo: Vals<Todo>| async move { ok(todo.remove().await?) })
             .patch(|Vals(mut todo): Vals<Todo>| async move {
-                ok(todo.update_done(!todo.done)?.render())
+                ok(todo.update_done(!todo.done).await?.render())
             }),
     )
     .wrap_non_htmx(into_page)
-    .run();
+    .run()
+    .await
 }

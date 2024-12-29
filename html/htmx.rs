@@ -23,6 +23,7 @@ where
 ///
 /// It also sets a proper html content type header and disables caching for htmx responses
 #[derive(Clone)]
+#[doc(hidden)]
 pub struct HtmxLayer<F> {
     pub wrapper: F,
 }
@@ -33,7 +34,7 @@ impl<F> HtmxLayer<F> {
     }
 }
 
-impl<S, F> Layer<S> for HtmxLayer<F>
+impl<S, F> tower::Layer<S> for HtmxLayer<F>
 where
     F: Clone,
 {
@@ -62,9 +63,9 @@ use core::{
 };
 use std::boxed::Box;
 
-impl<S, F, Fut, R> Service<Request<Body>> for HtmxMiddleware<S, F>
+impl<S, F, Fut, R> tower::Service<Request<Body>> for HtmxMiddleware<S, F>
 where
-    S: Service<Request<Body>, Response = Response> + Send + 'static,
+    S: tower::Service<Request<Body>, Response = Response> + Send + 'static,
     S::Future: Send + 'static,
     F: Fn(Markup) -> Fut + Send + Clone + 'static,
     Fut: Future<Output = R> + Send,

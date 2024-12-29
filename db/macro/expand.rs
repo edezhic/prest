@@ -4,10 +4,9 @@ use proc_macro2::TokenStream;
 pub fn impl_table(struct_ident: Ident, table_name: String, columns: Vec<Column>) -> TokenStream {
     let fields_idents = columns.iter().map(|col| col.field_name.clone());
     let table_schema = columns.iter().map(column_schema);
-    let add_columns = columns.iter().map(add_column);
     let from_row_extractions = columns.iter().enumerate().rev().map(from_glue_value);
     let into_row_items = columns.iter().rev().map(into_row_item);
-    let find_fns = columns.iter().map(find_by);
+    let find_fns = columns.iter().map(select_by);
     let check_fns = columns.iter().filter(|col| !col.pkey).map(check);
     let update_fns = columns.iter().filter(|col| !col.pkey).map(update);
     let get_all_as_strings = columns.iter().map(get_as_string);
@@ -32,13 +31,14 @@ pub fn impl_table(struct_ident: Ident, table_name: String, columns: Vec<Column>)
 
     let set_columns = columns.iter().filter(|col| !col.pkey).map(set_column);
     let save_fn = q!(
-        fn save(&self) -> prest::Result<&Self> {
-            if Self::find_by_pkey(self.get_pkey())?.is_some() {
+        async fn save(&self) -> prest::Result<&Self> {
+            if Self::select_by_pkey(self.get_pkey().clone()).await?.is_some() {
                 Self::update().filter(Self::pkey_filter(self.get_pkey()))
                     #(#set_columns)*
-                    .exec()?;
+                    .exec()
+                    .await?;
             } else {
-                self.insert_self()?;
+                self.insert_self().await?;
             }
             Ok(&self)
         }
@@ -55,7 +55,6 @@ pub fn impl_table(struct_ident: Ident, table_name: String, columns: Vec<Column>)
     let fields_idents2 = fields_idents.clone();
     let fields_idents3 = fields_idents.clone();
     let fields_idents4 = fields_idents.clone();
-    let table_schema2 = table_schema.clone();
     let get_all_as_strings2 = get_all_as_strings.clone();
 
     q! {
@@ -65,8 +64,8 @@ pub fn impl_table(struct_ident: Ident, table_name: String, columns: Vec<Column>)
             fn name(&self) -> &'static str {
                 #table_name
             }
-            fn schema(&self) -> ColumnsSchema {
-                &[#(#table_schema),*]
+            fn columns(&self) -> ColumnSchemas {
+                #struct_ident::COLUMN_SCHEMAS
             }
             fn relative_path(&self) -> &'static str {
                 #relative_path
@@ -76,7 +75,7 @@ pub fn impl_table(struct_ident: Ident, table_name: String, columns: Vec<Column>)
             }
             async fn get_all(&self) -> prest::Result<Vec<Vec<String>>> {
                 let mut rows = vec![];
-                for item in #struct_ident::find_all()? {
+                for item in #struct_ident::select_all().await? {
                     let #struct_ident { #(#fields_idents3 ,)* } = item;
                     let mut row = vec![];
                     #(#get_all_as_strings)*
@@ -86,7 +85,7 @@ pub fn impl_table(struct_ident: Ident, table_name: String, columns: Vec<Column>)
             }
             async fn get_row_by_id(&self, id: String) -> prest::Result<Vec<String>> {
                 #id_from_str
-                let Some(#struct_ident { #(#fields_idents4 ,)* }) = #struct_ident::find_by_pkey(&id)? else {
+                let Some(#struct_ident { #(#fields_idents4 ,)* }) = #struct_ident::select_by_pkey(id.clone()).await? else {
                     return Err(prest::e!("expected to find a row by id = {id}"))
                 };
                 let mut row = vec![];
@@ -95,20 +94,20 @@ pub fn impl_table(struct_ident: Ident, table_name: String, columns: Vec<Column>)
             }
             async fn save(&self, req: Request) -> prest::Result<String> {
                 let value: #struct_ident = Vals::from_request(req, &()).await?.0;
-                value.save()?;
+                value.save().await?;
                 Ok(value.get_pkey().to_string())
             }
             async fn remove(&self, req: Request) -> prest::Result {
                 let value: #struct_ident = Vals::from_request(req, &()).await?.0;
-                value.remove()?;
+                value.remove().await?;
                 Ok(())
             }
         }
 
+        #[prest::async_trait]
         impl prest::Table for #struct_ident {
             const TABLE_NAME: &'static str = #table_name;
-            const TABLE_SCHEMA: prest::ColumnsSchema = &[#(#table_schema2),*];
-            const KEY: &'static str = #key_name_str;
+            const COLUMN_SCHEMAS: prest::ColumnSchemas = &[#(#table_schema),*];
             type Key = #key_type_token;
 
             fn get_pkey(&self) -> &Self::Key {
@@ -117,19 +116,7 @@ pub fn impl_table(struct_ident: Ident, table_name: String, columns: Vec<Column>)
 
             fn pkey_filter<'a, 'b>(pkey: &'a Self::Key) -> prest::sql::ExprNode<'b> { #pkey_filter }
 
-            fn migrate() {
-                let table = Self::TABLE_NAME;
-                prest::sql::table(table)
-                    .create_table_if_not_exists()
-                    #(#add_columns)*
-                    .exec()
-                    .expect("migration for {table} should complete");
-            }
-
-            fn prepare_table() {
-                Self::migrate();
-                prest::DB_SCHEMA.add_table(&#schema_name);
-            }
+            fn schema() -> &'static dyn TableSchemaTrait { &#schema_name }
 
             fn from_row(mut row: Vec<prest::sql::Value>) -> prest::Result<Self> {
                 #(#from_row_extractions)*
@@ -153,30 +140,7 @@ pub fn impl_table(struct_ident: Ident, table_name: String, columns: Vec<Column>)
     }
 }
 
-fn add_column(col: &Column) -> TokenStream {
-    let Column {
-        field_name_str,
-        sql_type,
-        pkey,
-        optional,
-        unique,
-        list,
-        ..
-    } = col;
-
-    let col = if *list {
-        format!("{field_name_str} LIST")
-    } else {
-        let unique = if !*pkey && *unique { " UNIQUE" } else { "" };
-        let pkey = if *pkey { " PRIMARY KEY" } else { "" };
-        let optional = if *optional { "" } else { " NOT NULL" };
-        format!("{field_name_str} {sql_type}{pkey}{unique}{optional}")
-    };
-
-    q! { .add_column(#col) }
-}
-
-fn find_by(column: &Column) -> TokenStream {
+fn select_by(column: &Column) -> TokenStream {
     let Column {
         field_name_str,
         field_name,
@@ -189,20 +153,21 @@ fn find_by(column: &Column) -> TokenStream {
 
     let select = q!(Self::select()
         .filter(filter)
-        .rows()?
+        .rows()
+        .await?
         .into_iter()
         .map(Self::from_row)
         .collect::<Result<Vec<Self>>>());
 
     let find_null_fn = if *optional {
-        let fn_name = find_by_null_(column);
+        let fn_name = select_by_null_(column);
         let filter = q!(sql::col(#field_name_str).eq(sql::null()));
-        q!( pub fn #fn_name() -> prest::Result<Vec<Self>> { let filter = #filter; #select } )
+        q!( pub async fn #fn_name() -> prest::Result<Vec<Self>> { let filter = #filter; #select } )
     } else {
         q!()
     };
 
-    let fn_name = find_by_(column);
+    let fn_name = select_by_(column);
     let fn_value = match *unique {
         true => q!(Result<Option<Self>>),
         false => q!(Result<Vec<Self>>),
@@ -218,7 +183,7 @@ fn find_by(column: &Column) -> TokenStream {
     let filter = q!(sql::col(#field_name_str).eq(#filter_expr));
 
     q! {
-        pub fn #fn_name(#field_name: &#fn_arg) -> #fn_value {
+        pub async fn #fn_name(#field_name: &#fn_arg) -> #fn_value {
             let filter = #filter;
             #result
         }
@@ -240,11 +205,12 @@ fn in_range(col: &Column) -> TokenStream {
 
     let values = q!(Self::select()
         .filter(#filter)
-        .rows()?
+        .rows()
+        .await?
         .into_iter()
         .map(Self::from_row)
         .collect());
-    q! { pub fn #fn_name(min: &#inner_type, max: &#inner_type) -> Result<Vec<Self>> { #values } }
+    q! { pub async fn #fn_name(min: &#inner_type, max: &#inner_type) -> Result<Vec<Self>> { #values } }
 }
 
 fn update(col: &Column) -> TokenStream {
@@ -256,11 +222,12 @@ fn update(col: &Column) -> TokenStream {
     let fn_name = update_(col);
     let set_column = set_column(col);
     q! {
-        pub fn #fn_name(&mut self, #field_name: #full_type) -> prest::Result<&mut Self> {
+        pub async fn #fn_name(&mut self, #field_name: #full_type) -> prest::Result<&mut Self> {
             self.#field_name = #field_name;
             Self::update().filter(Self::pkey_filter(self.get_pkey()))
                 #set_column
-                .exec()?;
+                .exec()
+                .await?;
             Ok(self)
         }
     }
@@ -274,8 +241,8 @@ fn check(col: &Column) -> TokenStream {
     } = col;
     let fn_name = check_(col);
     q! {
-        pub fn #fn_name(&self, value: #full_type) -> prest::Result<bool> {
-            if let Some(item) = Self::find_by_pkey(self.get_pkey())? {
+        pub async fn #fn_name(&self, value: #full_type) -> prest::Result<bool> {
+            if let Some(item) = Self::select_by_pkey(self.get_pkey().clone()).await? {
                 Ok(item.#field_name == value)
             } else {
                 Err(prest::Error::NotFound)
@@ -321,12 +288,12 @@ fn set_column(column: &Column) -> TokenStream {
     q! { .set(#col, #value) }
 }
 
-fn find_by_(col: &Column) -> Ident {
-    ident(&format!("find_by_{}", col.field_name_str))
+fn select_by_(col: &Column) -> Ident {
+    ident(&format!("select_by_{}", col.field_name_str))
 }
 
-fn find_by_null_(col: &Column) -> Ident {
-    ident(&format!("find_by_null_{}", col.field_name_str))
+fn select_by_null_(col: &Column) -> Ident {
+    ident(&format!("select_by_null_{}", col.field_name_str))
 }
 
 fn find_in_range_(col: &Column) -> Ident {

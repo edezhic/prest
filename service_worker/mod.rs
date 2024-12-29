@@ -12,6 +12,8 @@ pub use web_sys::{console, FetchEvent, ServiceWorkerGlobalScope};
 #[cfg(feature = "db")]
 pub(crate) type PersistentStorage = gluesql::gluesql_shared_memory_storage::SharedMemoryStorage;
 
+pub use futures::executor::block_on as await_blocking;
+
 /// Util trait to add handle_fetch_events function to the Router
 pub trait ServiceWorkerUtils {
     fn handle_fetch_events(self);
@@ -75,6 +77,7 @@ pub async unsafe fn handle_fetch(sw: ServiceWorkerGlobalScope, event: FetchEvent
     }
 
     // pass the request to the router
+    use tower::Service;
     let response = match router.call(request).await {
         Ok(res) => res,
         Err(e) => {

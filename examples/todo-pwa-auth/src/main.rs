@@ -26,8 +26,8 @@ impl Render for Todo {
     }
 }
 
-fn main() {
-    init!(tables Todo);
+#[init]
+async fn main() -> Result {
     shared_routes()
         .route(
             "/todos",
@@ -38,7 +38,7 @@ fn main() {
                             input $"border rounded-md" type="text" name="task" {}
                             button $"ml-4" type="submit" {"Add"}
                         }
-                        div #list $"w-full" {(Todo::find_by_owner(&user.id)?)}
+                        div #list $"w-full" {(Todo::select_by_owner(&user.id).await?)}
                     } @else {
                         @if *WITH_GOOGLE_AUTH {
                             a $"p-4 border rounded-md" href=(GOOGLE_LOGIN_ROUTE) {"Login with Google"}
@@ -55,22 +55,23 @@ fn main() {
             })
                 .put(|user: User, Vals(mut todo): Vals<Todo>| async move {
                     todo.owner = user.id;
-                    ok(todo.save()?.render())
+                    ok(todo.save().await?.render())
                 })
                 .patch(|user: User, Vals(mut todo): Vals<Todo>| async move {
-                    if !todo.check_owner(user.id)? {
+                    if !todo.check_owner(user.id).await? {
                         return Err(Error::Unauthorized);
                     }
-                    Ok(todo.update_done(!todo.done)?.render())
+                    Ok(todo.update_done(!todo.done).await?.render())
                 })
                 .delete(|user: User, Vals(todo): Vals<Todo>| async move {
-                    if !todo.check_owner(user.id)? {
+                    if !todo.check_owner(user.id).await? {
                         return Err(Error::Unauthorized);
                     }
-                    Ok(todo.remove()?)
+                    Ok(todo.remove().await?)
                 }),
         )
         .wrap_non_htmx(into_page)
         .embed(BuiltAssets)
-        .run();
+        .run()
+        .await
 }

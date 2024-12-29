@@ -63,14 +63,14 @@ fn embedded(
             (#path, #bytes),
         }
     });
-    let value_type = quote! { prest::EmbeddedFile };
+    let value_type = quote! { prest::embed::EmbeddedFile };
     let get_value = quote! {|idx| ENTRIES[idx].1.clone()};
 
     Ok(quote! {
         #not_debug_attr
         impl #ident {
             /// Get an embedded file and its metadata.
-            pub fn get(file_path: &str) -> Option<prest::EmbeddedFile> {
+            pub fn get(file_path: &str) -> Option<prest::embed::EmbeddedFile> {
               #handle_prefix
               let key = file_path.replace("\\", "/");
               const ENTRIES: &'static [(&'static str, #value_type)] = &[
@@ -92,12 +92,12 @@ fn embedded(
         }
 
         #not_debug_attr
-        impl prest::Embed for #ident {
-          fn get(file_path: &str) -> Option<prest::EmbeddedFile> {
+        impl prest::EmbeddedStruct for #ident {
+          fn get(file_path: &str) -> Option<prest::embed::EmbeddedFile> {
             #ident::get(file_path)
           }
-          fn iter() -> prest::__Filenames {
-            prest::__Filenames::Embedded(#ident::names())
+          fn iter() -> prest::embed::__Filenames {
+            prest::embed::__Filenames::Embedded(#ident::names())
           }
         }
     })
@@ -141,7 +141,7 @@ fn dynamic(
         #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
         impl #ident {
             /// Get an embedded file and its metadata.
-            pub fn get(file_path: &str) -> Option<prest::EmbeddedFile> {
+            pub fn get(file_path: &str) -> Option<prest::embed::EmbeddedFile> {
                 #handle_prefix
 
                 #declare_includes
@@ -157,8 +157,8 @@ fn dynamic(
                     return None;
                 }
 
-                if prest::is_path_included(&rel_file_path, INCLUDES, EXCLUDES) {
-                  prest::read_file_from_fs(&canonical_file_path).ok()
+                if prest::embed::is_path_included(&rel_file_path, INCLUDES, EXCLUDES) {
+                  prest::embed::read_file_from_fs(&canonical_file_path).ok()
                 } else {
                   None
                 }
@@ -171,19 +171,19 @@ fn dynamic(
                 #declare_includes
                 #declare_excludes
 
-                prest::get_files(String::from(#folder_path), INCLUDES, EXCLUDES)
+                prest::embed::get_files(String::from(#folder_path), INCLUDES, EXCLUDES)
                     .map(|e| #map_iter)
             }
         }
 
         #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
-        impl prest::Embed for #ident {
-          fn get(file_path: &str) -> Option<prest::EmbeddedFile> {
+        impl prest::EmbeddedStruct for #ident {
+          fn get(file_path: &str) -> Option<prest::embed::EmbeddedFile> {
             #ident::get(file_path)
           }
-          fn iter() -> prest::__Filenames {
+          fn iter() -> prest::embed::__Filenames {
             // the return type of iter() is unnamable, so we have to box it
-            prest::__Filenames::Dynamic(Box::new(#ident::iter()))
+            prest::embed::__Filenames::Dynamic(Box::new(#ident::iter()))
           }
         }
     }
@@ -247,9 +247,9 @@ fn embed_file(
          #closure_args {
           #embedding_code
 
-          prest::EmbeddedFile {
+          prest::embed::EmbeddedFile {
               data: std::borrow::Cow::Borrowed(&BYTES),
-              metadata: prest::EmbeddedFileMetadata::__rust_embed_new([#(#hash),*], #last_modified #mimetype_tokens)
+              metadata: prest::embed::EmbeddedFileMetadata::__rust_embed_new([#(#hash),*], #last_modified #mimetype_tokens)
           }
         }
     })

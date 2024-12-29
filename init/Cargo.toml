@@ -1,0 +1,17 @@
+[package]
+name = "prest-init-macro"
+version = "0.1.0"
+edition = "2021"
+description = "prest init macro"
+license = "MIT OR Apache-2.0"
+authors = ["Egor Dezhic <edezhic@gmail.com>"]
+
+[lib]
+path = "lib.rs"
+proc-macro = true
+
+[dependencies]
+syn = { version = "2", features = ["derive", "parsing", "proc-macro", "printing", "full"] }
+quote = "1"
+proc-macro2 = "1"
+toml = "0.8"

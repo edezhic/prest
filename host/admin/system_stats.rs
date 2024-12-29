@@ -6,7 +6,7 @@ pub(crate) async fn full() -> Result<Markup> {
     const MAX_COUNT: usize = 100;
     let max = Utc::now().naive_utc();
     let min = max - TimeDelta::try_hours(24).unwrap();
-    let records = SystemStat::find_in_range_timestamp(&min, &max)?;
+    let records = SystemStat::find_in_range_timestamp(&min, &max).await?;
 
     let count = records.len();
 
@@ -106,7 +106,7 @@ async fn disk_stats() -> Result<Markup> {
     let used_disk = SYSTEM_INFO.used_disk.read().await;
     let total_disk = SYSTEM_INFO.total_disk;
 
-    let data_dir = &APP_CONFIG.check().data_dir;
+    let data_dir = &APP_CONFIG.data_dir;
 
     use std::{fs, io, path::PathBuf};
 

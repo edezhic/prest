@@ -18,8 +18,8 @@ use tower_sessions::{
 };
 
 pub type UserId = Uuid;
-pub type AuthLayer = AuthManagerLayer<Db, Db>;
-pub type Auth = AuthSession<Db>;
+pub type AuthLayer = AuthManagerLayer<DbStorage, DbStorage>;
+pub type Auth = AuthSession<DbStorage>;
 pub type OAuthCode = String;
 
 #[derive(Table, Clone, Debug, Serialize, Deserialize)]
@@ -48,7 +48,7 @@ pub enum Credentials {
     GoogleOpenID { code: OAuthCode, nonce: OAuthNonce },
 }
 
-pub type OAuthQuery = Query<OAuthQueryParams>;
+pub type OAuthQuery = axum::extract::Query<OAuthQueryParams>;
 #[derive(Debug, Deserialize)]
 pub struct OAuthQueryParams {
     pub code: OAuthCode,
@@ -60,24 +60,22 @@ trait AuthBackend:
     AuthnBackend<User = User, Credentials = Credentials, Error = AuthError> + SessionStore
 {
 }
-impl AuthBackend for Db {}
+impl AuthBackend for DbStorage {}
 
 pub const LOGIN_ROUTE: &str = "/auth/login";
 pub const LOGOUT_ROUTE: &str = "/auth/logout";
 pub const GOOGLE_LOGIN_ROUTE: &str = "/auth/google";
 pub const GOOGLE_CALLBACK_ROUTE: &str = "/auth/google/callback";
 
-pub fn init_auth_module() -> (AuthLayer, Router) {
-    SessionRow::prepare_table();
-    User::prepare_table();
-    let mut session_layer = SessionManagerLayer::new(DB.copy())
+pub fn init_auth_module() -> Result<(AuthLayer, Router)> {
+    let mut session_layer = SessionManagerLayer::new(DB.storage())
         .with_name("prest_session")
         .with_same_site(tower_sessions::cookie::SameSite::Lax)
         .with_expiry(Expiry::OnInactivity(time::Duration::days(30)));
-    if let Some(domain) = APP_CONFIG.check().domain.clone() {
+    if let Some(domain) = APP_CONFIG.domain {
         session_layer = session_layer.with_domain(domain);
     }
-    let layer = AuthManagerLayerBuilder::new(DB.copy(), session_layer).build();
+    let layer = AuthManagerLayerBuilder::new(DB.storage(), session_layer).build();
 
     let mut router = route(LOGIN_ROUTE, post(login)).route(LOGOUT_ROUTE, get(logout));
 
@@ -87,7 +85,7 @@ pub fn init_auth_module() -> (AuthLayer, Router) {
             .route(GOOGLE_CALLBACK_ROUTE, get(google_oauth_callback));
     }
 
-    (layer, router)
+    Ok((layer, router))
 }
 
 impl User {
@@ -146,19 +144,19 @@ async fn login(mut auth: Auth, Vals(form): Vals<AuthForm>) -> Result<Response> {
 
     let user = if signup {
         let new = if let Some(username) = username {
-            if User::find_by_username(&username)?.is_some() {
+            if User::select_by_username(&username).await?.is_some() {
                 return Ok(StatusCode::CONFLICT.into_response());
             }
             User::from_username_password(username, password)
         } else if let Some(email) = email {
-            if User::find_by_email(&email)?.is_some() {
+            if User::select_by_email(&email).await?.is_some() {
                 return Ok(StatusCode::CONFLICT.into_response());
             }
             User::from_email_password(email, password)
         } else {
             return Ok(StatusCode::BAD_REQUEST.into_response());
         };
-        let Ok(_) = new.save() else {
+        let Ok(_) = new.save().await else {
             return Ok(StatusCode::INTERNAL_SERVER_ERROR.into_response());
         };
         new
@@ -204,7 +202,7 @@ const REDIRECT_KEY: &str = "after_auth_redirect";
 
 async fn init_google_oauth(
     session: Session,
-    Query(NextUrl { next }): Query<NextUrl>,
+    axum::extract::Query(NextUrl { next }): axum::extract::Query<NextUrl>,
 ) -> impl IntoResponse {
     let (authz_url, csrf_token, nonce) = GOOGLE_CLIENT.authz_request();
     let ins1 = session.insert(NONCE_KEY, nonce).await;
@@ -222,7 +220,7 @@ async fn init_google_oauth(
 
 async fn google_oauth_callback(
     session: Session,
-    Query(query): OAuthQuery,
+    axum::extract::Query(query): OAuthQuery,
     mut auth: Auth,
 ) -> impl IntoResponse {
     let Ok(Some(initial_csrf)) = session.remove::<OAuthCSRF>(CSRF_KEY).await else {
@@ -324,7 +322,7 @@ pub enum AuthError {
 }
 
 #[async_trait]
-impl AuthnBackend for Db {
+impl AuthnBackend for DbStorage {
     type User = User;
     type Credentials = Credentials;
     type Error = AuthError;
@@ -342,7 +340,7 @@ impl AuthnBackend for Db {
                 let Ok(email) = GOOGLE_CLIENT.get_email(code, nonce).await else {
                     return Ok(None); // TODO an error here
                 };
-                let maybe_user = match User::find_by_email(&email) {
+                let maybe_user = match User::select_by_email(&email).await {
                     Ok(v) => v,
                     Err(e) => return Err(AuthError::DbError(format!("User load error: {e}"))),
                 };
@@ -351,13 +349,14 @@ impl AuthnBackend for Db {
                     None => {
                         let user = User::from_email(email);
                         user.save()
+                            .await
                             .map_err(|e| AuthError::UserNotFound(e.to_string()))?;
                         Ok(Some(user))
                     }
                 }
             }
             Credentials::UsernamePassword { username, password } => {
-                let maybe_user = match User::find_by_username(&username) {
+                let maybe_user = match User::select_by_username(&username).await {
                     Ok(v) => v,
                     Err(e) => return Err(AuthError::DbError(format!("User load error: {e}"))),
                 };
@@ -374,7 +373,7 @@ impl AuthnBackend for Db {
                 Ok(Some(user))
             }
             Credentials::EmailPassword { email, password } => {
-                let maybe_user = match User::find_by_email(&email) {
+                let maybe_user = match User::select_by_email(&email).await {
                     Ok(v) => v,
                     Err(e) => return Err(AuthError::DbError(format!("User load error: {e}"))),
                 };
@@ -397,7 +396,7 @@ impl AuthnBackend for Db {
         &self,
         user_id: &axum_login::UserId<Self>,
     ) -> std::result::Result<Option<Self::User>, Self::Error> {
-        let maybe_user = match User::find_by_id(user_id) {
+        let maybe_user = match User::select_by_id(user_id).await {
             Ok(v) => v,
             Err(e) => return Err(AuthError::DbError(format!("User load error: {e}"))),
         };
@@ -408,7 +407,7 @@ impl AuthnBackend for Db {
 pub type Permission = String;
 
 #[async_trait]
-impl AuthzBackend for Db {
+impl AuthzBackend for DbStorage {
     type Permission = Permission;
 
     async fn get_user_permissions(
@@ -448,21 +447,21 @@ pub struct SessionRow {
 }
 
 #[async_trait]
-impl SessionStore for Db {
+impl SessionStore for DbStorage {
     async fn save(&self, record: &Record) -> SessionResult<()> {
         let id = record.id.0;
         let record = match to_json_string(record) {
             Ok(s) => s,
             Err(e) => return Err(SessionError::Encode(format!("{e}"))),
         };
-        match (SessionRow { id, record }).save() {
+        match (SessionRow { id, record }).save().await {
             Ok(_) => Ok(()),
             Err(e) => Err(SessionError::Backend(format!("Session save error: {e}"))),
         }
     }
 
     async fn load(&self, session_id: &Id) -> SessionResult<Option<Record>> {
-        let search = match SessionRow::find_by_id(&session_id.0) {
+        let search = match SessionRow::select_by_id(&session_id.0).await {
             Ok(v) => v,
             Err(e) => {
                 return Err(SessionError::Backend(format!(
@@ -481,7 +480,7 @@ impl SessionStore for Db {
     }
 
     async fn delete(&self, session_id: &Id) -> SessionResult<()> {
-        match SessionRow::delete_by_pkey(&session_id.0) {
+        match SessionRow::delete_by_pkey(session_id.0).await {
             Ok(_) => Ok(()),
             Err(e) => Err(SessionError::Backend(format!(
                 "Session deletion error: {e}"

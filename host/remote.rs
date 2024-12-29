@@ -66,9 +66,9 @@ impl RemoteHost {
         }
 
         let (addr, user, pass) = match (
-            env::var("SSH_ADDR").ok(),
-            env::var("SSH_USER").ok(),
-            env::var("SSH_PASSWORD").ok(),
+            env_var("SSH_ADDR").ok(),
+            env_var("SSH_USER").ok(),
+            env_var("SSH_PASSWORD").ok(),
         ) {
             (Some(addr), Some(user), Some(password)) => {
                 match SshSession::connect(&addr, &user, &password).await {
@@ -110,9 +110,7 @@ impl RemoteHost {
         let mut conn = self.conn().await?;
         let mut deployments = conn.list_deployments().await?;
 
-        let active = conn
-            .find_current_deployment(&APP_CONFIG.check().name)
-            .await?;
+        let active = conn.find_current_deployment(APP_CONFIG.name).await?;
 
         if let Some(active) = active {
             if let Some(deployment) = deployments.iter_mut().find(|d| {
@@ -150,14 +148,13 @@ pub(crate) struct DeploymentInfo {
 
 impl DeploymentInfo {
     pub fn new() -> Self {
-        let cfg = APP_CONFIG.check();
-        let pkg_name = &cfg.name;
-        let version = &cfg.version;
+        let pkg_name = APP_CONFIG.name;
+        let version = APP_CONFIG.version.clone();
 
         DeploymentInfo {
             pid: None,
             pkg_name: pkg_name.to_owned(),
-            version: version.clone(),
+            version,
             datetime: Utc::now(),
         }
     }
@@ -306,7 +303,7 @@ impl SshSession {
         let mut channel = self.session.channel_open_session().await?;
         channel.exec(true, command).await?;
 
-        let mut stdout = io::stdout();
+        let mut stdout = tokio::io::stdout();
 
         loop {
             let Some(msg) = channel.wait().await else {
@@ -361,7 +358,7 @@ impl SshSession {
 
     pub async fn find_current_deployment(
         &mut self,
-        package: &String,
+        package: &str,
     ) -> Result<Option<DeploymentInfo>> {
         Ok(self
             .find_prest_processes()

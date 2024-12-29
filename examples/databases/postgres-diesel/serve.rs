@@ -17,7 +17,8 @@ state!(DB_POOL: Pool<AsyncPgConnection> = {
     Pool::builder(config).build()?
 });
 
-fn main() {
+#[init]
+async fn main() -> Result {
     route(
         "/",
         get(|| async { get_todos().await.render() })
@@ -27,6 +28,7 @@ fn main() {
     )
     .wrap_non_htmx(page)
     .run()
+    .await
 }
 
 async fn get_todos() -> Vec<Todo> {

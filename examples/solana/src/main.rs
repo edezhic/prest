@@ -18,8 +18,8 @@ state!(PROGRAM: Program<Arc<Keypair>> = {
 });
 state!(TODO_LIST_PDA: Pubkey = { Pubkey::find_program_address(&[KEYPAIR.pubkey().as_ref()], &PROGRAM.id()).0 });
 
-fn main() {
-    init!();
+#[init]
+async fn main() {
     setup_local_solana_environment();
     route("/", get(list).post(add))
         .route("/toggle/:index", get(toggle))

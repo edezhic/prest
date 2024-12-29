@@ -4,37 +4,37 @@
 // for macro-generated code inside prest itself
 pub(crate) use crate as prest;
 
+pub use prest_init_macro::init;
+
+#[doc(hidden)]
 pub use serde;
 pub use serde_derive::{Deserialize, Serialize};
 
-pub use anyhow::{anyhow, bail, Result as AnyhowResult};
+// pub use anyhow::{anyhow, bail, Result as AnyhowResult};
 pub use async_trait::async_trait;
 pub use axum::{
     self,
     body::{Body, HttpBody},
     error_handling::{HandleError, HandleErrorLayer},
     extract::{
-        self, Extension, Form, FromRequest, FromRequestParts, Host, MatchedPath, NestedPath,
-        OriginalUri, Path, Query, Request,
+        self, Extension, FromRequest, FromRequestParts, Host, MatchedPath, NestedPath, OriginalUri,
+        Path, Request,
     },
     http::{self, header, HeaderMap, HeaderValue, Method, StatusCode, Uri},
-    middleware::{from_extractor, from_extractor_with_state, from_fn, from_fn_with_state, Next},
-    response::{
-        AppendHeaders, ErrorResponse, Html, IntoResponse, IntoResponseParts, Json, Redirect,
-        Response, ResponseParts,
-    },
+    middleware::{from_fn, Next},
+    response::{ErrorResponse, Html, IntoResponse, Json, Redirect, Response},
     routing::{any, delete, get, patch, post, put},
     Router,
 };
-pub use axum_htmx::{
-    HxBoosted, HxCurrentUrl, HxEvent, HxHistoryRestoreRequest, HxLocation, HxPrompt, HxPushUrl,
-    HxRedirect, HxRefresh, HxReplaceUrl, HxRequest, HxReselect, HxResponseTrigger, HxReswap,
-    HxRetarget, HxTarget, HxTrigger, HxTriggerName, SwapOption,
-};
+// TODO: either do smth with it or get rid of
+// pub use axum_htmx::{
+//     HxBoosted, HxCurrentUrl, HxEvent, HxHistoryRestoreRequest, HxLocation, HxPrompt, HxPushUrl,
+//     HxRedirect, HxRefresh, HxReplaceUrl, HxRequest, HxReselect, HxResponseTrigger, HxReswap,
+//     HxRetarget, HxTarget, HxTrigger, HxTriggerName, SwapOption,
+// };
 
-pub use chrono::{NaiveDateTime, Utc};
+pub use chrono::{NaiveDate, NaiveDateTime, NaiveTime, Utc};
 pub use futures::{
-    executor::block_on as await_blocking,
     future::{join_all, FutureExt},
     stream::{self, Stream, StreamExt, TryStreamExt},
 };
@@ -42,33 +42,41 @@ pub use serde_json::{
     from_slice as from_json_slice, from_str as from_json_str, json, to_string as to_json_string,
 };
 pub use std::sync::LazyLock as Lazy;
-pub use std::{convert::Infallible, env, sync::Arc};
-pub use tower::{self, BoxError, Layer, Service, ServiceBuilder};
+pub use std::{env::var as env_var, sync::Arc};
+// pub use tower::{self, BoxError, Layer, Service, ServiceBuilder};
 pub use tracing::{debug, error, info, trace, warn};
 pub use uuid::Uuid;
 
-mod config;
-pub use config::*;
+#[doc(hidden)]
+pub mod config;
+pub use config::APP_CONFIG;
 
 mod result;
-pub use result::*;
+#[doc(hidden)]
+pub use result::_Somehow;
+pub use result::{ok, AnyError, Error, Result, Somehow, OK};
 
 mod vals;
-pub use vals::*;
+pub use vals::Vals;
 
 #[cfg(feature = "db")]
 mod db;
 #[cfg(feature = "db")]
 pub use db::*;
 #[cfg(feature = "embed")]
-mod embed;
+#[doc(hidden)]
+pub mod embed;
 #[cfg(feature = "embed")]
-pub use embed::*;
+pub use embed::Embed;
+#[cfg(feature = "embed")]
+#[doc(hidden)]
+pub use embed::{EmbedRoutes, EmbeddedStruct};
 #[cfg(feature = "html")]
 mod html;
 #[cfg(feature = "html")]
 pub use html::*;
 #[cfg(feature = "html")]
+
 /// Default doctype for HTML
 pub const DOCTYPE: PreEscaped<&'static str> = PreEscaped("<!DOCTYPE html>");
 /// Default favicon

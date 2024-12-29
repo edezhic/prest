@@ -7,8 +7,8 @@ const DOCKER_BUILDER_IMAGE: &str = "prest-builder";
 const DOCKER_CARGO_CACHE_DIR: &str = "docker_cargo_cache";
 
 pub(crate) fn build_linux_binary() -> Result<String> {
-    let name = &APP_CONFIG.check().name;
-    let mut workspace_path = APP_CONFIG.check().manifest_dir.to_owned();
+    let name = APP_CONFIG.name;
+    let mut workspace_path = APP_CONFIG.manifest_dir.to_owned();
 
     // checking higher-level workspace path required for local dependencies
     let mut pb = std::path::PathBuf::from(&workspace_path);

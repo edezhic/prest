@@ -33,8 +33,8 @@ impl Todo {
     }
 }
 
-fn main() {
-    init!(tables Todo);
+#[init]
+async fn main() -> Result {
     shared_routes()
         .route(
             "/todos",
@@ -54,29 +54,29 @@ fn main() {
                         }
                     }
                     div #"todos" $"w-full" sse="/todos/subscribe" sse-msg="add" swap-beforeend {
-                        @for item in Todo::find_all()? {(item.render_for(&auth.user))}
+                        @for item in Todo::select_all().await? {(item.render_for(&auth.user))}
                     }
                 ))
             })
                 .put(|user: User, Vals(mut todo): Vals<Todo>| async move {
                     todo.owner = user.id;
-                    todo.save()?;
+                    todo.save().await?;
                     TODO_UPDATES.send("add", Some(todo)).await?;
                     OK
                 })
                 .patch(|user: User, Vals(mut todo): Vals<Todo>| async move {
-                    if !todo.check_owner(user.id)? {
+                    if !todo.check_owner(user.id).await? {
                         return Err(Error::Unauthorized);
                     }
-                    todo.update_done(!todo.done)?;
+                    todo.update_done(!todo.done).await?;
                     TODO_UPDATES.send(todo.id.to_string(), Some(todo)).await?;
                     OK
                 })
                 .delete(|user: User, Vals(todo): Vals<Todo>| async move {
-                    if !todo.check_owner(user.id)? {
+                    if !todo.check_owner(user.id).await? {
                         return Err(Error::Unauthorized);
                     }
-                    todo.remove()?;
+                    todo.remove().await?;
                     TODO_UPDATES.send(todo.id.to_string(), None).await?;
                     OK
                 }),
@@ -91,5 +91,6 @@ fn main() {
             }),
         )
         .embed(BuiltAssets)
-        .run();
+        .run()
+        .await
 }

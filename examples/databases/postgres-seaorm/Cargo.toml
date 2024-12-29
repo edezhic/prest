@@ -7,6 +7,6 @@ name = "serve"
 path = "./serve.rs"
 
 [dependencies]
-prest = "0.4"
+prest = "0.5"
 sea-orm = { version = "0.12", features = [ "sqlx-postgres", "runtime-tokio-rustls", "macros", "with-uuid"] }
 sea-orm-migration = "0.12"

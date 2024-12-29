@@ -38,10 +38,10 @@ pub enum Error {
     Session(#[from] tower_sessions::session_store::Error),
     #[cfg(all(host, feature = "auth"))]
     #[error(transparent)]
-    AuthBackend(#[from] AuthError),
+    AuthBackend(#[from] crate::host::auth::AuthError),
     #[cfg(all(host, feature = "auth"))]
     #[error(transparent)]
-    AxumLogin(#[from] axum_login::Error<Db>),
+    AxumLogin(#[from] ::axum_login::Error<DbStorage>),
     #[cfg(all(host, feature = "auth"))]
     #[error(transparent)]
     OAuth(#[from] openidconnect::ClaimsVerificationError),
@@ -50,23 +50,21 @@ pub enum Error {
     GlueSQL(#[from] gluesql::core::error::Error),
     #[cfg(all(host, feature = "db"))]
     #[error(transparent)]
-    Sled(#[from] sled::Error),
+    Sled(#[from] ::sled::Error),
     #[cfg(all(host, feature = "db"))]
     #[error(transparent)]
-    SledTransactionError(#[from] sled::transaction::TransactionError),
+    SledTransactionError(#[from] ::sled::transaction::TransactionError),
     #[cfg(all(host, feature = "db"))]
     #[error(transparent)]
-    SledUnabortableTransactionError(#[from] sled::transaction::UnabortableTransactionError),
+    SledUnabortableTransactionError(#[from] ::sled::transaction::UnabortableTransactionError),
     #[cfg(all(host, feature = "db"))]
     #[error(transparent)]
-    SledConflictableTransactionError(#[from] sled::transaction::ConflictableTransactionError),
+    SledConflictableTransactionError(#[from] ::sled::transaction::ConflictableTransactionError),
     #[cfg(all(host, feature = "db"))]
     #[error(transparent)]
     Bincode(#[from] bincode::Error),
     #[error(transparent)]
     IO(#[from] std::io::Error),
-    #[error(transparent)]
-    Anyhow(#[from] anyhow::Error),
     #[error(transparent)]
     FormRejection(#[from] axum::extract::rejection::FormRejection),
     #[error(transparent)]
@@ -79,6 +77,8 @@ pub enum Error {
     #[cfg(host)]
     #[error(transparent)]
     RuSFTP(#[from] russh_sftp::client::error::Error),
+    #[error("{0:?}")]
+    Any(AnyError),
 }
 
 impl IntoResponse for Error {
@@ -102,31 +102,44 @@ impl IntoResponse for Error {
 }
 
 /// Provides shorthand to map errs into [`prest::Error`] using `.somehow()`
-pub trait Somehow<T, E> {
+#[doc(hidden)]
+pub trait _Somehow<T, E> {
     fn somehow(self) -> Result<T, Error>;
 }
 
-impl<T, E> Somehow<T, E> for Result<T, E>
+impl<T, E> _Somehow<T, E> for Result<T, E>
 where
     E: std::fmt::Display,
 {
     fn somehow(self) -> Result<T, Error> {
-        self.map_err(|e| anyhow!("{e}").into())
+        self.map_err(|e| Error::Any(AnyError(format!("{e}"))))
     }
 }
+
+#[derive(Debug)]
+#[doc(hidden)]
+pub struct AnyError(pub String);
+impl<E: std::error::Error> From<E> for AnyError {
+    fn from(value: E) -> Self {
+        AnyError(format!("{value}"))
+    }
+}
+
+/// Anyhow-like result which can be `?` from any error type
+pub type Somehow<T = ()> = std::result::Result<T, AnyError>;
 
 /// Shorthand to create formatted [`prest::Error`] values like `e!("{x:?}")`
 #[macro_export]
 macro_rules! e {
     ($($tokens:tt),+) => {
-        prest::Error::Anyhow(anyhow!($($tokens),+))
+        prest::Error::Any(prest::AnyError(format!($($tokens),+)))
     };
 }
 
 #[cfg(host)]
-impl From<sled::transaction::ConflictableTransactionError<Box<bincode::ErrorKind>>> for Error {
+impl From<::sled::transaction::ConflictableTransactionError<Box<bincode::ErrorKind>>> for Error {
     fn from(
-        value: sled::transaction::ConflictableTransactionError<Box<bincode::ErrorKind>>,
+        value: ::sled::transaction::ConflictableTransactionError<Box<bincode::ErrorKind>>,
     ) -> Self {
         e!("{value}")
     }

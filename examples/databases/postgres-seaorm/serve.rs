@@ -29,7 +29,8 @@ struct DeleteTodo {
     uuid: Uuid,
 }
 
-fn main() {
+#[init]
+async fn main() -> Result {
     route(
         "/",
         get(|| async { Todos::find().all(&*DB).await.unwrap().render() })
@@ -70,6 +71,7 @@ fn main() {
     )
     .wrap_non_htmx(page)
     .run()
+    .await
 }
 
 impl Render for todos::Model {

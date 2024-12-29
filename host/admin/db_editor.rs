@@ -4,7 +4,7 @@ use crate::*;
 
 pub(crate) async fn db_page() -> Markup {
     let tables = html! {
-        @for table in DB_SCHEMA.tables() {
+        @for table in DB.custom_tables() {
             $"font-bold text-lg" {(table.name())}
             a get=(table.full_path()) trigger="load" swap-this {}
         }
@@ -12,9 +12,9 @@ pub(crate) async fn db_page() -> Markup {
     html!((tables))
 }
 
-pub(crate) fn db_routes() -> Router {
+pub(crate) async fn db_routes() -> Router {
     let mut router = route("/", get(db_page));
-    for table in DB_SCHEMA.tables() {
+    for table in DB.custom_tables() {
         let get_by_id_path = format!("{}/:id", table.relative_path());
         router = router
             .route(
@@ -27,7 +27,7 @@ pub(crate) fn db_routes() -> Router {
                         .map(|row| view_row(table, row));
                     ok(html!(
                         table #(table.name()) .table-editor $"w-full font-mono text-[0.5rem] lg:text-sm" {
-                            @let columns = table.schema().iter().map(|c| (c.name, c.rust_type));
+                            @let columns = table.columns().iter().map(|c| (c.name, c.rust_type));
                             @for (name, rust_type) in columns {th {(name)" ("(rust_type)")"}}
                             th #actions $"w-[70px]" {}
                             (create_form(table))
@@ -64,11 +64,11 @@ pub(crate) fn db_routes() -> Router {
     router
 }
 
-fn create_form(table: &dyn TableSchemaTrait) -> Markup {
-    let schema = table.schema();
+fn create_form(table: TableSchema) -> Markup {
+    let columns = table.columns();
     let key_selector = key_selector(table, None);
 
-    let cells = schema.iter().map(|schema| {
+    let cells = columns.iter().map(|schema| {
         html!(
             td .create { (column_input(schema, None, &key_selector)) }
         )
@@ -82,13 +82,13 @@ fn create_form(table: &dyn TableSchemaTrait) -> Markup {
     })
 }
 
-fn view_row(table: &dyn TableSchemaTrait, values: Vec<String>) -> Markup {
-    let schema = table.schema();
+fn view_row(table: TableSchema, values: Vec<String>) -> Markup {
+    let columns = table.columns();
     let key_selector = key_selector(table, Some(&values));
 
     let cells = values.iter().map(|value| html! {td ."view" {(value)}});
 
-    let id = std::iter::zip(schema, &values)
+    let id = std::iter::zip(columns, &values)
         .find(|(col, _)| col.pkey)
         .map(|(_, v)| v)
         .expect("Some column must be primary key");
@@ -102,11 +102,11 @@ fn view_row(table: &dyn TableSchemaTrait, values: Vec<String>) -> Markup {
     })
 }
 
-fn edit_row(table: &dyn TableSchemaTrait, values: Vec<String>) -> Markup {
-    let schema = table.schema();
+fn edit_row(table: TableSchema, values: Vec<String>) -> Markup {
+    let columns = table.columns();
     let key_selector = key_selector(table, Some(&values));
 
-    let cells = std::iter::zip(schema, &values).map(|(schema, value)| {
+    let cells = std::iter::zip(columns, &values).map(|(schema, value)| {
         html!(
             td .edit {
                 (column_input(schema, Some(value), &key_selector))
@@ -145,10 +145,10 @@ fn column_input(schema: &ColumnSchema, value: Option<&str>, key_selector: &Strin
     }
 }
 
-fn key_selector(table: &dyn TableSchemaTrait, values: Option<&Vec<String>>) -> String {
+fn key_selector(table: TableSchema, values: Option<&Vec<String>>) -> String {
     if let Some(values) = values {
         let pkey_index = table
-            .schema()
+            .columns()
             .iter()
             .position(|c| c.pkey)
             .expect("Some column must be the primary key");

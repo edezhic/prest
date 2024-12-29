@@ -8,7 +8,8 @@ struct Todo {
     pub done: Option<bool>,
 }
 
-fn main() {
+#[init]
+async fn main() -> Result {
     route(
         "/",
         get(|| async { select!(Vec<Todo>).unwrap().render() })
@@ -28,6 +29,7 @@ fn main() {
     )
     .wrap_non_htmx(page)
     .run()
+    .await
 }
 
 impl Render for Todo {

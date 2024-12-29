@@ -7,7 +7,7 @@ use {
         transaction::TxPayload,
         tx_err_into, SharedSledStorage, Snapshot, SCHEMA_PREFIX,
     },
-    crate::host::await_blocking,
+    crate::await_blocking,
     async_trait::async_trait,
     gluesql::core::{
         data::{Key, Schema},

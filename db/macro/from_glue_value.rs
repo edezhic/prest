@@ -21,18 +21,18 @@ pub fn from_glue_value((index, col): (usize, &Column)) -> TokenStream {
 
     let error_arms = q!(
         Some(other) => {
-            let column = Self::TABLE_SCHEMA[#index];
+            let column = Self::COLUMN_SCHEMAS[#index];
             return Err(prest::e!("unexpected value {other:?} for {column:?}"))
         }
         None => {
-            let column = Self::TABLE_SCHEMA[#index];
+            let column = Self::COLUMN_SCHEMAS[#index];
             return Err(prest::e!("row too short, missing {column:?}"))
         }
     );
 
     if *list {
         let err = q!(
-            let column = Self::TABLE_SCHEMA[#index];
+            let column = Self::COLUMN_SCHEMAS[#index];
             return Err(prest::e!("unexpected list item value {item:?} in {column:?}"))
         );
         let match_and_push = if sql_type.int_or_smaller() {

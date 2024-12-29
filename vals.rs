@@ -13,8 +13,8 @@ where
     async fn from_request(req: Request<Body>, state: &S) -> Result<Self> {
         if req.method() == Method::GET || req.method() == Method::HEAD {
             let (mut parts, _) = req.into_parts();
-            match Query::<T>::from_request_parts(&mut parts, state).await {
-                Ok(Query(params)) => Ok(Vals(params)),
+            match axum::extract::Query::<T>::from_request_parts(&mut parts, state).await {
+                Ok(axum::extract::Query(params)) => Ok(Vals(params)),
                 Err(e) => Err(e.into()),
             }
         } else {

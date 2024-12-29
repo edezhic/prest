@@ -24,8 +24,8 @@ impl Render for Todo {
     }
 }
 
-fn main() {
-    init!(tables Todo);
+#[init]
+async fn main() -> Result {
     shared_routes()
         .route(
             "/todos",
@@ -35,16 +35,17 @@ fn main() {
                         input $"border rounded-md" type="text" name="task" {}
                         button $"ml-4" type="submit" {"Add"}
                     }
-                    div #list $"w-full" {(Todo::find_all()?)}
+                    div #list $"w-full" {(Todo::select_all().await?)}
                 ))
             })
-            .put(|todo: Vals<Todo>| async move { ok(todo.save()?.render()) })
-            .delete(|todo: Vals<Todo>| async move { ok(todo.remove()?) })
+            .put(|todo: Vals<Todo>| async move { ok(todo.save().await?.render()) })
+            .delete(|todo: Vals<Todo>| async move { ok(todo.remove().await?) })
             .patch(|Vals(mut todo): Vals<Todo>| async move {
-                ok(todo.update_done(!todo.done)?.render())
+                ok(todo.update_done(!todo.done).await?.render())
             }),
         )
         .wrap_non_htmx(into_page)
         .embed(BuiltAssets)
-        .run();
+        .run()
+        .await
 }

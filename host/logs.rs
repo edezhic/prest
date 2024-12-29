@@ -7,9 +7,9 @@ use std::{
     io::{BufRead, Read, Write},
     path::PathBuf,
 };
-use tracing::Level;
+pub use tracing::Level;
 use tracing_appender::{non_blocking::WorkerGuard, rolling::RollingFileAppender};
-pub use tracing_subscriber::filter::LevelFilter;
+pub(crate) use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::{
     filter::Targets,
     fmt::{self, time::ChronoUtc},
@@ -18,31 +18,15 @@ use tracing_subscriber::{
     EnvFilter, Layer,
 };
 
-/// [`Level::TRACE`] shorthand for [`init!`] macro
-pub const TRACE: Level = Level::TRACE;
-/// [`Level::DEBUG`] shorthand for [`init!`] macro
-pub const DEBUG: Level = Level::DEBUG;
-/// [`Level::INFO`] shorthand for [`init!`] macro
-pub const INFO: Level = Level::INFO;
-/// [`Level::WARN`] shorthand for [`init!`] macro
-pub const WARN: Level = Level::WARN;
-/// [`Level::ERROR`] shorthand for [`init!`] macro
-pub const ERROR: Level = Level::ERROR;
-
 pub(crate) const LOGS_INFO_NAME: &str = "info";
 pub(crate) const LOGS_TRACES_NAME: &str = "traces";
 pub(crate) const TRACES_DATE_FORMAT: &str = "%Y-%m-%d";
 
 state!(LOGS: Logs = {
-    let AppConfig {
-        data_dir,
-        ..
-    } = APP_CONFIG.check();
-
-    let mut info_path = data_dir.clone();
+    let mut info_path = APP_CONFIG.data_dir.clone();
     info_path.push(LOGS_INFO_NAME);
 
-    let mut traces_path = data_dir.clone();
+    let mut traces_path = APP_CONFIG.data_dir.clone();
     traces_path.push(LOGS_TRACES_NAME);
 
     Logs {

@@ -12,7 +12,8 @@ use std::{
     panic::AssertUnwindSafe,
     sync::atomic::{AtomicBool, AtomicUsize, Ordering},
 };
-use tokio::time::sleep;
+use tokio::runtime::Runtime;
+#[doc(hidden)]
 pub use tokio_schedule::Job as RepeatableJob;
 use tokio_schedule::{every, Every};
 use tracing::{trace_span as span, Span};
@@ -21,6 +22,7 @@ use tracing::{trace_span as span, Span};
 pub struct PrestRuntime {
     pub inner: Runtime,
     pub running_scheduled_tasks: AtomicUsize,
+    pub ready: AtomicBool,
     pub shutting_down: AtomicBool,
     pub server_handles: std::sync::RwLock<Vec<Handle>>,
 }
@@ -33,9 +35,18 @@ impl PrestRuntime {
         PrestRuntime {
             inner,
             running_scheduled_tasks: 0.into(),
+            ready: false.into(),
             shutting_down: false.into(),
             server_handles: Default::default(),
         }
+    }
+
+    pub fn ready(&self) -> bool {
+        self.ready.load(Ordering::SeqCst)
+    }
+
+    pub fn set_ready(&self) {
+        self.ready.store(true, Ordering::SeqCst);
     }
 
     pub fn every(&self, period: u32) -> Every {
@@ -74,7 +85,7 @@ impl PrestRuntime {
         });
     }
 
-    pub fn shutdown(&self) {
+    pub async fn shutdown(&self) {
         if self.shutting_down() {
             return;
         } else {
@@ -88,14 +99,14 @@ impl PrestRuntime {
 
         // awaiting currently running scheduled tasks
         while RT.running_scheduled_tasks.load(Ordering::SeqCst) > 0 {
-            std::thread::sleep(std::time::Duration::from_millis(10));
+            sleep(std::time::Duration::from_millis(10)).await;
             continue;
         }
         debug!(target:"runtime", "Awaited scheduled tasks completion");
 
         // flushing dirty db writes
         #[cfg(feature = "db")]
-        DB.flush();
+        DB.flush().await;
         debug!(target:"runtime", "Flushed the DB");
 
         warn!(target:"runtime", "Finished shutdown procedures");
@@ -113,11 +124,11 @@ impl PrestRuntime {
 
     #[cfg(unix)]
     pub async fn listen_shutdown(&self) {
-        match tokio_signal::unix::signal(tokio_signal::unix::SignalKind::terminate()) {
+        match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
             Ok(mut sigterm) => {
                 sigterm.recv().await;
                 warn!(target:"runtime", "Received shutdown(SIGTERM) signal, initiating");
-                RT.shutdown();
+                RT.shutdown().await;
             }
             Err(err) => {
                 error!(target:"runtime", "Error listening for shutdown(SIGTERM) signal: {}", err);
@@ -155,26 +166,26 @@ impl ScheduledJobRecord {
         };
         trace!(target:"runtime", job = %name, start = %stat.start);
         let stat_clone = stat.clone();
-        RT.spawn_blocking(move || {
-            if let Err(e) = stat_clone.save() {
+        RT.spawn(async move {
+            if let Err(e) = stat_clone.save().await {
                 error!(target:"runtime", "Failed to record start of the scheduled job stat {stat_clone:?} : {e}");
             }
         });
         stat
     }
 
-    pub fn end(mut self, error: Option<String>) {
+    pub async fn end(mut self, error: Option<String>) {
         let end = Utc::now().naive_utc();
 
         trace!(target:"runtime", job = %self.name, end = %end);
 
-        if let Err(e) = self.update_end(Some(end)) {
+        if let Err(e) = self.update_end(Some(end)).await {
             error!(target:"runtime", "Failed to record end of the scheduled job stat {self:?} : {e}");
         }
 
         if let Some(e) = error {
             error!(target:"runtime", "Scheduled job {} error: {e}", self.name);
-            if let Err(upd_e) = self.update_error(Some(e.clone())) {
+            if let Err(upd_e) = self.update_error(Some(e.clone())).await {
                 error!(target:"runtime", "Failed to record error {e} of the scheduled job stat {self:?} : {upd_e}");
             }
         }
@@ -240,13 +251,13 @@ impl<T: RepeatableJob> Schedulable<()> for T {
                         get_panic_message(e)
                     );
                 }
-                stat.end(None);
+                stat.end(None).await;
             }
         });
     }
 }
 
-impl<T: RepeatableJob, E: std::fmt::Display + 'static> Schedulable<Result<(), E>> for T {
+impl<T: RepeatableJob, E: std::fmt::Display + 'static + Send> Schedulable<Result<(), E>> for T {
     fn spawn<'a, F, Fut>(self, mut func: F)
     where
         Self: Send + 'static,
@@ -288,8 +299,8 @@ impl<T: RepeatableJob, E: std::fmt::Display + 'static> Schedulable<Result<(), E>
                         "Panicked in scheduled job {job_name} with: {}",
                         get_panic_message(e)
                     ),
-                    Ok(Err(e)) => stat.end(Some(e.to_string())),
-                    Ok(Ok(())) => stat.end(None),
+                    Ok(Err(e)) => stat.end(Some(e.to_string())).await,
+                    Ok(Ok(())) => stat.end(None).await,
                 }
             }
         });
@@ -301,6 +312,9 @@ pub(crate) trait ShouldProceed: RepeatableJob {
 }
 impl<T: RepeatableJob> ShouldProceed for T {
     async fn should_proceed(&self) -> bool {
+        while !RT.ready() {
+            sleep(std::time::Duration::from_millis(1)).await;
+        }
         if RT.shutting_down() {
             return false;
         }
@@ -322,7 +336,8 @@ pin_project! {
         pub(crate) span: Span,
     }
 }
-impl<F: Future> ScheduledJobFuture<F> {
+
+impl<F: Future + Send> ScheduledJobFuture<F> {
     pub fn from(inner: F, span: Span) -> Self {
         RT.running_scheduled_tasks.fetch_add(1, Ordering::SeqCst);
         Self { inner, span }
@@ -330,7 +345,7 @@ impl<F: Future> ScheduledJobFuture<F> {
 }
 impl<Fut, O> Future for ScheduledJobFuture<Fut>
 where
-    Fut: Future<Output = O>,
+    Fut: Future<Output = O> + Send,
 {
     type Output = O;
 

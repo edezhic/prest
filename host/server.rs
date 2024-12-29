@@ -7,21 +7,18 @@ use rustls_acme::{caches::DirCache, AcmeConfig};
 use std::net::{Ipv6Addr, SocketAddr};
 
 pub async fn start(router: Router) -> Result<(), Error> {
-    let AppConfig {
-        name,
-        domain,
-        data_dir,
-        ..
-    } = APP_CONFIG.check();
+    let name = APP_CONFIG.name;
+    let domain = APP_CONFIG.domain;
+    let data_dir = APP_CONFIG.data_dir.clone();
 
     let handle = RT.new_server_handle();
 
     if *IS_REMOTE && domain.is_some() {
-        let domain = domain.as_ref().expect("Already validated is_some");
+        let domain = domain.expect("Already validated is_some");
         let mut certs_path = data_dir.clone();
         certs_path.push("certs");
 
-        let mut state = AcmeConfig::new(vec![domain.clone()])
+        let mut state = AcmeConfig::new(vec![domain])
             .cache_option(Some(DirCache::new(certs_path)))
             .directory_lets_encrypt(true)
             .state();
@@ -59,7 +56,7 @@ pub async fn start(router: Router) -> Result<(), Error> {
 }
 
 async fn redirect_http_to_https(handle: Handle) {
-    fn make_https(host: &str, uri: Uri, https_port: u16) -> Result<Uri, BoxError> {
+    fn make_https(host: &str, uri: Uri, https_port: u16) -> Result<Uri, tower::BoxError> {
         let mut parts = uri.into_parts();
 
         parts.scheme = Some(axum::http::uri::Scheme::HTTPS);
@@ -104,7 +101,7 @@ async fn redirect_http_to_https(handle: Handle) {
 }
 
 fn check_port() -> u16 {
-    if let Ok(v) = env::var("PORT") {
+    if let Ok(v) = env_var("PORT") {
         v.parse::<u16>().unwrap_or(80)
     } else {
         80

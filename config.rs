@@ -1,107 +1,69 @@
+use std::{ops::Deref, sync::OnceLock};
+
 use crate::*;
 
-/// Starting point for prest apps that performs basic setup
-#[macro_export]
-macro_rules! init {
-    ($(tables $($table:ident),+)? $(; log filters: $(($filter:literal, $level:ident)),+)? ) => { //$(except $($exc:literal),+)?) => {
-        let __config = APP_CONFIG.init(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml")), env!("CARGO_MANIFEST_DIR"));
-        #[cfg(not(target_arch = "wasm32"))]
-        let __________ = prest::init_tracing_subscriber(&[
-            $(
-                $( ($filter, $level), )+
-            )?
-        ]);
-        #[cfg(not(target_arch = "wasm32"))] {
-            prest::Lazy::force(&RT);
-            let _ = prest::dotenv();
-            prest::Lazy::force(&DB);
-            // initializing here because it starts with the runtime but requires the DB
-            prest::ScheduledJobRecord::migrate();
-            $(
-                $( $table::prepare_table(); )+
-            )?
-            prest::Lazy::force(&SYSTEM_INFO);
-        }
-        prest::info!(target: "prest", "Initialized {} v{}", __config.name, __config.version);
-    };
-}
+/// Holds initialized [`AppConfig`], requires arguments from the init macro to initialize so cant be Lazy
+pub static APP_CONFIG: AppConfig = AppConfig::new();
 
 /// Holds basic information about the app
 pub struct AppConfig {
-    pub name: String,
+    info: OnceLock<AppConfigInfo>,
+}
+
+#[derive(Debug)]
+pub struct AppConfigInfo {
+    pub name: &'static str,
     pub version: semver::Version,
     pub persistent: bool,
-    pub domain: Option<String>,
-    pub manifest_dir: String,
+    pub domain: Option<&'static str>,
+    pub manifest_dir: &'static str,
     #[cfg(host)]
     pub data_dir: std::path::PathBuf,
 }
 
-/// Holds initialized [`AppConfig`], requires arguments from the init macro to initialize so cant be Lazy
-pub static APP_CONFIG: std::sync::OnceLock<AppConfig> = std::sync::OnceLock::new();
+impl AppConfig {
+    const fn new() -> Self {
+        Self {
+            info: OnceLock::new(),
+        }
+    }
 
-/// Interface for the [`APP_CONFIG`]
-pub trait AppConfigAccess {
-    /// Runs inside of the [`init!`] macro to read options from app's manifest
-    fn init(&self, manifest: &'static str, manifest_dir: &'static str) -> &AppConfig;
-    fn check(&self) -> &AppConfig;
-}
-
-impl AppConfigAccess for std::sync::OnceLock<AppConfig> {
-    fn init(&self, manifest: &str, manifest_dir: &str) -> &AppConfig {
-        let parsed = manifest.parse::<toml::Table>().unwrap();
-
-        let name = parsed["package"]["name"]
-            .as_str()
-            .unwrap()
-            .replace("-", "_");
-
-        let version = parsed["package"]
-            .get("version")
-            .map(|v| v.as_str().unwrap())
-            .unwrap_or("0.0.0")
-            .parse::<semver::Version>()
-            .unwrap();
-
-        let metadata = parsed.get("package").map(|t| t.get("metadata")).flatten();
-
-        let persistent = if let Some(Some(Some(value))) =
-            metadata.map(|cfgs| cfgs.get("persistent").map(|v| v.as_bool()))
-        {
-            value
-        } else {
-            true
-        };
-
-        let domain = if let Some(Some(Some(value))) =
-            metadata.map(|cfgs| cfgs.get("domain").map(|v| v.as_str()))
-        {
-            Some(value.to_owned())
-        } else {
-            None
-        };
+    pub fn _init(
+        &self,
+        manifest_dir: &'static str,
+        name: &'static str,
+        version: &str,
+        persistent: bool,
+        domain: Option<&'static str>,
+    ) {
+        let version = version.parse::<semver::Version>().unwrap();
 
         #[cfg(host)]
         let data_dir = {
-            let project_dirs = prest::ProjectDirs::from("", "", &name).unwrap();
+            let project_dirs = prest::ProjectDirs::from("", "", name).unwrap();
             let path = project_dirs.data_dir().to_path_buf();
             std::fs::create_dir_all(&path).unwrap();
             path
         };
 
-        self.get_or_init(|| AppConfig {
-            name,
-            version,
-            persistent,
-            domain,
-            manifest_dir: manifest_dir.to_owned(),
-            #[cfg(host)]
-            data_dir,
-        })
+        self.info
+            .set(AppConfigInfo {
+                name,
+                version,
+                persistent,
+                domain,
+                manifest_dir,
+                #[cfg(host)]
+                data_dir,
+            })
+            .expect("App config should initialize");
     }
+}
 
-    fn check(&self) -> &AppConfig {
-        self.get()
-            .expect("App config should be initialized first. Did you forget to add `init!();` macro in the beginning of the main function?")
+impl Deref for AppConfig {
+    type Target = AppConfigInfo;
+
+    fn deref(&self) -> &Self::Target {
+        self.info.get().expect("App config should be initialized. Did you forget to add `#[init]` macro to the main function?")
     }
 }

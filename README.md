@@ -5,19 +5,19 @@
 It ain't easy to compete with laravel, rails, nextjs and many others, but I always wanted a framework which enables simplicity in common development needs and allows **any** customizations/optimizations without switching languages. Rust provides ways to build servers, clients, AIs, blockchains, OS kernels and whatever else you might need, while also being arguably the most [reliable practical language](https://prest.blog/rust). Thanks to a lot of [amazing libraries](https://prest.blog/internals) in the rust ecosystem prest re-exports a comprehensive development toolkit and adds a bunch of integrations and features on top of them for simplicity:
 
 #### Easy start
-Create a default rust project, add `prest` dependency, bulk `use` everything from it, invoke `init!` macro and add your app's logic. No massive boilerplates, no custom required CLI tools.
+Create a default rust project, add `prest` dependency, bulk `use` everything from it, add `init` macro and make your `main` async. No massive boilerplates, no custom required CLI tools.
 
 `Cargo.toml`
 ```toml
 [dependencies]
-prest = "0.4"
+prest = "0.5"
 ```
 
 `src/main.rs`
 ```rust
 use prest::*;
-fn main() {
-    init!();
+#[init]
+async fn main() {
     ...
 }
 ```
@@ -25,11 +25,13 @@ fn main() {
 By default it reads the env variables, initializes the runtime, logging, database and other prest subsystems.
 
 #### Server
-High-performance, concurrent, intuitively routed. Based on [axum](https://github.com/tokio-rs/axum) so it includes powerful middleware api, simple extractors to get information handlers need from requests and flexible return types. But prest also enchances it with a bunch of additional utilities to get started quickly - just `run` your router and everything else will be configured automatically.
+High-performance, concurrent, intuitively routed. Based on [axum](https://github.com/tokio-rs/axum) so it includes powerful middleware api, simple extractors to get information handlers need from requests and flexible return types. But prest also enchances it with a bunch of additional utilities to get started quickly - just `run().await` your router and everything else will be configured automatically.
 
 ```rust
-route("/", get("Hello world")).run()
+route("/", get("Hello world")).run().await
 ```
+
+You can also add logic after the `await` in case you want to run smth during the shutdown. 
 
 For deserialization of incoming data there is a small utility extractor `Vals<T>` which extracts fields from the query in GET requests and expects json bodies for other methods, for example:
 
@@ -77,7 +79,7 @@ html!{
 For more details about these tools I suggest checking out their docs, overall they are pretty simple and intuitive by themselves but powerful enough for the vast majority of apps. Default prest bundle includes tailwind's presets and patched htmx version which sends non-GET request payloads in json format to easily use with `Vals` and includes a few other tweaks for better compatability.
 
 #### Database
-Embedded DB that works without running separate services based on [GlueSQL](https://gluesql.org/docs) for compatibility with SQL and [sled](https://github.com/spacejam/sled) for high-performance storage. Prest enchances them with the `Table` macro to automatically derive schema based on usual rust structs, and some helper functions to easily interact with the underlying tables without worrying about SQL injections. Just add your structs into the `init!` macro to make sure tables for them are initialized:
+Embedded DB that works without running separate services based on [GlueSQL](https://gluesql.org/docs) for compatibility with SQL and [sled](https://github.com/spacejam/sled) for high-performance storage. Prest enchances them with the `Table` macro to automatically derive schema based on usual rust structs, and some helper functions to easily interact with the underlying tables without worrying about SQL injections:
 
 ```rust
 #[derive(Table, Deserialize)]
@@ -87,30 +89,29 @@ struct Todo {
     done: bool,
 }
 ...
-init!(tables Todo/*, OtherTable, ... */)
-...
-Todo::find_all()
-Todo::find_by_task("Buy milk")
+Todo::select_all().await?;
+Todo::select_by_task("Buy milk").await?;
 Todo::select()
     .filter(col("done").eq(true))
     .order_by("task")
     .values()
-...
+    .await?;
+
 let todo = Todo {
     id: Uuid::now_v7(),
     task: "Buy bread".into(),
     done: false,
 };
-todo.save()
-todo.update_task("Buy candies")
-assert!(todo.check_task("Buy candies"))
-todo.remove()
+todo.save().await?;
+todo.update_task("Buy candies").await?;
+assert!(todo.check_task("Buy candies").await?);
+todo.remove().await?;
 ```
 
-It's aimed to support all the basic types supported by GlueSQL, `Option`, `Vec`, as well as custom ones which can be serialized/deserialized. As of now `Table` also requires derived `Deserialize` trait to enable DB editor in the...
+It's aimed to support all the basic types supported by GlueSQL, `Option`, `Vec`, as well as custom ones which can be serialized/deserialized. As of now `Table` also requires derived `Deserialize` trait for the DB editor in the...
 
 #### Admin panel
-Monitors host system's resources, collects filtered stats for requests/responses with their timings, high-level info and detailed traces, provides read/write GUI to all initialized tables, tracks scheduled tasks, and provide controls over remote host in local builds. While blog intentionally exposes access to it for demo purposes (cog in the menu), by default it is protected by...
+Monitors host system's resources, collects filtered stats for requests/responses with their timings, high-level info and detailed traces, provides read/write GUI to tables, tracks scheduled tasks, and provide controls over remote host in local builds. While blog intentionally exposes access to it for demo purposes (cog in the menu), by default it is protected by...
 
 #### Auth
 Session and user management using passwords and OAuth/openID protocols. Based on the built-in DB, [openidconnect-rs](https://github.com/ramosbugs/openidconnect-rs), [axum-login](https://github.com/maxcountryman/axum-login) and [password-auth](https://crates.io/crates/password-auth). Persisted in the built-in DB, can be initiated by leading users to the predefined routes, and can retrieve current auth/user info using extractors:
@@ -158,11 +159,11 @@ Logging is powered by [tracing](https://docs.rs/tracing) ecosystem with `trace!`
 info!("My variable value is {}", x); // supports same formatting as `format!` macro
 ```
 
-Prest initializes a subscriber which collects these records into several streams: high-level `INFO`+ level logs are written in html format to be observed in the main admin panel page (and the shell in debug builds), and traces of all levels are also written in a non-blocking fashion to files split by days in the `json` format, which can be also explored through special page in the admin panel. By default prest filters low-level logs of its dependencies to avoid spamming your feeds, and you can also add more filters in the `init!` macro:
+Prest initializes a subscriber which collects these records into several streams: high-level `INFO`+ level logs are written in html format to be observed in the main admin panel page (and the shell in debug builds), and traces of all levels are also written in a non-blocking fashion to files split by days in the `json` format, which can be also explored through special page in the admin panel. By default prest filters low-level logs of its dependencies to avoid spamming your feeds, and you can also add more filters in the argument to the `init` macro:
 
 ```rust
 // like in the `scraping` example
-init!(tables Story; log filters: ("html5ever", INFO), ("selectors", INFO));
+#[init(log_filters=[("html5ever", "info"), ("selectors", "info")])]
 ```
 
 #### Build utils
@@ -278,12 +279,12 @@ To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/
 ### what's next
 
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ move `DB_SCHEMA` into `DB`
 + schema changes validations, automigrations like turbosql
 + add replication and/or backup+import
-+ [rust-i18n](https://github.com/longbridgeapp/rust-i18n) or another i18n solution
 + auth upgrades - simpler UX + DX, support more providers/methods
 + subdomains and multiple-services on single machine support
++ example with react-based islands built with bun?
++ [rust-i18n](https://github.com/longbridgeapp/rust-i18n) or another i18n solution
 + `axum-valid`-like integration for `Vals` or smth alike
 
 Some ideas are more complex/crazy but interesting:

@@ -14,9 +14,9 @@ pub(crate) struct RouteStat {
 }
 
 impl RouteStat {
-    pub fn record(req_method: Method, path: String, latency: f64) {
+    pub async fn record(req_method: Method, path: String, latency: f64) {
         let req_method = req_method.to_string();
-        if let Ok(Some(mut stats)) = RouteStat::find_by_path(&path) {
+        if let Ok(Some(mut stats)) = RouteStat::select_by_path(&path).await {
             let entry = stats.method_hits_and_latency.entry(req_method).or_default();
 
             let updated_hits = entry.0 + 1;
@@ -25,7 +25,7 @@ impl RouteStat {
 
             *entry = (updated_hits, updated_avg_latency);
 
-            if let Err(e) = stats.save() {
+            if let Err(e) = stats.save().await {
                 warn!(target:"analytics", "Failed to update stats: {e}");
             }
         } else {
@@ -41,7 +41,7 @@ impl RouteStat {
                 is_asset,
             };
 
-            if let Err(e) = stats.save() {
+            if let Err(e) = stats.save().await {
                 warn!(target:"analytics", "Failed to save new stats: {e}");
             }
         }
@@ -69,9 +69,7 @@ fn record_response_metrics(
         true => trace!(target: "response", latency = %short_latency, code = %status.as_u16()),
         false => {
             debug!(target: "response", latency = %short_latency, code = %status.as_u16());
-            RT.spawn_blocking(move || {
-                RouteStat::record(req_method, req_path, latency);
-            });
+            RT.spawn(RouteStat::record(req_method, req_path, latency));
         }
     }
 }
@@ -82,12 +80,11 @@ pub(crate) struct AnalyticsLayer;
 
 impl AnalyticsLayer {
     pub fn init() -> Self {
-        RouteStat::migrate();
         Self
     }
 }
 
-impl<S> Layer<S> for AnalyticsLayer {
+impl<S> tower::Layer<S> for AnalyticsLayer {
     type Service = AnalyticsMiddleware<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
@@ -109,9 +106,9 @@ use core::{
 };
 use std::boxed::Box;
 
-impl<S> Service<Request<Body>> for AnalyticsMiddleware<S>
+impl<S> tower::Service<Request<Body>> for AnalyticsMiddleware<S>
 where
-    S: Service<Request<Body>, Response = Response> + Send + 'static,
+    S: tower::Service<Request<Body>, Response = Response> + Send + 'static,
     S::Future: Send + 'static,
     S::Error: std::fmt::Display + 'static,
 {

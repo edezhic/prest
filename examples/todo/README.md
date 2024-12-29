@@ -36,7 +36,7 @@ Alright, now we have all the components for our service so let's move on to the 
 
 {src/main.rs:37-52}
 
-The first lines invokes the `init` macro with the only table we defined so it will setup basic prest configs and make sure there is a table in the database prepared for our todos.
+The attribute macro `init` will setup basic prest configs and make sure there is a table in the database prepared for our todos.
 
 Then goes the definition of the router from just a single route `/` but with closure-based handlers for 4 methods: `get`, `put`, `patch` and `delete`.
 

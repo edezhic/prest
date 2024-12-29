@@ -16,7 +16,7 @@ const EDIT_SVG: PreEscaped<&str> = PreEscaped(include_str!("assets/edit.svg"));
 const DONE_SVG: PreEscaped<&str> = PreEscaped(include_str!("assets/done.svg"));
 const DELETE_SVG: PreEscaped<&str> = PreEscaped(include_str!("assets/delete.svg"));
 
-pub(crate) fn routes() -> Router {
+pub(crate) async fn routes() -> Router {
     route(
         "/",
         get(|| async {
@@ -34,13 +34,13 @@ pub(crate) fn routes() -> Router {
     .route("/schedule_stats", get(schedule_stats::full))
     .route("/analytics", get(routes_stats::full))
     .nest("/remote", remote::routes())
-    .nest("/db", db_editor::db_routes())
+    .nest("/db", db_editor::db_routes().await)
     .wrap_non_htmx(into_page)
     .route("/traces/:period", get(logs::traces))
 }
 
 async fn into_page(content: Markup) -> impl IntoResponse {
-    let page = html! {(DOCTYPE) html $"bg-stone-800 font-sans text-gray-300" {
+    html! {(DOCTYPE) html $"bg-stone-800 font-sans text-gray-300" {
         (Head::with_title("Prest Admin"))
         body $"max-w-screen-md lg:max-w-screen-lg md:mx-auto" {
             nav replace-url into="main" $"bg-stone-900 my-4 p-5 shadow-lg rounded-full items-center flex gap-6 w-min mx-auto" {
@@ -48,7 +48,7 @@ async fn into_page(content: Markup) -> impl IntoResponse {
                 button get="/admin" {div $"w-6" {(ADMIN_SVG)}}
                 button get="/admin/analytics" {div $"w-6" {(ANALYTICS_SVG)}}
                 button get="/admin/traces" {div $"w-6" {(LOGS_SVG)}}
-                @if DB_SCHEMA.tables().len() > 0 {
+                @if DB.custom_tables().len() > 0 {
                     button get="/admin/db" {div $"w-6" {(DB_SVG)}}
                 }
             }
@@ -57,15 +57,7 @@ async fn into_page(content: Markup) -> impl IntoResponse {
             }
             (Scripts::default().include("/admin.js").css("/admin.css"))
         }
-    }};
-
-    (
-        (
-            HxRetarget::from("body"),
-            HxReswap::from(SwapOption::OuterHtml),
-        ),
-        page,
-    )
+    }}
 }
 
 fn home_svg() -> Markup {

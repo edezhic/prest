@@ -1,6 +1,6 @@
 use crate::*;
 
-use super::Db::*;
+use super::DbStorage::*;
 
 use gluesql::core::{
     ast::{ColumnDef, IndexOperator, OrderByExpr},
@@ -15,7 +15,7 @@ use gluesql::core::{
 type GResult<T> = core::result::Result<T, GlueError>;
 
 #[async_trait(?Send)]
-impl Store for Db {
+impl Store for DbStorage {
     async fn fetch_schema(&self, table_name: &str) -> GResult<Option<Schema>> {
         match self {
             Memory(s) => s.fetch_schema(table_name).await,
@@ -46,7 +46,7 @@ impl Store for Db {
 }
 
 #[async_trait(?Send)]
-impl StoreMut for Db {
+impl StoreMut for DbStorage {
     async fn insert_schema(&mut self, schema: &Schema) -> GResult<()> {
         match self {
             Memory(s) => s.insert_schema(schema).await,
@@ -84,7 +84,7 @@ impl StoreMut for Db {
 }
 
 #[async_trait(?Send)]
-impl AlterTable for Db {
+impl AlterTable for DbStorage {
     async fn rename_schema(&mut self, _table_name: &str, _new_table_name: &str) -> GResult<()> {
         match self {
             Memory(s) => s.rename_schema(_table_name, _new_table_name).await,
@@ -131,7 +131,7 @@ impl AlterTable for Db {
 }
 
 #[async_trait(?Send)]
-impl Transaction for Db {
+impl Transaction for DbStorage {
     async fn begin(&mut self, autocommit: bool) -> GResult<bool> {
         match self {
             Memory(s) => s.begin(autocommit).await,
@@ -155,7 +155,7 @@ impl Transaction for Db {
 }
 
 #[async_trait(?Send)]
-impl CustomFunction for Db {
+impl CustomFunction for DbStorage {
     async fn fetch_function(&self, _func_name: &str) -> GResult<Option<&StructCustomFunction>> {
         match self {
             Memory(s) => s.fetch_function(_func_name).await,
@@ -172,7 +172,7 @@ impl CustomFunction for Db {
 }
 
 #[async_trait(?Send)]
-impl CustomFunctionMut for Db {
+impl CustomFunctionMut for DbStorage {
     async fn insert_function(&mut self, _func: StructCustomFunction) -> GResult<()> {
         match self {
             Memory(s) => s.insert_function(_func).await,
@@ -189,21 +189,21 @@ impl CustomFunctionMut for Db {
 }
 
 #[async_trait(?Send)]
-impl Index for Db {
+impl Index for DbStorage {
     async fn scan_indexed_data(
         &self,
-        _table_name: &str,
-        _index_name: &str,
-        _asc: Option<bool>,
-        _cmp_value: Option<(&IndexOperator, sql::Value)>,
+        table_name: &str,
+        index_name: &str,
+        asc: Option<bool>,
+        cmp_value: Option<(&IndexOperator, sql::Value)>,
     ) -> GResult<RowIter> {
         match self {
             Memory(s) => {
-                s.scan_indexed_data(_table_name, _index_name, _asc, _cmp_value)
+                s.scan_indexed_data(table_name, index_name, asc, cmp_value)
                     .await
             }
             Persistent(s) => {
-                s.scan_indexed_data(_table_name, _index_name, _asc, _cmp_value)
+                s.scan_indexed_data(table_name, index_name, asc, cmp_value)
                     .await
             }
         }
@@ -211,23 +211,23 @@ impl Index for Db {
 }
 
 #[async_trait(?Send)]
-impl IndexMut for Db {
+impl IndexMut for DbStorage {
     async fn create_index(
         &mut self,
-        _table_name: &str,
-        _index_name: &str,
-        _column: &OrderByExpr,
+        table_name: &str,
+        index_name: &str,
+        column: &OrderByExpr,
     ) -> GResult<()> {
         match self {
-            Memory(s) => s.create_index(_table_name, _index_name, _column).await,
-            Persistent(s) => s.create_index(_table_name, _index_name, _column).await,
+            Memory(s) => s.create_index(table_name, index_name, column).await,
+            Persistent(s) => s.create_index(table_name, index_name, column).await,
         }
     }
 
-    async fn drop_index(&mut self, _table_name: &str, _index_name: &str) -> GResult<()> {
+    async fn drop_index(&mut self, table_name: &str, index_name: &str) -> GResult<()> {
         match self {
-            Memory(s) => s.drop_index(_table_name, _index_name).await,
-            Persistent(s) => s.drop_index(_table_name, _index_name).await,
+            Memory(s) => s.drop_index(table_name, index_name).await,
+            Persistent(s) => s.drop_index(table_name, index_name).await,
         }
     }
 }
@@ -237,7 +237,7 @@ use std::collections::HashMap;
 type _MetaIter = Box<dyn Iterator<Item = GResult<(ObjectName, HashMap<String, sql::Value>)>>>;
 
 #[async_trait(?Send)]
-impl Metadata for Db {
+impl Metadata for DbStorage {
     async fn scan_table_meta(&self) -> GResult<_MetaIter> {
         Ok(Box::new(std::iter::empty()))
     }
