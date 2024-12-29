@@ -82,7 +82,7 @@ impl SharedSledStorage {
         let sled_config = sled::Config::default()
             .path(db_path)
             // use up to 20% ram for cache
-            .cache_capacity(total_ram_mbs.div_ceil(5));
+            .cache_capacity(total_ram_mbs.div_ceil(5) * 1_000_000);
 
         let tree = sled_config.open().map_err(err_into)?;
         let id_offset = get_id_offset(&tree)?;
