@@ -6,7 +6,7 @@ use std::{collections::HashMap, task::ready, time::Instant};
 use tracing::Span;
 
 /// Describes collected stats for some path
-#[derive(Debug, Table, Serialize, Deserialize)]
+#[derive(Debug, Storage, Serialize, Deserialize)]
 pub(crate) struct RouteStat {
     pub path: String,
     pub method_hits_and_latency: HashMap<String, (u64, f64)>,

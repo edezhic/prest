@@ -2,7 +2,7 @@ use prest::*;
 
 embed_build_output_as!(BuiltAssets);
 
-#[derive(Debug, Table, Default, Serialize, Deserialize)]
+#[derive(Debug, Storage, Default, Serialize, Deserialize)]
 struct Todo {
     pub id: Uuid,
     pub custom: Inner,
@@ -28,6 +28,6 @@ async fn main() -> Result {
     }
     .save()
     .await?;
-    
+
     blog::routes().embed(BuiltAssets).run().await
 }

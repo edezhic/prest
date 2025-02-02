@@ -16,12 +16,11 @@ impl MigrationName for MigrationCreateTodos {
 }
 #[async_trait::async_trait]
 impl MigrationTrait for MigrationCreateTodos {
-    // Define how to apply this migration: Create the Bakery table.
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
             .create_table(
                 Table::create()
-                    .table(Todos::Table)
+                    .table(Todos::Storage)
                     .col(ColumnDef::new(Todos::Uuid).uuid().not_null().primary_key())
                     .col(ColumnDef::new(Todos::Task).string().not_null())
                     .col(ColumnDef::new(Todos::Done).boolean().not_null())
@@ -29,18 +28,16 @@ impl MigrationTrait for MigrationCreateTodos {
             )
             .await
     }
-
-    // Define how to rollback this migration: Drop the Bakery table.
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(Todos::Table).to_owned())
+            .drop_table(Table::drop().table(Todos::Storage).to_owned())
             .await
     }
 }
 
 #[derive(Iden)]
 pub enum Todos {
-    Table,
+    Storage,
     Uuid,
     Task,
     Done,

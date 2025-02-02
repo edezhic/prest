@@ -1,3 +1,5 @@
+use std::future::Future;
+
 use crate::*;
 
 mod admin;
@@ -29,18 +31,16 @@ pub mod logs;
 #[cfg(feature = "traces")]
 use logs::*;
 
+#[cfg(feature = "db")]
+pub(crate) mod db;
+// #[cfg(feature = "db")]
+// pub use db;
+
 #[cfg(all(feature = "traces", feature = "db"))]
 pub(crate) mod analytics;
 
 #[cfg(feature = "webview")]
 mod webview;
-
-pub fn await_blocking<F, R>(f: F) -> R
-where
-    F: std::future::Future<Output = R>,
-{
-    tokio::task::block_in_place(move || tokio::runtime::Handle::current().block_on(f))
-}
 
 pub(crate) use directories::*;
 #[doc(hidden)]
@@ -58,12 +58,6 @@ pub mod _host {
         Builder as RuntimeBuilder, Handle as RuntimeHandle, Runtime, RuntimeFlavor,
     };
 }
-
-#[cfg(feature = "db")]
-pub(crate) mod sled;
-#[cfg(feature = "db")]
-pub(crate) use sled::SharedSledStorage as PersistentStorage;
-use tower::Service;
 
 state!(RT: PrestRuntime = { PrestRuntime::init() });
 state!((crate) IS_REMOTE: bool = { env_var("DEPLOYED_TO_REMOTE").is_ok() });
@@ -141,6 +135,7 @@ impl HostUtils for Router {
         pub struct BuiltinAssets;
         self = self.embed(BuiltinAssets);
 
+        use tower::Service;
         // add default favicon
         let current_resp = self
             .call(
@@ -238,4 +233,14 @@ fn internal_request(request: &Request) -> bool {
         }
     }
     false
+}
+
+impl<T> NonSendFuturesAdapter for T where T: Future {}
+pub trait NonSendFuturesAdapter: Future {
+    fn await_blocking<R>(self) -> R
+    where
+        Self: Future<Output = R> + Sized,
+    {
+        tokio::task::block_in_place(move || tokio::runtime::Handle::current().block_on(self))
+    }
 }

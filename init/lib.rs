@@ -55,7 +55,7 @@ fn build_config(input: &ItemFn, args: AttributeArgs) -> Result<Config, syn::Erro
         return Err(syn::Error::new_spanned(input.sig.fn_token, msg));
     }
 
-    // parse all source files in search for Table derivations
+    // parse all source files in search for Storage derivations
 
     let mut log_filters = vec![];
 
@@ -168,7 +168,7 @@ fn build_config(input: &ItemFn, args: AttributeArgs) -> Result<Config, syn::Erro
                             tables.push(struct_name.to_owned());
                             expecting = false;
                         }
-                        if line.starts_with("#[derive(") && line.contains("Table") {
+                        if line.starts_with("#[derive(") && line.contains("Storage") {
                             expecting = true;
                         }
                     }
@@ -237,13 +237,13 @@ fn expand(mut input: ItemFn, config: Config) -> TokenStream {
     });
 
     let init_tracing = quote!(
-        let __________ = prest::logs::init_tracing_subscriber(&[ #(#filters ,)* ])
+        let __________ = std::thread::spawn(|| prest::logs::init_tracing_subscriber(&[ #(#filters ,)* ]))
     );
 
     let register_tables = config
         .tables
         .into_iter()
-        .map(|table| quote!( prest::DB._register_table(#table::schema()); ));
+        .map(|table| quote!( prest::DB._register_schema(#table::schema()); ));
 
     let body = input.body();
     let body = quote! {
@@ -252,9 +252,13 @@ fn expand(mut input: ItemFn, config: Config) -> TokenStream {
         #init_tracing;
         prest::Lazy::force(&prest::RT);
         let _ = prest::dotenv();
-        prest::Lazy::force(&prest::SYSTEM_INFO);
-        prest::Lazy::force(&prest::DB);
-        #(#register_tables)*
+        std::thread::spawn(|| {
+            prest::Lazy::force(&prest::SYSTEM_INFO);
+        });
+        std::thread::spawn(|| {
+            prest::Lazy::force(&prest::DB);
+            #(#register_tables)*
+        });
         prest::RT.block_on(async {
             prest::DB.migrate().await.expect("DB migration should be successful");
         });

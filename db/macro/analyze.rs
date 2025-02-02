@@ -4,13 +4,13 @@ pub fn from_field(field: Field) -> Column {
     let pkey = field
         .attrs
         .iter()
-        .find(|a| a.path().to_token_stream().to_string() == "pkey_column")
+        .find(|a| a.path().to_token_stream().to_string() == "pkey")
         .is_some();
 
     let unique = field
         .attrs
         .iter()
-        .find(|a| a.path().to_token_stream().to_string() == "unique_column")
+        .find(|a| a.path().to_token_stream().to_string() == "unique")
         .is_some()
         || pkey;
 
@@ -39,6 +39,12 @@ pub fn from_field(field: Field) -> Column {
 
     let inner_type: syn::Type = syn::parse_str(inner_type_str).unwrap();
 
+    let serialized = match inner_type_str {
+        "Uuid" | "String" | "NaiveDateTime" | "bool" | "u128" | "u64" | "u32" | "u16" | "u8"
+        | "i128" | "i64" | "i32" | "i16" | "i8" | "f64" | "f32" => false,
+        _ => true,
+    };
+
     use SqlType::*;
     let sql_type = match inner_type_str {
         "Uuid" => Uuid,
@@ -56,13 +62,10 @@ pub fn from_field(field: Field) -> Column {
         "i8" => Int8,
         "f32" => Float32,
         "f64" => Float,
-        _ => Text, // string, custom types and fallback for others
-    };
-
-    let serialized = match inner_type_str {
-        "Uuid" | "String" | "NaiveDateTime" | "bool" | "u128" | "u64" | "u32" | "u16" | "u8"
-        | "i128" | "i64" | "i32" | "i16" | "i8" | "f64" | "f32" => false,
-        _ => true,
+        "String" => Text,
+        _ if serialized => Bytea,
+        _ => panic!("Unsupported inner type str = {inner_type_str}"),
+        // _ => Text, // fallback?
     };
 
     Column {

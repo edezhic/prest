@@ -4,7 +4,7 @@ use crate::*;
 
 pub(crate) async fn db_page() -> Markup {
     let tables = html! {
-        @for table in DB.custom_tables() {
+        @for table in DB.custom_schemas() {
             $"font-bold text-lg" {(table.name())}
             a get=(table.full_path()) trigger="load" swap-this {}
         }
@@ -14,20 +14,20 @@ pub(crate) async fn db_page() -> Markup {
 
 pub(crate) async fn db_routes() -> Router {
     let mut router = route("/", get(db_page));
-    for table in DB.custom_tables() {
+    for table in DB.custom_schemas() {
         let get_by_id_path = format!("{}/:id", table.relative_path());
         router = router
             .route(
                 table.relative_path(),
                 get(|| async {
                     let rows = table
-                        .get_all()
+                        .get_all_as_strings()
                         .await?
                         .into_iter()
                         .map(|row| view_row(table, row));
                     ok(html!(
                         table #(table.name()) .table-editor $"w-full font-mono text-[0.5rem] lg:text-sm" {
-                            @let columns = table.columns().iter().map(|c| (c.name, c.rust_type));
+                            @let columns = table.fields().iter().map(|c| (c.name, c.rust_type));
                             @for (name, rust_type) in columns {th {(name)" ("(rust_type)")"}}
                             th #actions $"w-[70px]" {}
                             (create_form(table))
@@ -39,20 +39,20 @@ pub(crate) async fn db_routes() -> Router {
             .route(
                 &get_by_id_path,
                 get(|Path(id): Path<String>| async {
-                    let row = table.get_row_by_id(id).await?;
+                    let row = table.get_as_strings_by_id(id).await?;
                     ok(edit_row(table, row))
                 }),
             )
             .route(table.relative_path(), put(|req: Request| async {
                 let id = table.save(req).await?;
-                let row = table.get_row_by_id(id).await?;
+                let row = table.get_as_strings_by_id(id).await?;
                 ok(view_row(table, row))
             }))
             .route(
                 table.relative_path(),
                 patch(|req: Request| async {
                     let id = table.save(req).await?;
-                    let row = table.get_row_by_id(id).await?;
+                    let row = table.get_as_strings_by_id(id).await?;
                     ok(view_row(table, row))
                 }),
             )
@@ -64,8 +64,8 @@ pub(crate) async fn db_routes() -> Router {
     router
 }
 
-fn create_form(table: TableSchema) -> Markup {
-    let columns = table.columns();
+fn create_form(table: StructSchema) -> Markup {
+    let columns = table.fields();
     let key_selector = key_selector(table, None);
 
     let cells = columns.iter().map(|schema| {
@@ -82,8 +82,8 @@ fn create_form(table: TableSchema) -> Markup {
     })
 }
 
-fn view_row(table: TableSchema, values: Vec<String>) -> Markup {
-    let columns = table.columns();
+fn view_row(table: StructSchema, values: Vec<String>) -> Markup {
+    let columns = table.fields();
     let key_selector = key_selector(table, Some(&values));
 
     let cells = values.iter().map(|value| html! {td ."view" {(value)}});
@@ -102,8 +102,8 @@ fn view_row(table: TableSchema, values: Vec<String>) -> Markup {
     })
 }
 
-fn edit_row(table: TableSchema, values: Vec<String>) -> Markup {
-    let columns = table.columns();
+fn edit_row(table: StructSchema, values: Vec<String>) -> Markup {
+    let columns = table.fields();
     let key_selector = key_selector(table, Some(&values));
 
     let cells = std::iter::zip(columns, &values).map(|(schema, value)| {
@@ -126,7 +126,7 @@ fn edit_row(table: TableSchema, values: Vec<String>) -> Markup {
     })
 }
 
-fn column_input(schema: &ColumnSchema, value: Option<&str>, key_selector: &String) -> Markup {
+fn column_input(schema: &FieldSchema, value: Option<&str>, key_selector: &String) -> Markup {
     let input_type = if value.is_some() && schema.pkey {
         "hidden"
     } else {
@@ -145,10 +145,10 @@ fn column_input(schema: &ColumnSchema, value: Option<&str>, key_selector: &Strin
     }
 }
 
-fn key_selector(table: TableSchema, values: Option<&Vec<String>>) -> String {
+fn key_selector(table: StructSchema, values: Option<&Vec<String>>) -> String {
     if let Some(values) = values {
         let pkey_index = table
-            .columns()
+            .fields()
             .iter()
             .position(|c| c.pkey)
             .expect("Some column must be the primary key");
@@ -158,11 +158,11 @@ fn key_selector(table: TableSchema, values: Option<&Vec<String>>) -> String {
     }
 }
 
-fn column_input_type(column: &ColumnSchema) -> &str {
+fn column_input_type(column: &FieldSchema) -> &str {
     let singular = !column.list && !column.optional;
     match column.sql_type {
-        "BOOLEAN" if singular => "checkbox",
+        sql::DataType::Boolean if singular => "checkbox",
         _ if column.numeric && singular => "number",
-        "TEXT" | _ => "text",
+        sql::DataType::Text | _ => "text",
     }
 }

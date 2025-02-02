@@ -75,7 +75,7 @@ fn prepare_docker_builder(target_dir: &str) -> Result {
         .arg(DOCKER_BUILDER_IMAGE)
         .stdout(Stdio::null())
         .status()
-        .somehow()?
+        .map_err(|e| e!("failed to check docker builder image: {e}"))?
         .success()
     {
         std::fs::write(dockerfile_path, BUILDER_DOCKERFILE)?;

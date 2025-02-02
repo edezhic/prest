@@ -1,43 +1,42 @@
+pub(crate) mod authn;
 mod google_openid;
-use std::collections::HashSet;
-
-use axum::http::request::Parts;
-pub use google_openid::{GOOGLE_CLIENT, WITH_GOOGLE_AUTH};
+mod permissions;
+mod session;
+pub(crate) use session::SessionRow;
 
 use crate::*;
+use axum::http::request::Parts;
 use axum_login::{
     AuthManagerLayer, AuthManagerLayerBuilder, AuthSession, AuthUser, AuthnBackend, AuthzBackend,
 };
+pub use google_openid::{GOOGLE_CLIENT, WITH_GOOGLE_AUTH};
 pub use openidconnect::{CsrfToken as OAuthCSRF, Nonce as OAuthNonce};
 use password_auth::{generate_hash, verify_password};
+use std::collections::HashSet;
 pub use tower_sessions::Session;
-use tower_sessions::{
-    session::{Id, Record},
-    session_store::{Error as SessionError, Result as SessionResult},
-    Expiry, SessionManagerLayer, SessionStore,
-};
+use tower_sessions::{Expiry, SessionManagerLayer, SessionStore};
 
 pub type UserId = Uuid;
-pub type AuthLayer = AuthManagerLayer<DbStorage, DbStorage>;
-pub type Auth = AuthSession<DbStorage>;
+pub type AuthLayer = AuthManagerLayer<Prest, Prest>;
+pub type Auth = AuthSession<Prest>;
 pub type OAuthCode = String;
 
-#[derive(Table, Clone, Debug, Serialize, Deserialize)]
+#[derive(Storage, Clone, Debug, Serialize, Deserialize)]
 pub struct User {
     pub id: Uuid,
     pub permissions: Vec<String>,
     pub group: UserGroup,
-    #[unique_column]
+    #[unique]
     pub username: Option<String>,
-    #[unique_column]
+    #[unique]
     pub email: Option<String>,
     pub password_hash: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum UserGroup {
+    Default,
     Admin,
-    Visitor,
     Custom(String),
 }
 
@@ -57,10 +56,13 @@ pub struct OAuthQueryParams {
 
 #[allow(dead_code)]
 trait AuthBackend:
-    AuthnBackend<User = User, Credentials = Credentials, Error = AuthError> + SessionStore
+    AuthnBackend<User = User, Credentials = Credentials, Error = authn::AuthError>
+    + SessionStore
+    + Send
+    + Sync
 {
 }
-impl AuthBackend for DbStorage {}
+impl AuthBackend for Prest {}
 
 pub const LOGIN_ROUTE: &str = "/auth/login";
 pub const LOGOUT_ROUTE: &str = "/auth/logout";
@@ -68,14 +70,14 @@ pub const GOOGLE_LOGIN_ROUTE: &str = "/auth/google";
 pub const GOOGLE_CALLBACK_ROUTE: &str = "/auth/google/callback";
 
 pub fn init_auth_module() -> Result<(AuthLayer, Router)> {
-    let mut session_layer = SessionManagerLayer::new(DB.storage())
+    let mut session_layer = SessionManagerLayer::new(Prest)
         .with_name("prest_session")
         .with_same_site(tower_sessions::cookie::SameSite::Lax)
         .with_expiry(Expiry::OnInactivity(time::Duration::days(30)));
     if let Some(domain) = APP_CONFIG.domain {
         session_layer = session_layer.with_domain(domain);
     }
-    let layer = AuthManagerLayerBuilder::new(DB.storage(), session_layer).build();
+    let layer = AuthManagerLayerBuilder::new(Prest, session_layer).build();
 
     let mut router = route(LOGIN_ROUTE, post(login)).route(LOGOUT_ROUTE, get(logout));
 
@@ -93,7 +95,7 @@ impl User {
         Self {
             id: Uuid::now_v7(),
             permissions: vec![],
-            group: UserGroup::Visitor,
+            group: UserGroup::Default,
             username: None,
             email: Some(email),
             password_hash: None,
@@ -103,7 +105,7 @@ impl User {
         Self {
             id: Uuid::now_v7(),
             permissions: vec![],
-            group: UserGroup::Visitor,
+            group: UserGroup::Default,
             username: Some(username),
             email: None,
             password_hash: Some(generate_hash(password)),
@@ -113,7 +115,7 @@ impl User {
         Self {
             id: Uuid::now_v7(),
             permissions: vec![],
-            group: UserGroup::Visitor,
+            group: UserGroup::Default,
             username: None,
             email: Some(email),
             password_hash: Some(generate_hash(password)),
@@ -308,183 +310,6 @@ impl AuthUser for User {
             username.as_bytes()
         } else {
             self.id.as_bytes()
-        }
-    }
-}
-
-use thiserror::Error;
-#[derive(Error, Debug)]
-pub enum AuthError {
-    #[error("User not found: {0}")]
-    UserNotFound(String),
-    #[error("Failed to load: {0}")]
-    DbError(String),
-}
-
-#[async_trait]
-impl AuthnBackend for DbStorage {
-    type User = User;
-    type Credentials = Credentials;
-    type Error = AuthError;
-
-    async fn authenticate(
-        &self,
-        creds: Self::Credentials,
-    ) -> std::result::Result<Option<Self::User>, Self::Error> {
-        match creds {
-            Credentials::GoogleOpenID { code, nonce } => {
-                if !*WITH_GOOGLE_AUTH {
-                    warn!("Attempted to authenticate with google credentials without google credentials!");
-                    return Ok(None); // TODO an error here
-                }
-                let Ok(email) = GOOGLE_CLIENT.get_email(code, nonce).await else {
-                    return Ok(None); // TODO an error here
-                };
-                let maybe_user = match User::select_by_email(&email).await {
-                    Ok(v) => v,
-                    Err(e) => return Err(AuthError::DbError(format!("User load error: {e}"))),
-                };
-                match maybe_user {
-                    Some(user) => Ok(Some(user)),
-                    None => {
-                        let user = User::from_email(email);
-                        user.save()
-                            .await
-                            .map_err(|e| AuthError::UserNotFound(e.to_string()))?;
-                        Ok(Some(user))
-                    }
-                }
-            }
-            Credentials::UsernamePassword { username, password } => {
-                let maybe_user = match User::select_by_username(&username).await {
-                    Ok(v) => v,
-                    Err(e) => return Err(AuthError::DbError(format!("User load error: {e}"))),
-                };
-
-                let Some(user) = maybe_user else {
-                    return Ok(None); // TODO an error here
-                };
-                let Some(pw_hash) = &user.password_hash else {
-                    return Ok(None); // TODO an error here
-                };
-                let Ok(()) = verify_password(password, pw_hash) else {
-                    return Ok(None); // TODO an error here
-                };
-                Ok(Some(user))
-            }
-            Credentials::EmailPassword { email, password } => {
-                let maybe_user = match User::select_by_email(&email).await {
-                    Ok(v) => v,
-                    Err(e) => return Err(AuthError::DbError(format!("User load error: {e}"))),
-                };
-
-                let Some(user) = maybe_user else {
-                    return Ok(None); // TODO an error here
-                };
-                let Some(pw_hash) = &user.password_hash else {
-                    return Ok(None); // TODO an error here
-                };
-                let Ok(()) = verify_password(password, pw_hash) else {
-                    return Ok(None); // TODO an error here
-                };
-                Ok(Some(user))
-            }
-        }
-    }
-
-    async fn get_user(
-        &self,
-        user_id: &axum_login::UserId<Self>,
-    ) -> std::result::Result<Option<Self::User>, Self::Error> {
-        let maybe_user = match User::select_by_id(user_id).await {
-            Ok(v) => v,
-            Err(e) => return Err(AuthError::DbError(format!("User load error: {e}"))),
-        };
-        Ok(maybe_user)
-    }
-}
-
-pub type Permission = String;
-
-#[async_trait]
-impl AuthzBackend for DbStorage {
-    type Permission = Permission;
-
-    async fn get_user_permissions(
-        &self,
-        user: &Self::User,
-    ) -> std::result::Result<HashSet<Self::Permission>, Self::Error> {
-        Ok(user.permissions.iter().map(|s| s.to_owned()).collect())
-    }
-
-    async fn get_group_permissions(
-        &self,
-        user: &Self::User,
-    ) -> std::result::Result<HashSet<Self::Permission>, Self::Error> {
-        Ok(user.permissions.iter().map(|s| s.to_owned()).collect())
-    }
-
-    async fn get_all_permissions(
-        &self,
-        user: &Self::User,
-    ) -> std::result::Result<HashSet<Self::Permission>, Self::Error> {
-        Ok(user.permissions.iter().map(|s| s.to_owned()).collect())
-    }
-
-    async fn has_perm(
-        &self,
-        user: &Self::User,
-        perm: Self::Permission,
-    ) -> std::result::Result<bool, Self::Error> {
-        Ok(user.permissions.iter().find(|p| **p == perm).is_some())
-    }
-}
-
-#[derive(Table, Debug, Serialize, Deserialize)]
-pub struct SessionRow {
-    pub id: i128,
-    pub record: String,
-}
-
-#[async_trait]
-impl SessionStore for DbStorage {
-    async fn save(&self, record: &Record) -> SessionResult<()> {
-        let id = record.id.0;
-        let record = match to_json_string(record) {
-            Ok(s) => s,
-            Err(e) => return Err(SessionError::Encode(format!("{e}"))),
-        };
-        match (SessionRow { id, record }).save().await {
-            Ok(_) => Ok(()),
-            Err(e) => Err(SessionError::Backend(format!("Session save error: {e}"))),
-        }
-    }
-
-    async fn load(&self, session_id: &Id) -> SessionResult<Option<Record>> {
-        let search = match SessionRow::select_by_id(&session_id.0).await {
-            Ok(v) => v,
-            Err(e) => {
-                return Err(SessionError::Backend(format!(
-                    "Failed to load session: {e}"
-                )))
-            }
-        };
-
-        let Some(session_row) = search else {
-            return Ok(None);
-        };
-        match from_json_str(&session_row.record) {
-            Ok(record) => Ok(Some(record)),
-            Err(e) => Err(SessionError::Decode(format!("Session load error: {e}"))),
-        }
-    }
-
-    async fn delete(&self, session_id: &Id) -> SessionResult<()> {
-        match SessionRow::delete_by_pkey(session_id.0).await {
-            Ok(_) => Ok(()),
-            Err(e) => Err(SessionError::Backend(format!(
-                "Session deletion error: {e}"
-            ))),
         }
     }
 }

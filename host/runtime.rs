@@ -104,9 +104,8 @@ impl PrestRuntime {
         }
         debug!(target:"runtime", "Awaited scheduled tasks completion");
 
-        // flushing dirty db writes
         #[cfg(feature = "db")]
-        DB.flush().await;
+        DB.shutdown();
         debug!(target:"runtime", "Flushed the DB");
 
         warn!(target:"runtime", "Finished shutdown procedures");
@@ -146,7 +145,7 @@ impl std::ops::Deref for PrestRuntime {
 }
 
 /// Describes collected stats for scheduled jobs
-#[derive(Debug, Table, Clone, Serialize, Deserialize)]
+#[derive(Debug, Storage, Clone, Serialize, Deserialize)]
 pub struct ScheduledJobRecord {
     pub id: Uuid,
     pub name: String,

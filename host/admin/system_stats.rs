@@ -1,43 +1,43 @@
 use crate::*;
 use chrono::{TimeDelta, Utc};
-use host::{system_info::SystemStat, LOGS_INFO_NAME, LOGS_TRACES_NAME};
+use host::{
+    system_info::{SystemStat, SYSTEM_INFO_RECORD_PERIOD},
+    LOGS_INFO_NAME, LOGS_TRACES_NAME,
+};
 
 pub(crate) async fn full() -> Result<Markup> {
-    const MAX_COUNT: usize = 100;
+    // past 10 mins by default
     let max = Utc::now().naive_utc();
-    let min = max - TimeDelta::try_hours(24).unwrap();
+    let min = max - TimeDelta::try_minutes(10).unwrap();
     let records = SystemStat::find_in_range_timestamp(&min, &max).await?;
-
     let count = records.len();
 
-    let records = if count > MAX_COUNT {
-        records
-            .chunks(count.div_ceil(MAX_COUNT))
-            .fold(vec![], |mut chunked, stats| {
-                let chunk_size = stats.len();
-                let chunk = stats.iter().fold(
-                    (0.0, 0.0, 0, 0),
-                    |(app_cpu, other_cpu, app_ram, other_ram), stat| {
-                        (
-                            app_cpu + stat.app_cpu,
-                            other_cpu + stat.other_cpu,
-                            app_ram + stat.app_ram,
-                            other_ram + stat.other_ram,
-                        )
-                    },
-                );
-                chunked.push(SystemStat {
-                    timestamp: stats[0].timestamp,
-                    app_cpu: chunk.0 / chunk_size as f32,
-                    other_cpu: chunk.1 / chunk_size as f32,
-                    app_ram: chunk.2 / chunk_size as u32,
-                    other_ram: chunk.3 / chunk_size as u32,
-                });
-                chunked
-            })
-    } else {
-        records
-    };
+    // TODO: move chunking to
+    // const CHUNK_SIZE: usize = 5;
+    // let records = records
+    //     .chunks(CHUNK_SIZE)
+    //     .fold(vec![], |mut chunked, stats| {
+    //         let chunk_size = stats.len();
+    //         let chunk = stats.iter().fold(
+    //             (0.0, 0.0, 0, 0),
+    //             |(app_cpu, other_cpu, app_ram, other_ram), stat| {
+    //                 (
+    //                     app_cpu + stat.app_cpu,
+    //                     other_cpu + stat.other_cpu,
+    //                     app_ram + stat.app_ram,
+    //                     other_ram + stat.other_ram,
+    //                 )
+    //             },
+    //         );
+    //         chunked.push(SystemStat {
+    //             timestamp: stats[0].timestamp,
+    //             app_cpu: chunk.0 / chunk_size as f32,
+    //             other_cpu: chunk.1 / chunk_size as f32,
+    //             app_ram: chunk.2 / chunk_size as u32,
+    //             other_ram: chunk.3 / chunk_size as u32,
+    //         });
+    //         chunked
+    //     });
 
     let max_cpu = records
         .iter()
@@ -75,7 +75,7 @@ pub(crate) async fn full() -> Result<Markup> {
     let max_cpu = format!("{:.1}", max_cpu);
 
     ok(html!(
-        $"w-full" get="/admin/system_stats" trigger="load delay:30s" swap-this {
+        $"w-full" get="/admin/system_stats" trigger={"load delay:"(SYSTEM_INFO_RECORD_PERIOD)"s"} swap-this {
             $"w-full flex gap-4" {
                 $"w-1/2 h-full flex flex-col" {
                     $"font-bold text-lg" {"CPU usage"}

@@ -2,7 +2,7 @@ use prest::*;
 use reqwest::get as fetch;
 use scraper::{Html, Selector};
 
-#[derive(Table, Serialize, Deserialize)]
+#[derive(Storage, Serialize, Deserialize)]
 struct Story {
     pub title: String,
     pub content: String,
@@ -21,7 +21,7 @@ async fn main() -> Result {
         "/",
         get(|| async {
             ok(html!(html {(Head::with_title("With scraping"))
-                body { @for story in Story::select_all().await? {
+                body { @for story in Story::get_all().await? {
                     div $"my-2" {
                         h3 {(story.title)}
                         div $"text-sm" {(format!("{:.150}...", story.content))}

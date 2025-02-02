@@ -79,36 +79,36 @@ html!{
 For more details about these tools I suggest checking out their docs, overall they are pretty simple and intuitive by themselves but powerful enough for the vast majority of apps. Default prest bundle includes tailwind's presets and patched htmx version which sends non-GET request payloads in json format to easily use with `Vals` and includes a few other tweaks for better compatability.
 
 #### Database
-Embedded DB that works without running separate services based on [GlueSQL](https://gluesql.org/docs) for compatibility with SQL and [sled](https://github.com/spacejam/sled) for high-performance storage. Prest enchances them with the `Table` macro to automatically derive schema based on usual rust structs, and some helper functions to easily interact with the underlying tables without worrying about SQL injections:
+Embedded DB that works without running separate services based on [GlueSQL](https://gluesql.org/docs) for compatibility with SQL and [sled](https://github.com/spacejam/sled) for high-performance storage. Prest enchances them with the `Storage` macro to automatically derive schema based on usual rust structs, and some helper functions to easily interact with the underlying tables without worrying about SQL injections:
 
 ```rust
-#[derive(Table, Deserialize)]
+#[derive(Storage, Deserialize)]
 struct Todo {
     id: Uuid,
     task: String,
     done: bool,
 }
 ...
-Todo::select_all().await?;
+Todo::get_all().await?;
 Todo::select_by_task("Buy milk").await?;
 Todo::select()
     .filter(col("done").eq(true))
     .order_by("task")
-    .values()
+    .rows()
     .await?;
 
 let todo = Todo {
     id: Uuid::now_v7(),
-    task: "Buy bread".into(),
+    task: "Buy milk".into(),
     done: false,
 };
 todo.save().await?;
-todo.update_task("Buy candies").await?;
-assert!(todo.check_task("Buy candies").await?);
+todo.update_done(true).await?;
+assert!(todo.check_done(true).await?);
 todo.remove().await?;
 ```
 
-It's aimed to support all the basic types supported by GlueSQL, `Option`, `Vec`, as well as custom ones which can be serialized/deserialized. As of now `Table` also requires derived `Deserialize` trait for the DB editor in the...
+It's aimed to support all the basic types supported by GlueSQL, `Option`, `Vec`, as well as custom ones which can be serialized/deserialized. As of now `Storage` also requires derived `Deserialize` trait for the DB editor in the...
 
 #### Admin panel
 Monitors host system's resources, collects filtered stats for requests/responses with their timings, high-level info and detailed traces, provides read/write GUI to tables, tracks scheduled tasks, and provide controls over remote host in local builds. While blog intentionally exposes access to it for demo purposes (cog in the menu), by default it is protected by...
@@ -131,7 +131,7 @@ route("/optional", get(|auth: Auth| async {"auth.user is Option<User>"}));
 To enable it you'll need the `auth` feature of prest:
 
 ```toml
-prest = { version = "0.4", features = ["auth"] }
+prest = { version = "0.5", features = ["auth"] }
 ```
 
 If someone requests a route which requires authorization `401 Unauthorized` error will be returned.
@@ -253,7 +253,7 @@ To embed the compiled assets into the host you can use the same `embed_build_out
 Running host functionality with a webview for offline-first apps. Somewhat like Electron but with much smaller and faster binaries. Based on the same libraries as [Tauri](https://tauri.app/) but for rust-first apps. To build for desktops just enable webview feature like this:
 
 ```toml
-prest = { version = "0.4", features = ["webview"] }
+prest = { version = "0.5", features = ["webview"] }
 ```
 
 This is quite different from server-first or PWA apps and require quite different architecture, especially around auth and similar components. For mobile platforms you'll need to do [some work](https://github.com/tauri-apps/wry/blob/dev/MOBILE.md) as of now, but hopefully this will be mostly automated as well.
@@ -275,28 +275,3 @@ Prest tutorials are designed to start from basics and then add more and more fea
 There are also todo examples with alternative databases - postgres through [seaorm](https://prest.blog/postgres-seaorm) or [diesel](https://prest.blog/postgres-diesel), sqlite through [sqlx](https://prest.blog/sqlite-sqlx) or [turbosql](https://prest.blog/sqlite-turbosql), [mongo](https://prest.blog/mongo-driver), [redis](https://prest.blog/redis-driver). Also, there is a couple of examples that showcase how one might use prest with uncommon for web development tech: [web scraper](https://prest.blog/scraper), [Large Language Model](https://prest.blog/llm-mistral) and [Solana blockchain program](https://prest.blog/solana).
 
 To run locally you'll need the latest stable [rust toolchain](https://rustup.rs/). I also recommend setting up the [rust-analyzer](https://rust-analyzer.github.io/) for your favourite IDE right away. To build & start any example from the cloned prest repo use `cargo run -p EXAMPLE-NAME`. Or just copy the selected example's code from the tutorials into local files and `cargo run` it. Some examples require additional setup and credentials which are mentioned in their docs.
-
-### what's next
-
-This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
-+ schema changes validations, automigrations like turbosql
-+ add replication and/or backup+import
-+ auth upgrades - simpler UX + DX, support more providers/methods
-+ subdomains and multiple-services on single machine support
-+ example with react-based islands built with bun?
-+ [rust-i18n](https://github.com/longbridgeapp/rust-i18n) or another i18n solution
-+ `axum-valid`-like integration for `Vals` or smth alike
-
-Some ideas are more complex/crazy but interesting:
-+ example with a built-in minimalistic polkadot chain - customizable + optionally distributed + optionally public DB
-+ web3 tooling for the frontend, either with the above polkadot idea or for solana, with as little JS as possible
-+ GlueSQL-based persistent DB in the SW that syncs with the host (meteor-like)
-
-There are also longer term things which will be needed or nice to have before the stable release of prest:
-* stabilization of async iterator and other basic concurrent std apis
-* stable releases of most important dependencies like axum and sled 
-* parallel frontend and cranelift backend of the rust compiler for faster builds
-* more optional configs all around for flexibility
-* find a way to re-export wasm-bindgen into the prest to avoid need for other deps 
-* better Service Worker DX in Rust
-* wider range of examples: interactive UIs, mobile builds, webgpu-based LLMs, ...?

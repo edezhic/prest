@@ -10,7 +10,7 @@ This might not be the idiomatic rust way, but it's more beginner friendly in my 
 
 {src/main.rs:3-10}
 
-Here we have serialization traits and defaults to be able to deserialize a todo value from just the `task` field. Also, there is a `Table` derive macro that implements a trait with the same name and a couple of helper methods which will allow us to easily work with a gluesql `Todos`(struct name + `s`) table. 
+Here we have serialization traits and defaults to be able to deserialize a todo value from just the `task` field. Also, there is a `Storage` derive macro that implements a trait with the same name and a couple of helper methods which will allow us to easily work with a gluesql `Todos`(struct name + `s`) table. 
 
 Then there is a manual implementation of the `Render` trait which will allow us to use todo values directly in the markup:
 

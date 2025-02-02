@@ -11,6 +11,7 @@ state!(INTERNALS: String = {
     md_to_html(&processed)
 });
 state!(RUST: String = { md_to_html(include_str!("../../../RUST.md")) });
+state!(WHATS_NEXT: String = { md_to_html(include_str!("../../../WHATS_NEXT.md")) });
 state!(PREST_VERSION: String = {
     let manifest = include_str!("../../../Cargo.toml").parse::<toml::Table>().unwrap();
     manifest["package"]["version"].as_str().unwrap().to_owned()

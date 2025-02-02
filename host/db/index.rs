@@ -1,24 +1,23 @@
 use {
     super::{
-        err_into,
         index_sync::{build_index_key, build_index_key_prefix},
-        lock, SharedSledStorage, Snapshot, State,
+        AsStorageError, Snapshot, DbConn,
     },
     async_trait::async_trait,
     futures::stream::iter,
-    gluesql::core::{
+    gluesql_core::{
         ast::IndexOperator,
         data::{Key, Value},
-        error::{Error, IndexError, Result},
+        error::{IndexError, Result},
         store::{DataRow, Index, RowIter},
     },
     iter_enum::{DoubleEndedIterator, Iterator},
-    sled::IVec,
+    sled::InlineArray,
     std::iter::{empty, once},
 };
 
 #[async_trait(?Send)]
-impl Index for SharedSledStorage {
+impl<'a> Index for DbConn<'a> {
     async fn scan_indexed_data(
         &self,
         table_name: &str,
@@ -26,7 +25,6 @@ impl Index for SharedSledStorage {
         asc: Option<bool>,
         cmp_value: Option<(&IndexOperator, Value)>,
     ) -> Result<RowIter> {
-        let db = self.state.db.read().await;
         let data_keys = {
             #[derive(Iterator, DoubleEndedIterator)]
             enum DataIds<I1, I2, I3, I4> {
@@ -42,7 +40,7 @@ impl Index for SharedSledStorage {
                 None => {
                     let prefix = build_index_key_prefix(table_name, index_name);
 
-                    DataIds::Full(db.tree.scan_prefix(prefix).map(map))
+                    DataIds::Full(self.tree.scan_prefix(prefix).map(map))
                 }
                 Some((op, value)) => {
                     let incr = |key: Vec<u8>| {
@@ -66,38 +64,30 @@ impl Index for SharedSledStorage {
                     let key = build_index_key(table_name, index_name, value)?;
 
                     match op {
-                        IndexOperator::Eq => match db.tree.get(&key).transpose() {
+                        IndexOperator::Eq => match self.tree.get(&key).transpose() {
                             Some(v) => DataIds::Once(once(v)),
                             None => DataIds::Empty(empty()),
                         },
                         IndexOperator::Gt => {
-                            DataIds::Range(db.tree.range(incr(key)..upper()).map(map))
+                            DataIds::Range(self.tree.range(incr(key)..upper()).map(map))
                         }
-                        IndexOperator::GtEq => DataIds::Range(db.tree.range(key..upper()).map(map)),
-                        IndexOperator::Lt => DataIds::Range(db.tree.range(lower()..key).map(map)),
+                        IndexOperator::GtEq => {
+                            DataIds::Range(self.tree.range(key..upper()).map(map))
+                        }
+                        IndexOperator::Lt => DataIds::Range(self.tree.range(lower()..key).map(map)),
                         IndexOperator::LtEq => {
-                            DataIds::Range(db.tree.range(lower()..=key).map(map))
+                            DataIds::Range(self.tree.range(lower()..=key).map(map))
                         }
                     }
                 }
             }
         };
 
-        let (txid, created_at) = match db.state {
-            State::Transaction {
-                txid, created_at, ..
-            } => (txid, created_at),
-            State::Idle => {
-                return Err(Error::StorageMsg(
-                    "conflict - scan_indexed_data failed, lock does not exist".to_owned(),
-                ));
-            }
-        };
-        let lock_txid = lock::fetch(&db.tree, txid, created_at, db.tx_timeout)?;
+        // let txid = self.state.txid;
 
         let prefix_len = build_index_key_prefix(table_name, index_name).len();
-        let tree = db.tree.clone();
-        let flat_map = move |keys: Result<IVec>| {
+        let tree = self.tree.clone();
+        let flat_map = move |keys: Result<InlineArray>| {
             #[derive(Iterator)]
             enum Rows<I1, I2> {
                 Ok(I1),
@@ -117,13 +107,13 @@ impl Index for SharedSledStorage {
 
             let keys = try_into!(keys);
             let keys: Vec<Snapshot<Vec<u8>>> =
-                try_into!(bincode::deserialize(&keys).map_err(err_into));
+                try_into!(bitcode::deserialize(&keys).as_storage_err());
 
             let tree2 = tree.clone();
             let rows = keys
                 .into_iter()
                 .map(move |key_snapshot| -> Result<_> {
-                    let key = match key_snapshot.extract(txid, lock_txid) {
+                    let key = match key_snapshot.take(self.state) {
                         Some(key) => key,
                         None => {
                             return Ok(None);
@@ -132,11 +122,11 @@ impl Index for SharedSledStorage {
 
                     let value = tree2
                         .get(&key)
-                        .map_err(err_into)?
+                        .as_storage_err()?
                         .ok_or(IndexError::ConflictOnEmptyIndexValueScan)?;
                     let snapshot: Snapshot<DataRow> =
-                        bincode::deserialize(&value).map_err(err_into)?;
-                    let row = snapshot.extract(txid, lock_txid);
+                        bitcode::deserialize(&value).as_storage_err()?;
+                    let row = snapshot.take(self.state);
                     let key = key.into_iter().skip(prefix_len).collect();
                     let item = row.map(|row| (Key::Bytea(key), row));
 
@@ -147,7 +137,7 @@ impl Index for SharedSledStorage {
             Rows::Ok(rows)
         };
 
-        let data_keys = data_keys.map(|v| v.map_err(err_into));
+        let data_keys = data_keys.map(|v| v.as_storage_err());
 
         Ok(match asc {
             Some(true) | None => Box::pin(iter(data_keys.flat_map(flat_map))),

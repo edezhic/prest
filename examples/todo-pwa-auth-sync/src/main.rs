@@ -5,7 +5,7 @@ embed_build_output_as!(BuiltAssets);
 
 state!(TODO_UPDATES: SseBroadcast<Option<Todo>> = { SseBroadcast::default() });
 
-#[derive(Table, Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Storage, Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 struct Todo {
     #[serde(default = "Uuid::now_v7")]
@@ -54,7 +54,7 @@ async fn main() -> Result {
                         }
                     }
                     div #"todos" $"w-full" sse="/todos/subscribe" sse-msg="add" swap-beforeend {
-                        @for item in Todo::select_all().await? {(item.render_for(&auth.user))}
+                        @for item in Todo::get_all().await? {(item.render_for(&auth.user))}
                     }
                 ))
             })

@@ -1,6 +1,6 @@
 use prest::*;
 
-#[derive(Table, Serialize, Deserialize)]
+#[derive(Storage, Serialize, Deserialize)]
 struct Todo {
     #[serde(default = "Uuid::now_v7")]
     pub id: Uuid,
@@ -38,7 +38,7 @@ async fn into_page(content: Markup) -> Markup {
 async fn main() -> Result {
     route(
         "/",
-        get(|| async { ok(Todo::select_all().await?.render()) })
+        get(|| async { ok(Todo::get_all().await?.render()) })
             .put(|todo: Vals<Todo>| async move { ok(todo.save().await?.render()) })
             .delete(|todo: Vals<Todo>| async move { ok(todo.remove().await?) })
             .patch(|Vals(mut todo): Vals<Todo>| async move {

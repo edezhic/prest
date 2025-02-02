@@ -8,9 +8,20 @@ pub use wasm_bindgen::prelude::wasm_bindgen;
 use wasm_bindgen::{JsCast, JsValue};
 pub use web_sys::{console, FetchEvent, ServiceWorkerGlobalScope};
 
-// TODO: figure out how to use gluesql::idb_storage::IdbStorage or another browser-based as PersistentStorage for SW
-#[cfg(feature = "db")]
-pub(crate) type PersistentStorage = gluesql::gluesql_shared_memory_storage::SharedMemoryStorage;
+impl Db {
+    pub(crate) fn init() -> Self {
+        // TODO: figure out how to use gluesql::idb_storage::IdbStorage or another browser-based for SW
+        let (write_sender, writes) = std::sync::mpsc::sync_channel::<DbWriteMessage>(1);
+        let (read_sender, reads) = std::sync::mpsc::sync_channel::<DbReadMessage>(1);
+        Db {
+            read: read_sender,
+            write: write_sender,
+            internal_schemas: Arc::new(vec![]),
+            custom_schemas: Default::default(),
+            handles: Arc::new(vec![]),
+        }
+    }
+}
 
 pub use futures::executor::block_on as await_blocking;
 

@@ -48,7 +48,7 @@ async fn into_page(content: Markup) -> impl IntoResponse {
                 button get="/admin" {div $"w-6" {(ADMIN_SVG)}}
                 button get="/admin/analytics" {div $"w-6" {(ANALYTICS_SVG)}}
                 button get="/admin/traces" {div $"w-6" {(LOGS_SVG)}}
-                @if DB.custom_tables().len() > 0 {
+                @if DB.custom_schemas().len() > 0 {
                     button get="/admin/db" {div $"w-6" {(DB_SVG)}}
                 }
             }

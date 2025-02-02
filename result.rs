@@ -38,33 +38,22 @@ pub enum Error {
     Session(#[from] tower_sessions::session_store::Error),
     #[cfg(all(host, feature = "auth"))]
     #[error(transparent)]
-    AuthBackend(#[from] crate::host::auth::AuthError),
+    Auth(#[from] crate::host::auth::authn::AuthError),
     #[cfg(all(host, feature = "auth"))]
     #[error(transparent)]
-    AxumLogin(#[from] ::axum_login::Error<DbStorage>),
+    Login(#[from] ::axum_login::Error<Prest>),
     #[cfg(all(host, feature = "auth"))]
     #[error(transparent)]
-    OAuth(#[from] openidconnect::ClaimsVerificationError),
+    OpenIDClaimVerification(#[from] openidconnect::ClaimsVerificationError),
     #[cfg(feature = "db")]
     #[error(transparent)]
-    GlueSQL(#[from] gluesql::core::error::Error),
+    SQL(#[from] gluesql_core::error::Error),
     #[cfg(all(host, feature = "db"))]
-    #[error(transparent)]
-    Sled(#[from] ::sled::Error),
-    #[cfg(all(host, feature = "db"))]
-    #[error(transparent)]
-    SledTransactionError(#[from] ::sled::transaction::TransactionError),
-    #[cfg(all(host, feature = "db"))]
-    #[error(transparent)]
-    SledUnabortableTransactionError(#[from] ::sled::transaction::UnabortableTransactionError),
-    #[cfg(all(host, feature = "db"))]
-    #[error(transparent)]
-    SledConflictableTransactionError(#[from] ::sled::transaction::ConflictableTransactionError),
-    #[cfg(all(host, feature = "db"))]
-    #[error(transparent)]
-    Bincode(#[from] bincode::Error),
     #[error(transparent)]
     IO(#[from] std::io::Error),
+    #[cfg(all(host, feature = "db"))]
+    #[error(transparent)]
+    Bincode(#[from] bitcode::Error),
     #[error(transparent)]
     FormRejection(#[from] axum::extract::rejection::FormRejection),
     #[error(transparent)]
@@ -77,6 +66,9 @@ pub enum Error {
     #[cfg(host)]
     #[error(transparent)]
     RuSFTP(#[from] russh_sftp::client::error::Error),
+    #[cfg(host)]
+    #[error(transparent)]
+    Channel(#[from] tokio::sync::oneshot::error::RecvError),
     #[error("{0:?}")]
     Any(AnyError),
 }
@@ -89,9 +81,10 @@ impl IntoResponse for Error {
             Error::JsonRejection(e) => e.into_response(),
             Error::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
             #[cfg(all(host, feature = "auth"))]
-            Error::AxumLogin(_) | Error::AuthBackend(_) | Error::Session(_) | Error::OAuth(_) => {
-                StatusCode::UNAUTHORIZED.into_response()
-            }
+            Error::Login(_)
+            | Error::Auth(_)
+            | Error::Session(_)
+            | Error::OpenIDClaimVerification(_) => StatusCode::UNAUTHORIZED.into_response(),
             Error::NotFound => StatusCode::NOT_FOUND.into_response(),
             _ => {
                 error!("{self}");
@@ -136,11 +129,11 @@ macro_rules! e {
     };
 }
 
-#[cfg(host)]
-impl From<::sled::transaction::ConflictableTransactionError<Box<bincode::ErrorKind>>> for Error {
-    fn from(
-        value: ::sled::transaction::ConflictableTransactionError<Box<bincode::ErrorKind>>,
-    ) -> Self {
-        e!("{value}")
-    }
-}
+// #[cfg(host)]
+// impl From<::sled::transaction::ConflictableTransactionError<Box<bitcode::ErrorKind>>> for Error {
+//     fn from(
+//         value: ::sled::transaction::ConflictableTransactionError<Box<bitcode::ErrorKind>>,
+//     ) -> Self {
+//         e!("{value}")
+//     }
+// }

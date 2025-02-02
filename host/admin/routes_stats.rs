@@ -1,7 +1,7 @@
 use crate::{analytics::RouteStat, *};
 
 pub(crate) async fn full() -> Result<Markup> {
-    let routes_stats = RouteStat::select_all().await?;
+    let routes_stats = RouteStat::get_all().await?;
     let mut total_path_hits = 0;
 
     type Stats = Vec<(Markup, Markup, u64, Markup)>;

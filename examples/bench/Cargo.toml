@@ -1,0 +1,7 @@
+[package]
+name = "bench"
+edition = "2021"
+
+[dependencies]
+prest = { path = "../../", features = ["experimental"] }
+fastrand = "2"

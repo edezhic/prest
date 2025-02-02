@@ -15,7 +15,7 @@ pub fn into_glue_expr(column: &Column, path: TokenStream, deref: bool, inner: bo
             let literal = |ts: TokenStream| q!(sql::Expr::Literal(sql::AstLiteral::#ts));
 
             let item_into_expr = match sql_type {
-                _ if *serialized => literal(q!(QuotedString(prest::to_json_string(item)?))),
+                _ if *serialized => literal(q!(HexString(prest::hex::encode(prest::into_bitcode(item)?)))),
                 _ if sql_type.integer() => literal(q!(Number(item.into()))),
                 SqlType::Boolean => literal(q!(Boolean(*item))),
                 SqlType::Text => literal(q!(QuotedString(item.to_string()))),
@@ -30,9 +30,9 @@ pub fn into_glue_expr(column: &Column, path: TokenStream, deref: bool, inner: bo
                 sql::ExprNode::Expr(std::borrow::Cow::Owned(sql::Expr::Array { elem }))
             })
         }
-        (false, false, true) => q!(sql::text(prest::to_json_string(&#path)?)),
+        (false, false, true) => q!(sql::bytea(prest::into_bitcode(&#path)?)),
         (false, true, true) => q!(
-            if let Some(v) = &#path { sql::text(prest::to_json_string(v)?)}
+            if let Some(v) = &#path { sql::bytea(prest::into_bitcode(v)?)}
             else { sql::null() }
         ),
         (false, true, false) => {

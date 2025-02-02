@@ -1,215 +1,211 @@
-mod gluesql_traits;
-
-mod table;
-pub use table::*;
-
 use crate::*;
 
-use gluesql::{
-    core::{ast_builder::Build as BuildSQL, store::Transaction},
-    gluesql_shared_memory_storage::SharedMemoryStorage as MemoryStorage,
-    prelude::Glue,
+mod storage;
+pub use storage::*;
+
+mod key;
+pub use key::IntoSqlKey;
+
+use gluesql_core::{ast_builder::Build as BuildSQL, prelude::Glue};
+use std::sync::{
+    atomic::{AtomicBool, AtomicU64},
+    mpsc::{Receiver, SyncSender},
 };
 
 /// re-export of GlueSQL core AST builder and other utils
 pub mod sql {
-    pub use gluesql::core::ast::*;
-    pub use gluesql::core::ast_builder::*;
-    pub use gluesql::core::data::Value;
-    pub use gluesql::core::executor::Payload;
+    pub use gluesql_core::ast::*;
+    pub use gluesql_core::ast_builder::*;
+    pub use gluesql_core::data::{Key, Value};
+    pub use gluesql_core::executor::Payload;
+    pub use gluesql_core::store::DataRow;
+    pub use ordered_float::OrderedFloat;
 }
-pub use prest_db_macro::Table;
+pub use prest_db_macro::Storage;
+
+type Returner = async_oneshot_channel::Sender<Result<Payload>>;
+pub(crate) type DbReadMessage = (Query, Returner);
+pub(crate) type DbWriteMessage = (Transaction, Returner);
 
 pub(crate) const DB_DIRECTORY_NAME: &str = "db";
 
-/// Embedded database
+pub(crate) static TX_ID: AtomicU64 = AtomicU64::new(0);
+pub(crate) static TX_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
+
+state!(DB: Db = { Db::init() });
+
 pub struct Db {
-    storage: DbStorage,
-    internal_schemas: Arc<Vec<TableSchema>>,
-    custom_schemas: Arc<std::sync::RwLock<Vec<TableSchema>>>,
+    pub(crate) read: SyncSender<DbReadMessage>,
+    pub(crate) write: SyncSender<DbWriteMessage>,
+    // shutdown: Sender ? + fn shutdown() -> Result ?
+    pub(crate) internal_schemas: Arc<Vec<StructSchema>>,
+    pub(crate) custom_schemas: Arc<std::sync::RwLock<Vec<StructSchema>>>,
+    pub(crate) handles: Arc<Vec<std::thread::JoinHandle<Result>>>,
 }
 
-// Container for the [`Db`]
-state!(DB: Db = {
-    #[cfg(host)] {
-        let storage = if APP_CONFIG.persistent {
-            let mut db_path = APP_CONFIG.data_dir.clone();
-            db_path.push(DB_DIRECTORY_NAME);
-            let storage = PersistentStorage::new(db_path).expect("Database storage should initialize");
-            Persistent(storage)
-        } else {
-            Memory(MemoryStorage::default())
-        };
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Query {
+    SqlStatement(sql::Statement),
+    SqlString(String),
+    GetByPKey { name: &'static str, pkey: sql::Key },
+}
 
-        use crate::host::analytics::RouteStat;
-        #[allow(unused_mut)]
-        let mut internal_schemas = vec![ScheduledJobRecord::schema(), RouteStat::schema(), SystemStat::schema()];
-        #[cfg(feature = "auth")] {
-            internal_schemas.push(crate::host::auth::SessionRow::schema());
-            internal_schemas.push(crate::host::auth::User::schema());
-        }
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Transaction {
+    SqlStatement(sql::Statement),
+    SqlString(String),
+    Insert {
+        name: &'static str,
+        key: sql::Key,
+        row: Vec<sql::Value>,
+    },
+    Save {
+        name: &'static str,
+        key: sql::Key,
+        row: Vec<sql::Value>,
+    },
+    UpdateField {
+        name: &'static str,
+        key: sql::Key,
+        column: usize,
+        value: sql::Value,
+    },
+    Delete {
+        name: &'static str,
+        key: sql::Key,
+    },
+    #[cfg(feature = "experimental")]
+    Nuke,
+}
 
-        Db {
-            storage,
-            internal_schemas: Arc::new(internal_schemas),
-            custom_schemas: Default::default(),
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Payload {
+    Success,
+    Rows(Vec<Vec<sql::Value>>),
+    Affected(usize),
+    Sql(sql::Payload),
+}
+
+impl From<sql::Payload> for Payload {
+    fn from(value: sql::Payload) -> Self {
+        match value {
+            sql::Payload::Select { rows, .. } => Self::Rows(rows),
+            sql::Payload::Insert(usize) => Self::Affected(usize),
+            sql::Payload::Delete(usize) => Self::Affected(usize),
+            sql::Payload::Update(usize) => Self::Affected(usize),
+            other => Self::Sql(other),
         }
     }
-    #[cfg(sw)] {
-        Db {
-            storage: Memory(MemoryStorage::default()),
-            internal_schemas: Arc::new(vec![]),
-            custom_schemas: Default::default(),
-        }
-    }
-});
+}
 
 impl Db {
-    pub(crate) fn storage(&self) -> DbStorage {
-        self.storage.clone()
+    pub async fn read(&self, query: Query) -> Result<Payload> {
+        let (returner, result) = async_oneshot_channel::oneshot::<Result<Payload>>();
+        self.read.send((query, returner));
+        result.recv().await.ok_or(e!("missing db return"))?
     }
-    pub fn _register_table(&self, schema: TableSchema) {
+    pub async fn write(&self, tx: Transaction) -> Result<Payload> {
+        let (returner, result) = async_oneshot_channel::oneshot::<Result<Payload>>();
+        self.write.send((tx, returner));
+        result.recv().await.ok_or(e!("missing db return"))?
+    }
+
+    pub async fn read_sql(&self, sql: &str) -> Result<Payload> {
+        let (returner, result) = async_oneshot_channel::oneshot::<Result<Payload>>();
+        self.read.send((Query::SqlString(sql.to_owned()), returner));
+        result.recv().await.ok_or(e!("missing db return"))?
+    }
+
+    pub async fn read_sql_rows<T: Storage>(&self, sql: &str) -> Result<Vec<T>> {
+        let (returner, result) = async_oneshot_channel::oneshot::<Result<Payload>>();
+        self.read.send((Query::SqlString(sql.to_owned()), returner));
+        match result.recv().await.ok_or(e!("missing value"))?? {
+            Payload::Rows(rows) => rows.into_iter().map(T::from_row).collect(),
+            p => Err(e!("Got {p:?} instead of rows")),
+        }
+    }
+
+    pub async fn write_sql(&self, sql: &str) -> Result<Payload> {
+        let (returner, result) = async_oneshot_channel::oneshot::<Result<Payload>>();
+        self.write
+            .send((Transaction::SqlString(sql.to_owned()), returner));
+        result.recv().await.ok_or(e!("missing db return"))?
+    }
+
+    #[cfg(feature = "experimental")]
+    pub async fn nuke(&self) -> Result<Payload> {
+        let (returner, result) = async_oneshot_channel::oneshot::<Result<Payload>>();
+        warn!("nuking the database");
+        self.write.send((Transaction::Nuke, returner));
+        result.recv().await.ok_or(e!("missing db return"))?
+    }
+
+    pub fn _register_schema(&self, schema: StructSchema) {
         self.custom_schemas.write().unwrap().push(schema);
     }
-    pub(crate) fn custom_tables(&self) -> Vec<TableSchema> {
+    pub(crate) fn custom_schemas(&self) -> Vec<StructSchema> {
         self.custom_schemas.read().unwrap().clone()
+    }
+    pub(crate) fn fetch_glue_schema(&self, table_name: &str) -> Option<gluesql_core::data::Schema> {
+        if let Some(schema) = self
+            .internal_schemas
+            .iter()
+            .find(|s| s.name() == table_name)
+        {
+            Some(into_glue_schema(*schema))
+        } else if let Some(schema) = self
+            .custom_schemas
+            .read()
+            .unwrap()
+            .iter()
+            .find(|s| s.name() == table_name)
+        {
+            Some(into_glue_schema(*schema))
+        } else {
+            None
+        }
+    }
+    pub(crate) fn fetch_all_glue_schemas(&self) -> Vec<gluesql_core::data::Schema> {
+        let mut schemas = self
+            .internal_schemas
+            .iter()
+            .map(|s| into_glue_schema(*s))
+            .collect::<Vec<_>>();
+        schemas.extend(
+            self.custom_schemas
+                .read()
+                .unwrap()
+                .iter()
+                .map(|s| into_glue_schema(*s)),
+        );
+        schemas
     }
     pub async fn migrate(&self) -> Result {
         let mut all_tables = (*self.internal_schemas).clone();
-        all_tables.extend(self.custom_tables().into_iter());
-
-        // let names: Vec<&'static str> = all_tables.iter().map(|t| t.name()).collect();
-
-        // let DbStorage::Persistent(PersistentStorage { state }) = &DB.storage() else {
-        //     return Ok(());
-        // };
-
-        // for name in names {
-        //     let tree = state
-        //         .db
-        //         .read()
-        //         .await
-        //         .tree
-        //         .transaction(move |tx_tree| sled::fetch_schema(tx_tree, name));
-        //     info!("{:?}", tree);
-        // }
-
-        // naive migration
-        for table in all_tables {
-            Self::create_if_not_exists(table).await?;
-        }
-
+        all_tables.extend(self.custom_schemas().into_iter());
         Ok(())
     }
-
-    async fn create_if_not_exists(table: TableSchema) -> Result {
-        let mut stmt = sql::table(table.name()).create_table_if_not_exists();
-        for ColumnSchema {
-            name,
-            sql_type,
-            unique,
-            pkey,
-            list,
-            optional,
-            ..
-        } in table.columns()
-        {
-            let col = if *list {
-                format!("{name} LIST")
-            } else {
-                let unique = if !*pkey && *unique { " UNIQUE" } else { "" };
-                let pkey = if *pkey { " PRIMARY KEY" } else { "" };
-                let optional = if *optional { "" } else { " NOT NULL" };
-                format!("{name} {sql_type}{pkey}{unique}{optional}")
-            };
-            stmt = stmt.add_column(col.as_str());
-        }
-        stmt.exec().await?;
-        Ok(())
+    pub fn shutdown(&self) -> Result {
+        // TODO: stop receiving on the write thread and flush?
+        OK
     }
 }
 
-#[derive(Clone, Debug)]
-#[doc(hidden)]
-pub enum DbStorage {
-    Memory(MemoryStorage),
-    Persistent(PersistentStorage),
-}
-use DbStorage::*;
-
-/// Interface for the [`DB`]
-#[doc(hidden)]
+/// Simplified interface for gluesql AST queries to run in the [`DB`]
 #[async_trait]
-pub trait DbAccess {
-    async fn query(&self, query: &str) -> Result<Vec<sql::Payload>>;
-    async fn flush(&self);
-}
-
-#[async_trait]
-impl DbAccess for Lazy<Db> {
-    async fn query(&self, query: &str) -> Result<Vec<sql::Payload>> {
-        // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1265
-        let payload = await_blocking(async move { Glue::new(DB.storage()).execute(query).await })?;
-        Ok(payload)
+pub trait SqlExecutable: BuildSQL + Sized {
+    async fn read(self) -> Result<Payload> {
+        Ok(DB.read(Query::SqlStatement(self.build()?)).await?)
     }
-
-    async fn flush(&self) {
-        #[cfg(not(target_arch = "wasm32"))]
-        match DB.storage() {
-            Memory(_) => (),
-            Persistent(mut store) => {
-                // if there is an active transaction, rollback
-                if store
-                    .state
-                    .in_progress
-                    .load(std::sync::atomic::Ordering::Acquire)
-                {
-                    if let Err(err) = crate::host::await_blocking(async { store.rollback().await })
-                    {
-                        warn!(target: "db", "error rolling back transaction: {:?}", err);
-                    }
-                }
-                if let Err(e) = store.flush() {
-                    error!(target:"db", "flushing DB failed with: {e}");
-                }
-            }
+    async fn write(self) -> Result<Payload> {
+        Ok(DB.write(Transaction::SqlStatement(self.build()?)).await?)
+    }
+    async fn rows<T: storage::Storage>(self) -> Result<Vec<T>> {
+        match self.read().await {
+            Ok(Payload::Rows(rows)) => rows.into_iter().map(T::from_row).collect(),
+            Ok(p) => return Err(e!("rows method used on query which returned: {:?}", p)),
+            Err(e) => Err(e),
         }
     }
 }
-
-/// Simplified interface for queries to run with [`DB`]
-#[async_trait]
-pub trait DbExecutable {
-    async fn exec(self) -> Result<sql::Payload>;
-    async fn rows(self) -> Result<Vec<Vec<sql::Value>>>;
-    async fn values<T: Table>(self) -> Result<Vec<T>>;
-}
-
-#[async_trait]
-impl<Q: BuildSQL + Send> DbExecutable for Q {
-    async fn exec(self) -> Result<sql::Payload> {
-        let statement = self.build()?;
-        // temporary workaround until Glue futures implement Send https://github.com/gluesql/gluesql/issues/1265
-        let payload =
-            await_blocking(async move { Glue::new(DB.storage()).execute_stmt(&statement).await })?;
-        Ok(payload)
-    }
-
-    async fn rows(self) -> Result<Vec<Vec<sql::Value>>> {
-        match self.exec().await {
-            Ok(sql::Payload::Select { rows, .. }) => Ok(rows),
-            Ok(p) => {
-                return Err(e!(
-                    "rows method used on non-select query which returned: {:?}",
-                    p
-                ))
-            }
-            Err(e) => return Err(e!("query execution failed: {e:?}")),
-        }
-    }
-
-    async fn values<T: Table>(self) -> Result<Vec<T>> {
-        let rows = self.rows().await?;
-        rows.into_iter().map(T::from_row).collect()
-    }
-}
+impl<T> SqlExecutable for T where T: BuildSQL + Send + Sized {}

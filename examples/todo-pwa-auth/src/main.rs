@@ -3,7 +3,7 @@ use todo_pwa_auth::{into_page, shared_routes};
 
 embed_build_output_as!(BuiltAssets);
 
-#[derive(Table, Default, Serialize, Deserialize)]
+#[derive(Storage, Default, Serialize, Deserialize)]
 #[serde(default)]
 struct Todo {
     #[serde(default = "Uuid::now_v7")]

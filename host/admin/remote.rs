@@ -74,17 +74,26 @@ pub(crate) async fn start_deploy() -> impl IntoResponse {
     remote.set_state(DeploymentState::Building).await;
 
     RT.try_once(async {
-        if let Ok(Ok(binary_path)) = tokio::task::spawn_blocking(build_linux_binary).await {
-            if let Err(e) = upload_and_activate(&binary_path).await {
-                remote.set_state(DeploymentState::Failure).await;
-                error!(target: "remote", "failed to update the server: {e}");
-            } else {
-                remote.sync_deployments().await?;
-                remote.set_state(DeploymentState::Success).await;
+        match tokio::task::spawn_blocking(build_linux_binary).await {
+            Ok(Ok(binary_path)) => {
+                if let Err(e) = upload_and_activate(&binary_path).await {
+                    remote.set_state(DeploymentState::Failure).await;
+                    error!(target: "remote", "failed to update the server: {e}");
+                } else {
+                    remote.sync_deployments().await?;
+                    remote.set_state(DeploymentState::Success).await;
+                }
             }
-        } else {
-            remote.sync_deployments().await?;
-            remote.set_state(DeploymentState::Failure).await;
+            Ok(Err(e)) => {
+                error!("build error: {e}");
+                remote.sync_deployments().await?;
+                remote.set_state(DeploymentState::Failure).await;
+            }
+            Err(e) => {
+                error!("join error: {e}");
+                remote.sync_deployments().await?;
+                remote.set_state(DeploymentState::Failure).await;
+            }
         }
         OK
     });

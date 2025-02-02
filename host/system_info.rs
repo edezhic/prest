@@ -3,8 +3,10 @@ use sysinfo::{
     CpuRefreshKind, Disks, Pid, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System,
 };
 
+pub(crate) const SYSTEM_INFO_RECORD_PERIOD: u32 = 6;
+
 /// Describes collected stats for system resources
-#[derive(Debug, Table, Serialize, Deserialize)]
+#[derive(Debug, Storage, Serialize, Deserialize)]
 pub(crate) struct SystemStat {
     pub timestamp: NaiveDateTime,
     pub app_cpu: f32,
@@ -49,7 +51,7 @@ impl SystemInfo {
             used_disk,
             total_disk,
         };
-        RT.every(60)
+        RT.every(SYSTEM_INFO_RECORD_PERIOD)
             .seconds()
             .spawn(|| async { SYSTEM_INFO.record().await });
         host

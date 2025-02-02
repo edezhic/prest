@@ -13,26 +13,26 @@ pub fn from_glue_value((index, col): (usize, &Column)) -> TokenStream {
 
     let value_variant = ident(col.value_variant());
 
-    let transform = match col.from_row_transform() {
-        FromRowTransform::UuidFromU128 => q!(let v = prest::Uuid::from_u128(v)),
-        FromRowTransform::Deserialize => q!(let v = from_json_str(&v)?),
-        FromRowTransform::None => q!(),
+    let transform = match col.value_transform() {
+        ValueTransform::UuidU128 => q!(let v = prest::Uuid::from_u128(v)),
+        ValueTransform::SerDe => q!(let v = prest::from_bitcode(&v)?),
+        ValueTransform::None => q!(),
     };
 
     let error_arms = q!(
         Some(other) => {
-            let column = Self::COLUMN_SCHEMAS[#index];
+            let column = &Self::FIELD_SCHEMAS[#index];
             return Err(prest::e!("unexpected value {other:?} for {column:?}"))
         }
         None => {
-            let column = Self::COLUMN_SCHEMAS[#index];
+            let column = &Self::FIELD_SCHEMAS[#index];
             return Err(prest::e!("row too short, missing {column:?}"))
         }
     );
 
     if *list {
         let err = q!(
-            let column = Self::COLUMN_SCHEMAS[#index];
+            let column = &Self::FIELD_SCHEMAS[#index];
             return Err(prest::e!("unexpected list item value {item:?} in {column:?}"))
         );
         let match_and_push = if sql_type.int_or_smaller() {

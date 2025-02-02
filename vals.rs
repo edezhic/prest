@@ -39,12 +39,3 @@ impl<T> std::ops::DerefMut for Vals<T> {
         &mut self.0
     }
 }
-
-impl<T, S> extract::FromRef<S> for Vals<T>
-where
-    S: Send + Sync,
-{
-    fn from_ref(_state: &S) -> Self {
-        unreachable!("Param is not created from state")
-    }
-}

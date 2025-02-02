@@ -1,14 +1,20 @@
 //! These docs are focused on technical details. For tutorials check out [prest.blog](https://prest.blog)
 #![doc(html_favicon_url = "https://prest.blog/favicon.ico")]
+#![allow(warnings)]
 
 // for macro-generated code inside prest itself
 pub(crate) use crate as prest;
+
+#[derive(Debug, Clone, Copy)]
+pub struct Prest;
 
 pub use prest_init_macro::init;
 
 #[doc(hidden)]
 pub use serde;
 pub use serde_derive::{Deserialize, Serialize};
+
+pub use std::future::Future;
 
 // pub use anyhow::{anyhow, bail, Result as AnyhowResult};
 pub use async_trait::async_trait;
@@ -33,6 +39,7 @@ pub use axum::{
 //     HxRetarget, HxTarget, HxTrigger, HxTriggerName, SwapOption,
 // };
 
+pub use bitcode::{deserialize as from_bitcode, serialize as into_bitcode};
 pub use chrono::{NaiveDate, NaiveDateTime, NaiveTime, Utc};
 pub use futures::{
     future::{join_all, FutureExt},
@@ -44,6 +51,7 @@ pub use serde_json::{
 pub use std::sync::LazyLock as Lazy;
 pub use std::{env::var as env_var, sync::Arc};
 // pub use tower::{self, BoxError, Layer, Service, ServiceBuilder};
+pub use hex;
 pub use tracing::{debug, error, info, trace, warn};
 pub use uuid::Uuid;
 

@@ -1,3 +1,4 @@
+use content::WHATS_NEXT;
 use prest::*;
 
 mod content;
@@ -10,9 +11,11 @@ pub fn routes() -> Router {
     let _ = *README;
     let _ = *RUST;
     let _ = *PREST_VERSION;
+    let _ = *WHATS_NEXT;
 
     let mut router = route("/", get(README.clone()))
         .route("/internals", get(INTERNALS.clone()))
+        .route("/whats-next", get(WHATS_NEXT.clone()))
         .route("/rust", get(RUST.clone()));
     for readme in EXAMPLES.iter() {
         router = router.route(&readme.url, get(readme.content.as_str()));
@@ -62,6 +65,7 @@ async fn page(content: Markup) -> Markup {
                             #menu a:hover { background-color: #292524 }
                         "}
                         $"py-4 flex flex-col gap-2 text-xs" {
+                            a href="/whats-next" {"whats next"}
                             a href="/rust" {"about rust"}
                             a href="/internals" {"internals"}
                             a href="/about" {"about blog"}

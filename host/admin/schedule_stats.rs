@@ -2,7 +2,7 @@ use crate::*;
 use std::collections::HashMap;
 
 pub(crate) async fn full() -> Result<Markup> {
-    let jobs_records = ScheduledJobRecord::select_all().await?;
+    let jobs_records = ScheduledJobRecord::get_all().await?;
 
     #[derive(Default)]
     struct ScheduledJobStat {

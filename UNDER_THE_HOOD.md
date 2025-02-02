@@ -36,7 +36,7 @@ According to it's discord server and discussions around the web there are alread
 
 **[GlueSQL](https://gluesql.org/docs/)** - SQL query parser and execution layer that can be attached to wide variety of storage options. It's even younger than sled, but can already be used from rust, python and javascript(both node and browser!). Also, it already supports sled, redis, in-memory, json, csv, and browser local, session and indexedDB storages. You can also define your own storage interfaces and even create composite ones that allow different storages for different tables while still supporting JOIN queries across them.
 
-The main benefit of gluesql is that it allows to work with different storages on both client and server side using the same interface. As of now this interface has some issues and does not have anything like an ORM, but it ships with a query builder and you can use good old SQL. On top of that prest adds a `Table` derive macro that provides easy-to-use common CRUD operations.
+The main benefit of gluesql is that it allows to work with different storages on both client and server side using the same interface. As of now this interface has some issues and does not have anything like an ORM, but it ships with a query builder and you can use good old SQL. On top of that prest adds a `Storage` derive macro that provides easy-to-use common CRUD operations.
 
 This combo enables a zero-setup database in prest for your apps which can rely on in-memory storage, efficient disk persistance and even store data in the browser - all with the same sql-based interface.
 

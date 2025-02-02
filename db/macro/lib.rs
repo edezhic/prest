@@ -6,19 +6,17 @@ mod into_glue_expr;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::{quote as q, ToTokens};
-use syn::{
-    parse_macro_input, parse_quote, Data, DataStruct, DeriveInput, Expr, Field, Fields, Ident, Type,
-};
+use syn::{parse_macro_input, Data, DataStruct, DeriveInput, Field, Fields, Ident, Type};
 
 pub(crate) use gluesql_core::ast::DataType as SqlType;
 use SqlType::*;
 
 /// Generates schema and helper functions to use struct as a table in the embedded database
-#[proc_macro_derive(Table, attributes(pkey_column, unique_column))]
+#[proc_macro_derive(Storage, attributes(pkey, unique))]
 pub fn table_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
     let struct_ident = ast.ident;
-    let table_name = struct_ident.to_string() + "s";
+    let table_name = struct_ident.to_string();
 
     // supports only struct with named fields
     let fields = match ast.data {
@@ -39,7 +37,7 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
             columns[0].unique = true;
         }
         1 => {}
-        _ => panic!("Table macro doesn't support more than one pkey at the moment"),
+        _ => panic!("Storage macro doesn't support more than one pkey at the moment"),
     };
 
     // expand
@@ -68,11 +66,11 @@ struct Column {
 }
 
 impl Column {
-    fn from_row_transform(&self) -> FromRowTransform {
+    fn value_transform(&self) -> ValueTransform {
         match self.sql_type {
-            Uuid => FromRowTransform::UuidFromU128,
-            _ if self.serialized => FromRowTransform::Deserialize,
-            _ => FromRowTransform::None,
+            Uuid => ValueTransform::UuidU128,
+            _ if self.serialized => ValueTransform::SerDe,
+            _ => ValueTransform::None,
         }
     }
 
@@ -94,14 +92,15 @@ impl Column {
             Int8 => "I8",
             Float32 => "F32",
             Float => "F64",
-            _ => "Str",
+            _ if self.serialized => "Bytea",
+            _ => panic!("value variant for {:?} is not supported", self.sql_type),
         }
     }
 }
 
-enum FromRowTransform {
-    UuidFromU128,
-    Deserialize,
+enum ValueTransform {
+    UuidU128,
+    SerDe,
     None,
 }
 
@@ -174,12 +173,14 @@ fn column_schema(col: &Column) -> proc_macro2::TokenStream {
     } = col;
     let numeric = sql_type.numeric();
     let comparable = sql_type.comparable();
-    let sql_type = sql_type.to_string();
+    let sql_type_str = sql_type.to_string();
+    let (first_char, rest) = sql_type_str.split_at(1);
+    let sql_type = ident(&(first_char.to_owned() + &rest.to_ascii_lowercase()));
     q! {
-        ColumnSchema {
+        FieldSchema {
             name: #field_name_str,
             rust_type: #full_type_str,
-            sql_type: #sql_type,
+            sql_type: prest::sql::DataType::#sql_type,
             unique: #unique,
             pkey: #pkey,
             list: #list,

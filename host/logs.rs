@@ -12,7 +12,10 @@ use tracing_appender::{non_blocking::WorkerGuard, rolling::RollingFileAppender};
 pub(crate) use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::{
     filter::Targets,
-    fmt::{self, time::ChronoUtc},
+    fmt::{
+        self,
+        time::{ChronoLocal, ChronoUtc},
+    },
     layer::SubscriberExt,
     util::SubscriberInitExt,
     EnvFilter, Layer,
@@ -214,19 +217,20 @@ pub fn init_tracing_subscriber(filters: &[(&str, Level)]) -> WorkerGuard {
         .map_writer(move |_| MakeInfoLogWriter)
         .with_filter(info_filter(LevelFilter::INFO, filters));
 
-    #[cfg(debug_assertions)]
-    let shell_layer = fmt::layer()
-        .with_timer(ChronoUtc::new("%k:%M:%S%.3f".to_owned()))
-        .with_filter(info_filter(LevelFilter::DEBUG, filters));
-
     let registry = tracing_subscriber::registry()
         .with(traces_layer)
         .with(info_layer);
 
-    #[cfg(debug_assertions)]
-    let registry = registry.with(shell_layer);
+    if cfg!(debug_assertions) || !*IS_REMOTE {
+        let shell_layer = fmt::layer()
+            .with_timer(ChronoLocal::new("%k:%M:%S%.3f".to_owned()))
+            .with_filter(info_filter(LevelFilter::DEBUG, filters));
 
-    registry.init();
+        let registry = registry.with(shell_layer);
+        registry.init();
+    } else {
+        registry.init();
+    }
 
     guard
 }
