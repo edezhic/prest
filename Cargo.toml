@@ -17,11 +17,12 @@ path = "./lib.rs"
 [workspace]
 members = [
     "build", 
+    "cotton",
     "db/macro", 
-    "html/macro",
-    "init",
     "embed/macro", 
     "embed/utils", 
+    "html/macro",
+    "init",
     "serde_derive_fork",
     "examples/bench", 
     "examples/blog", 
@@ -73,6 +74,7 @@ iter-enum = "1"
 gluesql-core = { version = "0.16.3", default-features = false, optional = true }
 ordered-float = { version = "4", features = ["serde"] }
 async-oneshot-channel = "0.1"
+getrandom = { version = "0.2", features = ["js"] }
 
 # host
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
@@ -116,4 +118,4 @@ tracing-subscriber = { version = "0.3.18", features = ["fmt", "time"], optional 
 gluesql-shared-memory-storage = { version = "0.16.3", optional = true }
 
 [build-dependencies]
-prest-build = { path = "./build", version = "0.3", default-features = false, features = ["typescript", "sass"] }
+prest-build = { path = "./build", version = "0.4", default-features = false, features = ["typescript", "sass"] }

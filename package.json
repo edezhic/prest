@@ -1,0 +1,10 @@
+{
+  "exports": {
+    "preset": "./ui/preset.ts",
+    "admin": "./ui/admin.tsx"
+  },
+  "dependencies": {
+    "hyperscript.org": "^0.9.14",
+    "preact": "^10.25.4"
+  }
+}

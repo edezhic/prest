@@ -1,10 +1,11 @@
 .table-editor {
-    border-collapse: separate; 
+    border-collapse: separate;
     border-spacing: 0 0.3em;
 
     tr {
         height: 38px;
     }
+
     td {
         text-align: center;
     }
@@ -63,6 +64,7 @@
             }
         }
     }
+
     .pagination {
         width: 100%;
         margin: 2rem 0;
@@ -73,6 +75,7 @@
             opacity: 0.3;
         }
     }
+
     .log {
         font-size: 0.8rem;
         width: 100%;
@@ -89,7 +92,8 @@
             white-space: pre-line;
         }
 
-        .span, .fields {
+        .span,
+        .fields {
             line-break: anywhere;
 
             &.raw {
@@ -100,21 +104,25 @@
         .span {
             opacity: 0.6;
         }
-        
+
     }
 
     .TRACE {
         color: #cb2bcb;
     }
+
     .DEBUG {
         color: #4c4cff;
     }
+
     .INFO {
         color: #0a0;
     }
+
     .WARN {
         color: #a60;
     }
+
     .ERROR {
         color: #a00;
     }

@@ -1,7 +1,7 @@
 use crate::*;
 
-static DEFAULT_CSS: PreEscaped<&str> =
-    PreEscaped(include_str!(concat!(env!("OUT_DIR"), "/default.css")));
+static PRESET_CSS: PreEscaped<&str> =
+    PreEscaped(include_str!(concat!(env!("OUT_DIR"), "/preset.css")));
 
 /// Renders into a `<head>` tag with builder-like interface
 pub struct Head<'a> {
@@ -79,7 +79,7 @@ impl<'a> Render for Head<'a> {
                 @if let Some(viewport) = self.viewport { meta name="viewport" content=(viewport); }
                 @if let Some(color) = self.theme_color { meta name="theme-color" content=(color); }
                 @if let Some(stylesheets) = &self.stylesheets { @for stylesheet in stylesheets {link href={(stylesheet)} rel="stylesheet"{}}}
-                style {(DEFAULT_CSS)}
+                style {(PRESET_CSS)}
                 @if let Some(styles) = &self.styles { @for style in styles { style {(style)}}}
                 @if let Some(markup) = &self.other {(markup)}
             }
@@ -157,7 +157,7 @@ impl<'a> Render for Scripts<'a> {
                 noscript { link rel="stylesheet" href={(stylesheet)} {}}
             }}
             @if self.default_bundle {
-                script src="/prest.js" {}
+                script src="/preset.js" {}
             }
             @if let Some(srcs) = &self.others { @for src in srcs {
                 script src={(src)} crossorigin {}

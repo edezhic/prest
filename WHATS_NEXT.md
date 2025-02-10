@@ -1,4 +1,13 @@
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
+
++ For admin metrics - send upds over SSE, optimize perf & looks. Use [Chart.js](https://www.chartjs.org/) or smth alike
+
++ logs + metrics into db with 0x0(shared/localhost) owner?
+
++ DB and rest spawned in different processes and DB restarted only on migrations? How long DB restart takes with gigs of data?
+
++ indexes in dbs
+
 + how distributed scan might work? Need to keep all owners in the contact book which shared access? Mapping from any storage field type to CryptoAddress. Needs to implement smthlike `IntoOwnerAddress` like `IntoSqlKey`?
 + each `User` must have some kind of address? Roles/permissions for send/sync per table/row based on address/id/pk?
 + solana's programmatic delegation to programmatic addresses is kinda nice
@@ -13,15 +22,11 @@ This is a hobby project and plans change on the fly, but there are things I'd li
 + distributed ownership(slow path): no wide blockchain standard for address - use which or make custom? Any indexed value is ok? Has to be relevant to signatures etc? BIP44 and Hierarchical Deterministic (HD) wallets seem relevant for management of this stuff. Use most of the key derivation scheme but custom paths like `/{table_name}/{index_key}`?
 
 
-+ replace docker with zigbuild? Build for Selectel's [Raspberry Pi 4B](https://selectel.ru/services/dedicated/config/?uuid=8f84072c-5631-40a0-8053-a1cfca573c1e) using zigbuild (`cargo zigbuild -p blog --target aarch64-unknown-linux-musl --release`)?
-+ bun-based frontend for admin panel? Replace all my current swc bullshit with this approach as well? for admin metrics - send new ones over SSE or WS? Use [Chart.js](https://www.chartjs.org/)?
-+ rust & zig stronk together?
++ add runtimes(main and db) stats and db/sled storage_stats to system stats ([tokio](https://docs.rs/tokio/latest/tokio/runtime/struct.RuntimeMetrics.html)). Improve current reporting (RAM usage in mbs, ...) - add hover with mbs info.
 
-+ add runtimes(main and db) stats and db/sled storage_stats to system stats ([tokio](https://docs.rs/tokio/latest/tokio/runtime/struct.RuntimeMetrics.html)). Improve current reporting (RAM usage in mbs, ...) - add hover with mbs info? - no, 2much html even already
 + finish custom storage impl: indexes, add/drop column methods & validations & automigrations
 + auth upgrades - simpler UX + DX, support more providers/methods
 + subdomains and multiple-services on single machine support
-+ example with react-based islands built with bun?
 + [rust-i18n](https://github.com/longbridgeapp/rust-i18n) or another i18n solution
 + `axum-valid`-like integration for `Vals` or smth alike
 

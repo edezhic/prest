@@ -17,8 +17,8 @@ state!(PREST_VERSION: String = {
     manifest["package"]["version"].as_str().unwrap().to_owned()
 });
 
-embed_as!(ExamplesDocs from "../" only "*.md");
-embed_as!(ExamplesCode from "../" except "*.md");
+embed_as!(ExamplesDocs from "../" only "*.md" except "**/node_modules/*", "**/target/*");
+embed_as!(ExamplesCode from "../" except "*.md", "**/node_modules/*", "**/target/*");
 
 #[allow(dead_code)]
 pub struct Example {

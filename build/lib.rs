@@ -5,10 +5,21 @@ mod pwa;
 #[cfg(feature = "pwa")]
 pub use pwa::*;
 
+
 #[cfg(feature = "typescript")]
-mod typescript;
+mod swc_bundler;
 #[cfg(feature = "typescript")]
-pub use typescript::*;
+mod typescript {
+    pub fn bundle_ts() {
+        let exports = cotton_install::run().unwrap();
+        for (name, path) in exports {
+            crate::swc_bundler::bundle_js(&path, &name).unwrap();
+        }
+    }
+}
+#[cfg(feature = "typescript")]
+pub use typescript::bundle_ts;
+
 
 #[cfg(feature = "sass")]
 mod sass {

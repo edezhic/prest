@@ -6,3 +6,8 @@ target
 prest_storage
 .DS_Store
 migrations.toml
+node_modules
+bun.lock
+bun.lockb
+cotton.lock
+.cotton

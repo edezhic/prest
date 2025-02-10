@@ -1,0 +1,8 @@
+{
+    "exports": {
+      "prism": "./src/prism.ts"
+    },
+    "dependencies": {
+      "prismjs": "^1.29.0"
+    }
+  }

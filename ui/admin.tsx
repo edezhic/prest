@@ -1,5 +1,5 @@
 /**  @jsx h @jsxFrag Fragment */
-import { h, render, Fragment } from "./admin/preact.js";
+import { h, render, Fragment } from "preact";
 
 type Level = "TRACE" | "DEBUG" | "INFO" | "WARN" | "ERROR";
 type Attrs = { [key: string]: string };
@@ -40,7 +40,7 @@ async function loadTraces(period: string) {
     renderTraces();
 }
 
-const renderTraces = () => render(Traces(), document.getElementById('traces-container'));
+const renderTraces = () => render(Traces(), document.getElementById('traces-container')!);
 
 const setLevelFilter = (value: Level) => {
     levelFilter = value;
@@ -107,10 +107,10 @@ const Traces = () => {
             ) : (
                 <Fragment>
                     <div className="pagination">
-                        <button onClick={prevPage} disabled={firstPage}>{"< Newer"}</button> 
-                        <button onClick={nextPage} disabled={noMore}>{"Older >"}</button> 
+                        <button onClick={prevPage} disabled={firstPage}>{"< Newer"}</button>
+                        <button onClick={nextPage} disabled={noMore}>{"Older >"}</button>
                     </div>
-                
+
                     <div className="log">
                         <div className={"dt"}>timestamp</div>
                         <div className="target">target</div>
@@ -121,13 +121,13 @@ const Traces = () => {
                     {list}
 
                     <div className="pagination">
-                        <button onClick={prevPage} disabled={firstPage}>{"< Newer"}</button> 
-                        <button onClick={nextPage} disabled={noMore}>{"Older >"}</button> 
+                        <button onClick={prevPage} disabled={firstPage}>{"< Newer"}</button>
+                        <button onClick={nextPage} disabled={noMore}>{"Older >"}</button>
                     </div>
                 </Fragment>
             )}
-            
-        </div>        
+
+        </div>
     )
 };
 

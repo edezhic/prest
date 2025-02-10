@@ -1,8 +1,9 @@
-import htmx from  "./default-bundle/htmx.js";
-import defineSse from "./default-bundle/htmx-sse.js";
-import "./default-bundle/hyperscript.js";
+import 'hyperscript.org';
 
-defineSse(htmx);
+import { htmx, HtmxExtension } from "./htmx/main.js";
+import addSseExt from "./htmx/sse-ext.js";
+
+addSseExt(htmx);
 
 // By default DELETE also uses url params which is quite unintuitive and allows deleting stuff using malicious links
 htmx.config.methodsThatUseUrlParams = ["get"];
@@ -24,19 +25,19 @@ function reset(selectors) {
 }
 
 // slightly modified copy of https://github.com/Emtyloc/json-enc-custom/blob/main/json-enc-custom.js
-// --- its even standartized!!1 https://www.w3.org/TR/html-json-forms/
 htmx.defineExtension('json-enc-custom', {
     onEvent: function (name, evt) {
         if (name === "htmx:configRequest") {
-            evt.detail.headers['Content-Type'] = "application/json";
+            (evt as any).detail.headers['Content-Type'] = "application/json";
         }
+        return true;
     },
     encodeParameters: function (xhr, parameters, elt) {
         xhr.overrideMimeType('text/json');
         let encoded_parameters = encodingAlgorithm(parameters);
         return encoded_parameters;
     }
-});
+} as HtmxExtension);
 
 function encodingAlgorithm(parameters) {
     let resultingObject = Object.create(null);
@@ -116,7 +117,7 @@ function setValueFromPath(context, step, value) {
         try {
             const json_v = JSON.parse(value);
             context[step.key] = json_v;
-        } catch(e) {
+        } catch (e) {
             context[step.key] = value;
         }
     }

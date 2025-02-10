@@ -107,7 +107,7 @@ async fn page(content: Markup) -> Markup {
 
             (Scripts::default()
                 .include("/prism.js")
-                .css("/prism-tomorrow.css")
+                .css("https://unpkg.com/prismjs@1.29.0/themes/prism-tomorrow.min.css")
                 .hyperscript("
                     def format_content()
                         call Prism.highlightAll()

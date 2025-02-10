@@ -1,7 +1,7 @@
 [package]
 name = "prest-build"
 description = "Progressive RESTful framework build utils"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 resolver = "2" 
 license = "MIT OR Apache-2.0"
@@ -17,7 +17,7 @@ path = "./lib.rs"
 default = ["pwa"]
 pwa = ["webmanifest", "wasm-bindgen-cli-support"]
 sass = ["grass"]
-typescript = ["swc_bundler", "swc_common", "swc_ecma_ast", "swc_ecma_codegen", "swc_ecma_loader", "swc_ecma_minifier", "swc_ecma_parser", "swc_ecma_transforms_base", "swc_ecma_transforms_typescript", "swc_ecma_transforms_react", "swc_ecma_visit"]
+typescript = ["cotton-install", "swc_bundler", "swc_common", "swc_ecma_ast", "swc_ecma_codegen", "swc_ecma_loader", "swc_ecma_minifier", "swc_ecma_parser", "swc_ecma_transforms_base", "swc_ecma_transforms_typescript", "swc_ecma_transforms_react", "swc_ecma_visit"]
 
 [dependencies]
 anyhow = "1"
@@ -27,14 +27,15 @@ webmanifest = { version = "1.1.1", optional = true }
 wasm-bindgen-cli-support = { version = "0.2.97", optional = true }
 grass = { version = "0.13.4", default-features = false, optional = true }
 
-swc_common = { version = "5", features = ["tty-emitter"], optional = true }
-swc_bundler = { version = "6", features = ["concurrent"], optional = true }
-swc_ecma_parser = { version = "6", features = ["typescript"], optional = true }
-swc_ecma_ast = { version = "5", optional = true }
-swc_ecma_codegen = { version = "5", optional = true }
-swc_ecma_loader = { version = "5", optional = true, features = ["cache", "node"] }
-swc_ecma_minifier = { version = "6", optional = true }
-swc_ecma_transforms_base = { version = "6", optional = true }
-swc_ecma_transforms_typescript = { version = "6", optional = true }
-swc_ecma_transforms_react = { version = "6", optional = true }
-swc_ecma_visit = { version = "5", optional = true }
+cotton-install = { path = "../cotton", optional = true }
+swc_common = { version = "6.1", features = ["tty-emitter"], optional = true }
+swc_bundler = { version = "9", features = ["concurrent"], optional = true }
+swc_ecma_parser = { version = "8", features = ["typescript"], optional = true }
+swc_ecma_ast = { version = "6", optional = true }
+swc_ecma_codegen = { version = "6", optional = true }
+swc_ecma_loader = { version = "6", optional = true, features = ["cache", "node"] }
+swc_ecma_minifier = { version = "10", optional = true }
+swc_ecma_transforms_base = { version = "9", optional = true }
+swc_ecma_transforms_typescript = { version = "9", optional = true }
+swc_ecma_transforms_react = { version = "9", optional = true }
+swc_ecma_visit = { version = "6", optional = true }

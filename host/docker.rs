@@ -40,15 +40,15 @@ pub(crate) fn build_linux_binary() -> Result<String> {
             "-e",
             &format!("CARGO_HOME=/usr/src/target/{DOCKER_CARGO_CACHE_DIR}"),
         ])
-        .arg("prest-builder")
+        .arg(DOCKER_BUILDER_IMAGE)
         .args([
             "cargo",
-            "build",
+            "zigbuild",
             "-p",
             name,
             "--release",
             "--target",
-            "x86_64-unknown-linux-gnu",
+            "x86_64-unknown-linux-musl",
             "--target-dir",
             &format!("./target/{name}"),
         ])
@@ -56,7 +56,7 @@ pub(crate) fn build_linux_binary() -> Result<String> {
         .status()
     {
         Ok(s) if s.code().filter(|c| *c == 0).is_some() => Ok(format!(
-            "{target_path}/{name}/x86_64-unknown-linux-gnu/release/{name}"
+            "{target_path}/{name}/x86_64-unknown-linux-musl/release/{name}"
         )),
         Ok(s) => Err(e!("Failed to build the linux binary: {s}")),
         Err(e) => {

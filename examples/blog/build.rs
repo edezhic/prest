@@ -1,7 +1,6 @@
 use prest_build::*;
 fn main() {
     default_cfg_aliases();
-    bundle_ts("src/ui/prism.js").unwrap();
-    bundle_sass("src/ui/prism-tomorrow.css").unwrap();
+    bundle_ts();
     build_pwa(PWAOptions::new()).unwrap();
 }

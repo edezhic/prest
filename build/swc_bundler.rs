@@ -20,14 +20,13 @@ use swc_ecma_parser::{parse_file_as_module, EsSyntax, Syntax, TsSyntax};
 use swc_ecma_transforms_base::fixer::fixer;
 use swc_ecma_visit::VisitMutWith;
 
-use std::{fs::write, path::Path};
+use std::fs::write;
 
-pub fn bundle_ts(path: &str) -> Result<()> {
+pub fn bundle_js(path: &str, name: &str) -> Result<()> {
     // let minify = !cfg!(debug_assertions);
     let minify = false; // TODO: currently breaks things
     let js = swc_run(path, minify)?;
-    let ts_filename = Path::new(path).file_name().unwrap().to_str().unwrap();
-    let js_filename = ts_filename.replace(".tsx", ".js").replace(".ts", ".js");
+    let js_filename = format!("{name}.js");
     let out_file = super::out_path(&js_filename);
     write(out_file, js)?;
     Ok(())

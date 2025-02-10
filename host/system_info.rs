@@ -3,7 +3,7 @@ use sysinfo::{
     CpuRefreshKind, Disks, Pid, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System,
 };
 
-pub(crate) const SYSTEM_INFO_RECORD_PERIOD: u32 = 6;
+pub(crate) const SYSTEM_INFO_RECORD_PERIOD: u32 = 1;
 
 /// Describes collected stats for system resources
 #[derive(Debug, Storage, Serialize, Deserialize)]

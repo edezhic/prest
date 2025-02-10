@@ -1,0 +1,54 @@
+[package]
+name = "cotton-install"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "cotton-install"
+path = "src/main.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-compression = { version = "0.4.9", features = ["tokio", "gzip"] }
+async-recursion = "1.1.1"
+cached = "0.44.0"
+color-eyre = "0.6.3"
+compact_str = { version = "0.8.0", features = ["serde"] }
+dashmap = { version = "6.0.0", features = ["serde"] }
+flume = "0.11.0"
+futures = "0.3.30"
+futures-lite = "2.3.0"
+indexmap = { version = "2.2.6", features = ["serde"] }
+indicatif = "0.17.8"
+itertools = "0.14.0"
+node-semver = { git = "https://github.com/danielhuang/node-semver-rs", rev = "bf4b103dc88b310c9dc049433aff1a14716e1e68" }
+notify = "=8.0.0"
+once_cell = "1.19.0"
+owo-colors = "4.1.0"
+reqwest = { version = "0.12.4", features = [
+    "json",
+    "stream",
+    "rustls-tls",
+    "trust-dns",
+    "brotli",
+    "gzip",
+    "deflate",
+    "http2",
+], default-features = false }
+rustc-hash = "2.0.0"
+serde = { version = "1.0.200", features = ["derive", "rc"] }
+serde_json = { version = "1.0.116", features = ["preserve_order"] }
+serde_path_to_error = "0.1.16"
+tokio = { version = "1.37.0", features = ["full"] }
+tokio-tar = { git = "https://github.com/danielhuang/tokio-tar", rev = "ac063a10224a9dcb16967e792c3075e0ee8bb1a7" }
+tokio-util = { version = "0.7.10", features = ["compat"] }
+tracing = "0.1.40"
+tracing-error = "0.2.0"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+toml = "0.8.12"
+tap = "1.0.1"
+url = { version = "2.5.0", features = ["serde"] }
