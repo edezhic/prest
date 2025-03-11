@@ -1,5 +1,5 @@
 use {
-    super::{AsStorageError, Snapshot, DbConn, WRITE_STATE_KEY},
+    super::{AsStorageError, DbConn, Snapshot, WRITE_STATE_KEY},
     async_trait::async_trait,
     gluesql_core::{
         error::{Error, Result},

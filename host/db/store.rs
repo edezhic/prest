@@ -1,9 +1,9 @@
 use {
-    super::{AsStorageError, Snapshot, DbConn},
+    super::{AsStorageError, DbConn, Snapshot},
     async_trait::async_trait,
     futures::stream::iter,
     gluesql_core::{
-        data::{Key, Schema},
+        data::{Key, Schema, Value},
         error::Result,
         store::{DataRow, RowIter, Store},
     },
@@ -49,5 +49,34 @@ impl<'a> Store for DbConn<'a> {
             })
             .filter_map(|item| item.transpose());
         Ok(Box::pin(iter(result_set)))
+    }
+}
+
+use gluesql_core::error::Error;
+
+impl<'a> DbConn<'a> {
+    pub async fn pk_range(
+        &self,
+        table_name: &str,
+        pkey_min: Key,
+        pkey_max: Key,
+    ) -> Result<Vec<Vec<Value>>> {
+        let start = super::sled_key(table_name, pkey_min)?;
+        let end = super::sled_key(table_name, pkey_max)?;
+        self.tree
+            .range(start..end)
+            .map(move |item| {
+                let (_, value) = item.as_storage_err()?;
+                let snapshot: Snapshot<DataRow> = bitcode::deserialize(&value).as_storage_err()?;
+                let Some(row) = snapshot.take(self.state) else {
+                    return Err(Error::StorageMsg("unexpected DataRow variant".to_owned()));
+                };
+                let DataRow::Vec(values) = row else {
+                    return Err(Error::StorageMsg("unexpected DataRow variant".to_owned()));
+                };
+
+                Ok(values)
+            })
+            .collect()
     }
 }

@@ -1,12 +1,14 @@
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
 
-+ For admin metrics - send upds over SSE, optimize perf & looks. Use [Chart.js](https://www.chartjs.org/) or smth alike
++ separate thread with a tracing subscriber with sled writer under the hood?
+
++ generate Default + Serialize method into_mock and maybe generate TS types?
+
++ redo db editor in TS to avoid a need for htmx fork? Also it all about json, seems nicer this way
 
 + logs + metrics into db with 0x0(shared/localhost) owner?
 
 + DB and rest spawned in different processes and DB restarted only on migrations? How long DB restart takes with gigs of data?
-
-+ indexes in dbs
 
 + how distributed scan might work? Need to keep all owners in the contact book which shared access? Mapping from any storage field type to CryptoAddress. Needs to implement smthlike `IntoOwnerAddress` like `IntoSqlKey`?
 + each `User` must have some kind of address? Roles/permissions for send/sync per table/row based on address/id/pk?
@@ -29,6 +31,7 @@ This is a hobby project and plans change on the fly, but there are things I'd li
 + subdomains and multiple-services on single machine support
 + [rust-i18n](https://github.com/longbridgeapp/rust-i18n) or another i18n solution
 + `axum-valid`-like integration for `Vals` or smth alike
++ fix sql indexes 
 
 Some ideas are more complex/crazy but interesting:
 + prest blogging about its own system monitoring stats etc using small llm

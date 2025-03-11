@@ -5,7 +5,6 @@ mod pwa;
 #[cfg(feature = "pwa")]
 pub use pwa::*;
 
-
 #[cfg(feature = "typescript")]
 mod swc_bundler;
 #[cfg(feature = "typescript")]
@@ -19,7 +18,6 @@ mod typescript {
 }
 #[cfg(feature = "typescript")]
 pub use typescript::bundle_ts;
-
 
 #[cfg(feature = "sass")]
 mod sass {

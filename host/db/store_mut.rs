@@ -1,5 +1,5 @@
 use {
-    super::{index_sync::IndexSync, sql, AsStorageError, Snapshot, DbConn},
+    super::{index_sync::IndexSync, sql, AsStorageError, DbConn, Snapshot},
     async_trait::async_trait,
     gluesql_core::{
         data::{Key, Schema},

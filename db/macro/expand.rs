@@ -41,6 +41,8 @@ pub fn impl_table(struct_ident: Ident, table_name: String, columns: Vec<Column>)
     let pkey_expr = into_glue_expr(pkey, q!(pkey), true, false);
     let pk_filter_sql_node = q!(sql::col(#key_name_str).eq(#pkey_expr));
 
+    let pk_range_fn = pk_range(pkey);
+
     let schema_name = ident(&format!("{}Schema", struct_ident.to_string()));
 
     let relative_path = format!("/table/{table_name}");
@@ -135,6 +137,7 @@ pub fn impl_table(struct_ident: Ident, table_name: String, columns: Vec<Column>)
             #(#range_fns)*
             #(#update_fns)*
             #(#check_fns)*
+            #pk_range_fn
         }
     }
 }
@@ -200,6 +203,31 @@ fn in_range(col: &Column) -> TokenStream {
     let values = q!(Self::select().filter(#filter).rows().await);
 
     q! { pub async fn #fn_name(min: &#inner_type, max: &#inner_type) -> Result<Vec<Self>> { #values } }
+}
+
+fn pk_range(col: &Column) -> TokenStream {
+    let Column { full_type, .. } = col;
+    let fn_name = get_in_range_(col);
+    q! {
+        pub async fn #fn_name(min: #full_type, max: #full_type) -> prest::Result<Vec<Self>> {
+            let payload = prest::DB
+                .read(prest::Query::PKRange {
+                    name: Self::STRUCT_NAME,
+                    pkey_min: min.into_sql_key(),
+                    pkey_max: max.into_sql_key(),
+                })
+                .await?;
+
+            let prest::Payload::Rows(rows) = payload else {
+                panic!("unexpected DB pk_range return payload: {payload:?}")
+            };
+
+            Ok(rows
+                .into_iter()
+                .map(|r| Self::from_row(r))
+                .collect::<Result<Vec<_>>>()?)
+        }
+    }
 }
 
 fn update((index, col): (usize, &Column)) -> TokenStream {
@@ -342,6 +370,10 @@ fn select_by_null_(col: &Column) -> Ident {
 
 fn find_in_range_(col: &Column) -> Ident {
     ident(&format!("find_in_range_{}", col.field_name_str))
+}
+
+fn get_in_range_(col: &Column) -> Ident {
+    ident(&format!("get_in_{}_range", col.field_name_str))
 }
 
 fn update_(col: &Column) -> Ident {

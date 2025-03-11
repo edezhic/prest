@@ -9,16 +9,11 @@ use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
+use std::fs::{create_dir_all, exists, metadata, read_dir, remove_dir_all, File};
 use std::{
-    fs::Permissions,
-    io::{self, ErrorKind},
-    os::unix::prelude::PermissionsExt,
+    io::{self},
     path::{Path, PathBuf},
     sync::Arc,
-};
-use std::{
-    fs::{create_dir_all, exists, metadata, read_dir, remove_dir_all, set_permissions, File},
-    os::unix::fs::symlink,
 };
 use tap::Pipe;
 use tokio::{sync::Semaphore, task::JoinHandle};
@@ -32,7 +27,8 @@ use crate::{
     package::PackageMetadata,
     progress::{log_progress, log_verbose},
     scoped_path::scoped_join,
-    util::{retry, VersionSpecifier, CLIENT, CLIENT_LIMIT}, STORE_PATH,
+    util::{retry, VersionSpecifier, CLIENT, CLIENT_LIMIT},
+    STORE_PATH,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -189,25 +185,6 @@ pub async fn install_package(prefix: &[CompactString], dep: &Dependency) -> Resu
     let src_path = scoped_join(STORE_PATH, dep.id())?;
 
     hardlink_dir(get_package_src(&src_path)?, target_path)?;
-
-    if prefix.is_empty() {
-        for (cmd, path) in &dep.bins {
-            let path = path.to_compact_string();
-            let mut path = PathBuf::from("../").join(&*dep.name).join(&*path);
-            if !exists(PathBuf::from("node_modules/.bin").join(&path))? {
-                path.set_extension("js");
-            }
-            if !cmd.contains('/') {
-                let bin_path = PathBuf::from("node_modules/.bin").join(&**cmd);
-                if let Err(e) = symlink(&path, &bin_path) {
-                    if e.kind() != ErrorKind::AlreadyExists {
-                        return Err(e.into());
-                    }
-                }
-                set_permissions(&bin_path, Permissions::from_mode(0o755))?;
-            }
-        }
-    }
 
     File::create(&install_marker)?;
 

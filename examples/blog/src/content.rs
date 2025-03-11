@@ -6,12 +6,12 @@ state!(README: String = {
     md_to_html(homepage)
 });
 state!(INTERNALS: String = {
-    let md = include_str!("../../../UNDER_THE_HOOD.md").to_owned();
+    let md = include_str!("../../../docs/UNDER_THE_HOOD.md").to_owned();
     let processed = preprocess_md(md, "../../..", Some(include_str!("../../../Cargo.toml")));
     md_to_html(&processed)
 });
-state!(RUST: String = { md_to_html(include_str!("../../../RUST.md")) });
-state!(WHATS_NEXT: String = { md_to_html(include_str!("../../../WHATS_NEXT.md")) });
+state!(RUST: String = { md_to_html(include_str!("../../../docs/RUST.md")) });
+state!(WHATS_NEXT: String = { md_to_html(include_str!("../../../docs/WHATS_NEXT.md")) });
 state!(PREST_VERSION: String = {
     let manifest = include_str!("../../../Cargo.toml").parse::<toml::Table>().unwrap();
     manifest["package"]["version"].as_str().unwrap().to_owned()

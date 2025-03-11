@@ -1,6 +1,19 @@
 /**  @jsx h @jsxFrag Fragment */
 import { h, render, Fragment } from "preact";
 
+async function loadschema() {;
+    const resp = await fetch(`/admin/db/schema`);
+    const rawText = await resp.text();
+    const text = `[${rawText.trimEnd().slice(0, -1)}]`;
+    traces = JSON.parse(text).reverse();
+    index = 0;
+    levelFilter = "TRACE";
+    targetFilter = null;
+    renderTraces();
+}
+
+const renderTraces = () => render(Traces(), document.getElementById('traces-container')!);
+
 type Level = "TRACE" | "DEBUG" | "INFO" | "WARN" | "ERROR";
 type Attrs = { [key: string]: string };
 type TargetFilter = string | null;
@@ -15,7 +28,6 @@ type Trace = {
 };
 
 let traces: Trace[] = [];
-let container: HTMLElement | null = null;
 let index = 0;
 let levelFilter: Level = "TRACE";
 let targetFilter: TargetFilter = null;
@@ -27,20 +39,6 @@ const DT_OPTIONS: Intl.DateTimeFormatOptions = {
     second: "numeric",
     fractionalSecondDigits: 2,
 }
-
-async function loadTraces(period: string) {
-    container = document.getElementById("traces-container");
-    const resp = await fetch(`/admin/traces/${period}`);
-    const rawText = await resp.text();
-    const text = `[${rawText.trimEnd().slice(0, -1)}]`;
-    traces = JSON.parse(text).reverse();
-    index = 0;
-    levelFilter = "TRACE";
-    targetFilter = null;
-    renderTraces();
-}
-
-const renderTraces = () => render(Traces(), document.getElementById('traces-container')!);
 
 const setLevelFilter = (value: Level) => {
     levelFilter = value;

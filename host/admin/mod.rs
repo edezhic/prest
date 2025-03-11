@@ -1,11 +1,11 @@
 use crate::*;
 
-mod db_editor;
+mod analytics;
+mod db;
 mod logs;
+mod monitoring;
 mod remote;
-mod routes_stats;
-mod schedule_stats;
-mod system_stats;
+mod schedule;
 
 const ADMIN_SVG: PreEscaped<&str> = PreEscaped(include_str!("assets/admin.svg"));
 const DB_SVG: PreEscaped<&str> = PreEscaped(include_str!("assets/db.svg"));
@@ -21,22 +21,24 @@ pub(crate) async fn routes() -> Router {
         "/",
         get(|| async {
             ok(html!(
+                (monitoring::container().await?)
                 a get="/admin/remote/state" trigger="load" swap-this {}
-                (system_stats::full().await?)
                 (logs::info_explorer().await)
             ))
         }),
     )
-    .route("/system_stats", get(system_stats::full))
+    .route("/monitoring", get(monitoring::container))
     .route("/latest_info", get(logs::info_explorer))
     .route("/latest_info/:offset", get(logs::info))
     .route("/traces", get(logs::traces_explorer))
-    .route("/schedule_stats", get(schedule_stats::full))
-    .route("/analytics", get(routes_stats::full))
+    .route("/schedule", get(schedule::full))
+    .route("/analytics", get(analytics::full))
     .nest("/remote", remote::routes())
-    .nest("/db", db_editor::db_routes().await)
+    .nest("/db", db::table_routes().await)
     .wrap_non_htmx(into_page)
+    .route("/db/schema", get(db::schema))
     .route("/traces/:period", get(logs::traces))
+    .route("/monitoring/data", get(monitoring::data))
 }
 
 async fn into_page(content: Markup) -> impl IntoResponse {
@@ -45,17 +47,17 @@ async fn into_page(content: Markup) -> impl IntoResponse {
         body $"max-w-screen-md lg:max-w-screen-lg md:mx-auto" {
             nav replace-url into="main" $"bg-stone-900 my-4 p-5 shadow-lg rounded-full items-center flex gap-6 w-min mx-auto" {
                 a href="/" boost="false" {(home_svg())}
-                button get="/admin" {div $"w-6" {(ADMIN_SVG)}}
-                button get="/admin/analytics" {div $"w-6" {(ANALYTICS_SVG)}}
-                button get="/admin/traces" {div $"w-6" {(LOGS_SVG)}}
+                button get="/admin" {$"w-6" {(ADMIN_SVG)}}
+                button get="/admin/analytics" {$"w-6" {(ANALYTICS_SVG)}}
+                button get="/admin/traces" {$"w-6" {(LOGS_SVG)}}
                 @if DB.custom_schemas().len() > 0 {
-                    button get="/admin/db" {div $"w-6" {(DB_SVG)}}
+                    button get="/admin/db" {$"w-6" {(DB_SVG)}}
                 }
             }
-            main $"opacity-80 mx-auto p-4 gap-8 flex flex-col text-sm lg:text-base leading-loose" {
+            main $"opacity-80 mx-auto p-4 gap-4 flex flex-col text-sm lg:text-base leading-loose" {
                 (content)
             }
-            (Scripts::default().include("/admin.js").css("/admin.css"))
+            (Scripts::default().include("/traces.js").module("/stats.js").css("/admin.css"))
         }
     }}
 }

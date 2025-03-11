@@ -208,7 +208,7 @@ embed_as!(StructName from "path" only "path or wildcard"/*, "..."*/ except "path
 Such structs can be embedded into the router like this: `.embed(StructName)`.
 
 #### Deployment
-Prest supports 1 click build-upload-start deploy script based on docker for cross-platform compilation, and comes with automatically configured TLS based on LetsEncrypt. To make it work you'll need to have docker engine installed, specify the domain in the `Cargo.toml` and provide credentials:
+Prest supports 1 click build-upload-start deploy script to linux servers through ssh and sftp, based on docker for cross-platform compilation, and comes with automatically configured TLS based on LetsEncrypt. To make it work you'll need to have docker engine installed, specify the domain in the `Cargo.toml` and provide credentials:
 
 ```toml
 [package.metadata]

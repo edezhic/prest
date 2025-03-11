@@ -1,5 +1,5 @@
 use {
-    super::{AsStorageError, Snapshot, DbConn},
+    super::{AsStorageError, DbConn, Snapshot},
     crate::*,
     gluesql_core::{
         ast::ColumnDef,

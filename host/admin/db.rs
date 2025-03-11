@@ -2,17 +2,34 @@ use host::admin::{DELETE_SVG, DONE_SVG, EDIT_SVG};
 
 use crate::*;
 
+#[derive(Serialize)]
+struct TableDescription {
+    name: String,
+    fields: Vec<FieldSchema>,
+}
+
+pub(crate) async fn schema() -> impl IntoResponse {
+    let descriptions = DB
+        .custom_schemas()
+        .iter()
+        .map(|s| TableDescription {
+            name: s.name().to_owned(),
+            fields: s.fields().to_vec(),
+        })
+        .collect::<Vec<_>>();
+    Json(descriptions)
+}
+
 pub(crate) async fn db_page() -> Markup {
-    let tables = html! {
+    html! {
         @for table in DB.custom_schemas() {
             $"font-bold text-lg" {(table.name())}
             a get=(table.full_path()) trigger="load" swap-this {}
         }
-    };
-    html!((tables))
+    }
 }
 
-pub(crate) async fn db_routes() -> Router {
+pub(crate) async fn table_routes() -> Router {
     let mut router = route("/", get(db_page));
     for table in DB.custom_schemas() {
         let get_by_id_path = format!("{}/:id", table.relative_path());
@@ -26,7 +43,7 @@ pub(crate) async fn db_routes() -> Router {
                         .into_iter()
                         .map(|row| view_row(table, row));
                     ok(html!(
-                        table #(table.name()) .table-editor $"w-full font-mono text-[0.5rem] lg:text-sm" {
+                        table #(table.name()) ."table-editor" $"w-full font-mono text-[0.5rem] lg:text-sm" {
                             @let columns = table.fields().iter().map(|c| (c.name, c.rust_type));
                             @for (name, rust_type) in columns {th {(name)" ("(rust_type)")"}}
                             th #actions $"w-[70px]" {}

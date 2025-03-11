@@ -13,9 +13,9 @@ pub(crate) use docker::*;
 mod runtime;
 pub use runtime::*;
 
-mod system_info;
-pub(crate) use system_info::SystemStat;
-pub use system_info::SYSTEM_INFO;
+mod monitoring;
+pub(crate) use monitoring::SystemStat;
+pub use monitoring::SYSTEM_INFO;
 
 mod sse;
 pub use sse::*;

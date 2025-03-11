@@ -1,9 +1,11 @@
 {
   "exports": {
     "preset": "./ui/preset.ts",
-    "admin": "./ui/admin.tsx"
+    "stats": "./ui/stats.tsx",
+    "traces": "./ui/traces.tsx"
   },
   "dependencies": {
+    "chart.js": "^4.4.7",
     "hyperscript.org": "^0.9.14",
     "preact": "^10.25.4"
   }

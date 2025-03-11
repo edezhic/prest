@@ -13,7 +13,7 @@ pub type FieldSchemas = &'static [FieldSchema];
 
 /// Describes [`Storage`]-derived column schema
 #[doc(hidden)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct FieldSchema {
     pub name: &'static str,
     pub rust_type: &'static str,

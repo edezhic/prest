@@ -1,7 +1,7 @@
 use {
     super::{
         index_sync::{build_index_key, build_index_key_prefix},
-        AsStorageError, Snapshot, DbConn,
+        AsStorageError, DbConn, Snapshot,
     },
     async_trait::async_trait,
     futures::stream::iter,

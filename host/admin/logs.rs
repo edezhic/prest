@@ -27,7 +27,12 @@ pub(crate) async fn info(Path(offset): Path<usize>) -> Markup {
     html! {
         @for log in logs {p style="margin:0 !important"{(log)}}
         @if maybe_more {
-            $"w-8 mx-auto" get={"/admin/latest_info/"(offset + PER_PAGE)} trigger="revealed" target="this" swap="outerHTML transition:false" {(LOADER_SVG)}
+            $"w-8 mx-auto"
+                get={"/admin/latest_info/"(offset + PER_PAGE)}
+                trigger="revealed"
+                target="this"
+                swap="outerHTML transition:false"
+                {(LOADER_SVG)}
         }
     }
 }

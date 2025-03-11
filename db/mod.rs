@@ -47,7 +47,15 @@ pub struct Db {
 pub enum Query {
     SqlStatement(sql::Statement),
     SqlString(String),
-    GetByPKey { name: &'static str, pkey: sql::Key },
+    GetByPKey {
+        name: &'static str,
+        pkey: sql::Key,
+    },
+    PKRange {
+        name: &'static str,
+        pkey_min: sql::Key,
+        pkey_max: sql::Key,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

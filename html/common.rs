@@ -91,6 +91,7 @@ impl<'a> Render for Head<'a> {
 pub struct Scripts<'a> {
     pub default_bundle: bool,
     pub others: Option<Vec<&'a str>>,
+    pub modules: Option<Vec<&'a str>>,
     pub inlines: Option<Vec<&'a str>>,
     pub stylesheets: Option<Vec<&'a str>>,
     pub hyperscripts: Option<Vec<&'a str>>,
@@ -102,6 +103,7 @@ impl<'a> Default for Scripts<'a> {
             default_bundle: true,
             others: None,
             inlines: None,
+            modules: None,
             // inlines: Some(vec![include_str!("./htmx_patch.js")]),
             stylesheets: None,
             hyperscripts: None,
@@ -110,6 +112,15 @@ impl<'a> Default for Scripts<'a> {
 }
 
 impl<'a> Scripts<'a> {
+    /// Add script src to the [`Scripts`]
+    pub fn module(mut self, path: &'a str) -> Self {
+        if let Some(srcs) = &mut self.modules {
+            srcs.push(path)
+        } else {
+            self.modules = Some(vec![path])
+        }
+        self
+    }
     /// Add script src to the [`Scripts`]
     pub fn include(mut self, path: &'a str) -> Self {
         if let Some(srcs) = &mut self.others {
@@ -159,6 +170,9 @@ impl<'a> Render for Scripts<'a> {
             @if self.default_bundle {
                 script src="/preset.js" {}
             }
+            @if let Some(srcs) = &self.modules { @for src in srcs {
+                script type="module" src={(src)} crossorigin {}
+            }}
             @if let Some(srcs) = &self.others { @for src in srcs {
                 script src={(src)} crossorigin {}
             }}

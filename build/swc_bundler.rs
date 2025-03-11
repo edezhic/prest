@@ -189,7 +189,7 @@ impl Load for Loader {
 fn module_to_code(module: &Module, srcmap: Arc<SourceMap>) -> String {
     let mut buf = vec![];
     {
-        let writer = JsWriter::new(srcmap.clone(), "", &mut buf, None);
+        let writer = JsWriter::new(srcmap.clone(), "\n", &mut buf, None);
         let mut emitter = Emitter {
             cfg: swc_ecma_codegen::Config::default().with_minify(false),
             cm: srcmap,
@@ -199,7 +199,12 @@ fn module_to_code(module: &Module, srcmap: Arc<SourceMap>) -> String {
 
         emitter.emit_module(&module).unwrap();
     }
-    String::from_utf8_lossy(&buf).to_string()
+
+    let code = String::from_utf8_lossy(&buf).to_string().replace(
+        "Object.defineProperty(exports",
+        "var exports={};\nObject.defineProperty(exports",
+    );
+    code
 }
 
 fn handle_err(err: swc_ecma_parser::error::Error, f: &FileName, srcmap: Arc<SourceMap>) -> Module {

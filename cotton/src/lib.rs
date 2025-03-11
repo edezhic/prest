@@ -35,9 +35,8 @@ pub const NM_COTTON_PLAN_PATH: &str = "./node_modules/.cotton/plan.json";
 #[tokio::main]
 pub async fn run() -> Result<HashMap<String, String>> {
     let package = read_package().await?;
-    
+
     init_storage().await?;
-    // let config = read_config().await?;
 
     let start = Instant::now();
 
@@ -58,13 +57,6 @@ pub async fn run() -> Result<HashMap<String, String>> {
                 )
             }
         });
-
-        // if config.allow_install_scripts {
-        //     for (name, tree) in plan.trees.iter() {
-        //         exec_install_scripts(tree, &mut vec![name.clone()]).await?;
-        //     }
-        // }
-
         write_json(NM_COTTON_PLAN_PATH, &plan).await?;
     }
 
@@ -78,10 +70,8 @@ async fn prepare_plan(package: &PackageMetadata) -> Result<Plan> {
 
     let mut graph = load_graph_from_lockfile().await;
 
-    // if !ARGS.immutable {
     graph.append(package.iter_all(), true).await?;
     write_json("cotton.lock", Lockfile::new(graph.clone())).await?;
-    // }
 
     log_progress("Retrieved dependency graph");
 
@@ -121,6 +111,5 @@ async fn verify_installation(package: &PackageMetadata, plan: &Plan) -> Result<b
 async fn init_storage() -> Result<()> {
     create_dir_all(STORE_PATH).await?;
     create_dir_all(NM_COTTON_PATH).await?;
-    // create_dir_all("node_modules/.bin").await?;
     Ok(())
 }

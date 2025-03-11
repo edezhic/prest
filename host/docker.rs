@@ -2,9 +2,11 @@ use std::process::Stdio;
 
 use crate::*;
 
-static BUILDER_DOCKERFILE: &str = include_str!("Dockerfile");
+static BUILDER_DOCKERFILE: &str = include_str!("release-builder.Dockerfile");
+
 const DOCKER_BUILDER_IMAGE: &str = "prest-builder";
 const DOCKER_CARGO_CACHE_DIR: &str = "docker_cargo_cache";
+const RELEASE_TARGET: &str = "x86_64-unknown-linux-musl";
 
 pub(crate) fn build_linux_binary() -> Result<String> {
     let name = APP_CONFIG.name;
@@ -48,7 +50,7 @@ pub(crate) fn build_linux_binary() -> Result<String> {
             name,
             "--release",
             "--target",
-            "x86_64-unknown-linux-musl",
+            RELEASE_TARGET,
             "--target-dir",
             &format!("./target/{name}"),
         ])
@@ -56,7 +58,7 @@ pub(crate) fn build_linux_binary() -> Result<String> {
         .status()
     {
         Ok(s) if s.code().filter(|c| *c == 0).is_some() => Ok(format!(
-            "{target_path}/{name}/x86_64-unknown-linux-musl/release/{name}"
+            "{target_path}/{name}/{RELEASE_TARGET}/release/{name}"
         )),
         Ok(s) => Err(e!("Failed to build the linux binary: {s}")),
         Err(e) => {

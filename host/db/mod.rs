@@ -224,6 +224,14 @@ async fn read<'a>(tree: &'a sled::Db, (query, returner): DbReadMessage) -> Resul
             };
             Ok(Payload::Rows(rows))
         }
+        Query::PKRange {
+            name,
+            pkey_min,
+            pkey_max,
+        } => {
+            let rows = conn.pk_range(name, pkey_min, pkey_max).await?;
+            Ok(Payload::Rows(rows))
+        }
     };
     returner.send(result);
     OK
