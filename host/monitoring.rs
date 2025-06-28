@@ -52,6 +52,21 @@ impl SystemInfo {
         RT.every(1)
             .second()
             .spawn(|| async { SYSTEM_INFO.record().await });
+        
+        // Cleanup job: Delete SystemStat entries older than 1 day every 10 minutes
+        RT.every(10)
+            .minutes()
+            .schedule("SystemStat Cleanup", || async {
+                match SystemInfo::cleanup_old_stats().await {
+                    Ok(deleted_count) => {
+                        info!(target: "system_cleanup", "Deleted {} old SystemStat entries", deleted_count);
+                    }
+                    Err(e) => {
+                        warn!(target: "system_cleanup", "Failed to cleanup old SystemStat entries: {}", e);
+                    }
+                }
+            });
+        
         host
     }
     pub async fn record(&self) -> Result {
@@ -100,5 +115,27 @@ impl SystemInfo {
             true,
             ProcessRefreshKind::everything(),
         );
+    }
+
+    /// Cleanup SystemStat entries older than 1 day
+    pub async fn cleanup_old_stats() -> Result<usize> {
+        let cutoff_time = Utc::now().naive_utc() - chrono::Duration::days(1);
+        
+        // Use SQL DELETE to efficiently remove old entries
+        let delete_sql = format!(
+            "DELETE FROM SystemStat WHERE timestamp < '{}'", 
+            cutoff_time.format("%Y-%m-%d %H:%M:%S")
+        );
+        
+        match DB.write_sql(&delete_sql).await? {
+            Payload::Affected(count) => {
+                info!(target: "system_cleanup", "Successfully deleted {} SystemStat entries older than {}", count, cutoff_time);
+                Ok(count)
+            }
+            other => {
+                warn!(target: "system_cleanup", "Unexpected response from cleanup: {:?}", other);
+                Ok(0)
+            }
+        }
     }
 }

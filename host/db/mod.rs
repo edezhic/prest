@@ -57,6 +57,24 @@ impl Db {
             .open::<1024>()
             .expect(&format!("DB path ({db_path:?}) should be available"));
 
+        // ALTERNATIVE OPTIMIZATION: Separate trees per table for maximum performance
+        // This would eliminate the need for prefix scanning entirely but requires more changes:
+        //
+        // let route_stats_tree = storage.open_tree("RouteStat").expect("RouteStat tree");
+        // let system_stats_tree = storage.open_tree("SystemStat").expect("SystemStat tree"); 
+        // let job_records_tree = storage.open_tree("ScheduledJobRecord").expect("JobRecord tree");
+        //
+        // Benefits:
+        // - No scanning through millions of irrelevant entries
+        // - Independent table performance
+        // - Better memory locality
+        // - Easier to implement table-specific optimizations
+        //
+        // Changes needed:
+        // - Modify storage operations to use table-specific trees
+        // - Update sled_key() function to not use table prefixes
+        // - Adjust Store trait implementation
+
         if let Some(state_bytes) = storage.get(WRITE_STATE_KEY).unwrap() {
             let state: WriteState = bitcode::deserialize(&state_bytes).unwrap();
             if state.in_progress {

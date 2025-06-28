@@ -1,4 +1,4 @@
-FROM rust:1.84.0
+FROM rust:1.88.0
 ARG ZIG_VERSION=0.10.1
 
 # Install Zig

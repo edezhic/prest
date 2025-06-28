@@ -5,3 +5,6 @@ edition = "2021"
 [dependencies]
 prest = { path = "../../", features = ["experimental"] }
 fastrand = "2"
+
+[package.metadata]
+domain = "prest.blog"

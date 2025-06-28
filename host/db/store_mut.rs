@@ -84,6 +84,7 @@ impl<'a> StoreMut for DbConn<'a> {
             let snapshot: Snapshot<DataRow> = bitcode::deserialize(&snapshot).as_storage_err()?;
 
             let Some(updated) = snapshot.delete(self.state) else {
+                self.tree.remove(&key).as_storage_err()?;
                 continue;
             };
 

@@ -47,6 +47,7 @@ pub use futures::{
 };
 pub use serde_json::{
     from_slice as from_json_slice, from_str as from_json_str, json, to_string as to_json_string,
+    to_vec as to_json_vec,
 };
 pub use std::sync::LazyLock as Lazy;
 pub use std::{env::var as env_var, sync::Arc};
