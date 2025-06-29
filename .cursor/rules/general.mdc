@@ -1,0 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+This is the PREST (Progressive REST) framework. It's a full-stack project aiming for development of full-cycle app development in Rust. It's most distinctive feature is cross-compilation of some of the code into both regular server-side endpoints and service worker capabilities to render static pages on the client side. Another major focus is batteries-included simplicity of development - it comes with a built-in (sled + gluesql)-based DB (`./db/`), templating (`./html`) based on HTMX with special abbreviations to make code cleaner and compilation of tailwind classes directly into in-page styles, npm package manager (`./cotton`) for FE scripts, build system (`./build`) for service workers, TypeScript scripts and SASS styles, file embedding for both host and SW (`./embed`), host tools (`./host`) for serving, logging, auth, admin panel, deployment and monitoring utilities. As well as a whole bunch of other utilities. Instead of tests for now it's focused on providing runnable examples (`./examples`), and specifically `./examples/blog` serves as both live example and documentation website.
+
+After making changes run `cargo check` for modified projects to make sure they compile fine.

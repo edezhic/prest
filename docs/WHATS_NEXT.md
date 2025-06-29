@@ -4,7 +4,7 @@ This is a hobby project and plans change on the fly, but there are things I'd li
 + finish custom storage impl: indexes, add/drop column methods & validations & automigrations
 + subdomains and multiple-services on single machine support. Maybe run bench on a subdomain?
 
-+ generate Default + Serialize method into_mock and maybe generate TS types? I forgot what this is about -_-
++ generate Default + Serialize method into_mock and maybe generate TS types? For Rust<->TS glue
 
 + logs + metrics into db with 0x0(shared/localhost) owner?
 
