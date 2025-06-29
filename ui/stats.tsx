@@ -22,10 +22,66 @@ let info: MonitoringInfo = {
 
 let currentPeriod = '15m';
 
+/**
+ * Fills time gaps in system monitoring data with zero values to visually show when the app wasn't running.
+ * This prevents misleading line connections across downtime periods on the chart.
+ * 
+ * @param records Array of monitoring records from the backend
+ * @returns Array with gap periods filled with zero values
+ */
+const fillTimeGaps = (records: Record[]): Record[] => {
+    if (records.length === 0) return records;
+    
+    // Sort records by timestamp to ensure proper order
+    records.sort((a, b) => new Date(a.timestamp + 'Z').getTime() - new Date(b.timestamp + 'Z').getTime());
+    
+    const filledRecords: Record[] = [];
+    const intervalMs = 1000; // 1 second sampling interval
+    const gapThreshold = intervalMs * 3; // Consider gaps larger than 3 seconds as downtime
+    const maxGapToFill = 5 * 60 * 1000; // Don't fill gaps longer than 5 minutes (for performance)
+    
+    for (let i = 0; i < records.length; i++) {
+        const currentRecord = records[i];
+        filledRecords.push(currentRecord);
+        
+        // Check if there's a next record to compare with
+        if (i < records.length - 1) {
+            const nextRecord = records[i + 1];
+            const currentTime = new Date(currentRecord.timestamp + 'Z').getTime();
+            const nextTime = new Date(nextRecord.timestamp + 'Z').getTime();
+            const timeDiff = nextTime - currentTime;
+            
+            // Fill gaps that indicate downtime periods
+            if (timeDiff > gapThreshold && timeDiff <= maxGapToFill) {
+                const gapStart = currentTime + intervalMs;
+                const gapEnd = nextTime - intervalMs;
+                
+                // Add zero records for the gap period every second
+                for (let gapTime = gapStart; gapTime <= gapEnd; gapTime += intervalMs) {
+                    const gapDate = new Date(gapTime);
+                    // Format timestamp to match backend format (UTC without Z suffix)
+                    const utcTimestamp = gapDate.toISOString().slice(0, -1);
+                    const gapRecord: Record = {
+                        timestamp: utcTimestamp,
+                        app_cpu: 0,    // App wasn't running - zero CPU usage
+                        other_cpu: 0,  // System also likely idle during app downtime
+                        app_ram: 0,    // App wasn't running - zero RAM usage
+                        other_ram: 0,  // System RAM also zero during downtime
+                    };
+                    filledRecords.push(gapRecord);
+                }
+            }
+        }
+    }
+    
+    return filledRecords;
+};
+
 export async function loadStats(period: string = '15m') {
     currentPeriod = period;
     const resp = await fetch(`/admin/monitoring/data?period=${period}`);
     info = await resp.json();
+    info.records = fillTimeGaps(info.records);
     info.records = info.records.map(formatRecord);
     renderChart()
 }
