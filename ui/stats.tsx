@@ -20,16 +20,39 @@ let info: MonitoringInfo = {
     cores_num: 0,
 };
 
-export async function loadStats(period: string) {
-    const resp = await fetch(`/admin/monitoring/data`);
+let currentPeriod = '15m';
+
+export async function loadStats(period: string = '15m') {
+    currentPeriod = period;
+    const resp = await fetch(`/admin/monitoring/data?period=${period}`);
     info = await resp.json();
     info.records = info.records.map(formatRecord);
     renderChart()
 }
 
+const formatPeriodLabel = (period: string): string => {
+    const labels: { [key: string]: string } = {
+        '5m': 'Last 5 minutes',
+        '15m': 'Last 15 minutes',
+        '30m': 'Last 30 minutes',
+        '1h': 'Last 1 hour',
+        '2h': 'Last 2 hours',
+        '6h': 'Last 6 hours',
+        '12h': 'Last 12 hours',
+        '24h': 'Last 24 hours'
+    };
+    return labels[period] || 'Last 15 minutes';
+};
+
 const renderChart = () => {
-    new Chart(
-        document.getElementById('stats-chart') as ChartItem,
+    // Clear previous chart if it exists
+    const canvas = document.getElementById('stats-chart') as HTMLCanvasElement;
+    if (canvas && (canvas as any).chart) {
+        (canvas as any).chart.destroy();
+    }
+    
+    const chart = new Chart(
+        canvas as ChartItem,
         {
             type: 'line',
             data: {
@@ -74,13 +97,16 @@ const renderChart = () => {
                     },
                     title: {
                         display: true,
-                        text: `${info.cores_num} core(s), ${(info.max_ram / 1000).toFixed(1)} GB RAM`,
+                        text: `${info.cores_num} core(s), ${(info.max_ram / 1000).toFixed(1)} GB RAM - ${formatPeriodLabel(currentPeriod)}`,
                     }
                 },
                 maintainAspectRatio: false,
             }
         }
     );
+    
+    // Store chart reference for cleanup
+    (canvas as any).chart = chart;
 }
 
 const getOrCreateTooltip = (chart) => {

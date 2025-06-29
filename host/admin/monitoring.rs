@@ -9,15 +9,32 @@ struct MonitoringData {
     cores_num: usize,
 }
 
-async fn get_stats() -> Result<Vec<SystemStat>> {
+async fn get_stats_for_period(period: &str) -> Result<Vec<SystemStat>> {
     let max = Utc::now().naive_utc();
-    let min = max - TimeDelta::try_minutes(15).unwrap();
+    let min = match period {
+        "5m" => max - TimeDelta::try_minutes(5).unwrap(),
+        "15m" => max - TimeDelta::try_minutes(15).unwrap(),
+        "30m" => max - TimeDelta::try_minutes(30).unwrap(),
+        "1h" => max - TimeDelta::try_hours(1).unwrap(),
+        "2h" => max - TimeDelta::try_hours(2).unwrap(),
+        "6h" => max - TimeDelta::try_hours(6).unwrap(),
+        "12h" => max - TimeDelta::try_hours(12).unwrap(),
+        "24h" => max - TimeDelta::try_hours(24).unwrap(),
+        _ => max - TimeDelta::try_minutes(15).unwrap(), // Default to 15 minutes
+    };
     SystemStat::get_in_timestamp_range(min, max).await
 }
 
-pub(crate) async fn data() -> Result<impl IntoResponse> {
+pub(crate) async fn data(req: Request) -> Result<impl IntoResponse> {
+    let query = req.uri().query().unwrap_or("");
+    let period = if query.starts_with("period=") {
+        &query[7..] // Skip "period="
+    } else {
+        "15m"
+    };
+
     Ok(Json(MonitoringData {
-        records: get_stats().await?,
+        records: get_stats_for_period(period).await?,
         max_ram: SYSTEM_INFO.ram,
         cores_num: SYSTEM_INFO.cores,
     }))
@@ -27,9 +44,28 @@ pub(crate) async fn container() -> Result<Markup> {
     ok(html!(
         script type="module" {"
             import { loadStats } from './stats.js';
-            window.test = function() { loadStats(); }
+            window.loadStats = loadStats;
         "}
-        a _=(format!("on load call window.test() then remove me")) {}
+
+        div $"mb-4 flex items-center gap-3" {
+            span $"font-semibold text-sm" { "Time Range:" }
+            select
+                id="time-range-selector"
+                $"bg-stone-900 accent-stone-600 px-2 py-1 text-sm rounded"
+                _="on change call loadStats(event.target.value)"
+            {
+                option value="5m" { "Last 5 minutes" }
+                option value="15m" selected { "Last 15 minutes" }
+                option value="30m" { "Last 30 minutes" }
+                option value="1h" { "Last 1 hour" }
+                option value="2h" { "Last 2 hours" }
+                option value="6h" { "Last 6 hours" }
+                option value="12h" { "Last 12 hours" }
+                option value="24h" { "Last 24 hours" }
+            }
+        }
+
+        a _="on load call loadStats('15m') then remove me" {}
         $"h-[300px]" { canvas #"stats-chart" {} }
 
         (disk_stats().await?)
