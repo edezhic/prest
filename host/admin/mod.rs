@@ -12,9 +12,6 @@ const DB_SVG: PreEscaped<&str> = PreEscaped(include_str!("assets/db.svg"));
 const LOGS_SVG: PreEscaped<&str> = PreEscaped(include_str!("assets/logs.svg"));
 const ANALYTICS_SVG: PreEscaped<&str> = PreEscaped(include_str!("assets/analytics.svg"));
 const LOADER_SVG: PreEscaped<&str> = PreEscaped(include_str!("assets/loader.svg"));
-const EDIT_SVG: PreEscaped<&str> = PreEscaped(include_str!("assets/edit.svg"));
-const DONE_SVG: PreEscaped<&str> = PreEscaped(include_str!("assets/done.svg"));
-const DELETE_SVG: PreEscaped<&str> = PreEscaped(include_str!("assets/delete.svg"));
 
 pub(crate) async fn routes() -> Router {
     route(
@@ -33,9 +30,10 @@ pub(crate) async fn routes() -> Router {
     .route("/traces", get(logs::traces_explorer))
     .route("/schedule", get(schedule::full))
     .route("/analytics", get(analytics::full))
+    .route("/db", get(db::db_page))
     .nest("/remote", remote::routes())
-    .nest("/db", db::table_routes().await)
     .wrap_non_htmx(into_page)
+    .nest("/db", db::table_routes())
     .route("/db/schema", get(db::schema))
     .route("/traces/:period", get(logs::traces))
     .route("/monitoring/data", get(monitoring::data))
@@ -57,7 +55,7 @@ async fn into_page(content: Markup) -> impl IntoResponse {
             main $"opacity-80 mx-auto p-4 gap-4 flex flex-col text-sm lg:text-base leading-loose" {
                 (content)
             }
-            (Scripts::default().include("/traces.js").module("/stats.js").css("/admin.css"))
+            (Scripts::default().include("/traces.js").include("/db.js").module("/stats.js").css("/admin.css"))
         }
     }}
 }

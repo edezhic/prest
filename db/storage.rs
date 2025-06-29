@@ -72,6 +72,11 @@ pub trait StructSchemaTrait: Sync {
     fn relative_path(&self) -> &'static str;
     fn full_path(&self) -> &'static str;
     async fn get_all_as_strings(&self) -> Result<Vec<Vec<String>>>;
+    async fn get_as_strings_paginated(
+        &self,
+        offset: usize,
+        limit: usize,
+    ) -> Result<(Vec<Vec<String>>, bool)>;
     async fn get_as_strings_by_id(&self, id: String) -> Result<Vec<String>>;
     async fn save(&self, req: Request) -> Result<String>;
     async fn remove(&self, req: Request) -> Result;

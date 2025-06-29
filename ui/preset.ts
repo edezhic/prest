@@ -1,8 +1,8 @@
+import htmx from "htmx.org";
+import addSseExt from "./htmx-sse-ext.js";
 import 'hyperscript.org';
 
-import { htmx, HtmxExtension } from "./htmx/main.js";
-import addSseExt from "./htmx/sse-ext.js";
-
+// Initialize SSE extension with explicit htmx reference for proper bundling
 addSseExt(htmx);
 
 // By default DELETE also uses url params which is quite unintuitive and allows deleting stuff using malicious links
@@ -37,7 +37,7 @@ htmx.defineExtension('json-enc-custom', {
         let encoded_parameters = encodingAlgorithm(parameters);
         return encoded_parameters;
     }
-} as HtmxExtension);
+});
 
 function encodingAlgorithm(parameters) {
     let resultingObject = Object.create(null);

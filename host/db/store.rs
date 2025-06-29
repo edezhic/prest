@@ -35,12 +35,12 @@ impl<'a> Store for DbConn<'a> {
     async fn scan_data(&self, table_name: &str) -> Result<RowIter> {
         let prefix = super::data_prefix(table_name);
         let prefix_len = prefix.len();
-        
+
         // Use range scanning instead of prefix scanning for much better performance
         // Create a range that starts with the table prefix and ends just before the next table
         let start_key = prefix.as_bytes();
         let mut end_key = prefix.as_bytes().to_vec();
-        
+
         // Increment the last byte to create an exclusive upper bound
         // This ensures we only scan keys for this specific table
         if let Some(last_byte) = end_key.last_mut() {
@@ -58,7 +58,8 @@ impl<'a> Store for DbConn<'a> {
                 .map(move |item| {
                     let (key, value) = item.as_storage_err()?;
                     let key = key[prefix_len..key.len()].to_owned();
-                    let snapshot: Snapshot<DataRow> = bitcode::deserialize(&value).as_storage_err()?;
+                    let snapshot: Snapshot<DataRow> =
+                        bitcode::deserialize(&value).as_storage_err()?;
                     let row = snapshot.take(self.state);
                     let item = row.map(|row| (Key::Bytea(key), row));
 
@@ -67,7 +68,7 @@ impl<'a> Store for DbConn<'a> {
                 .filter_map(|item| item.transpose());
             return Ok(Box::pin(iter(result_set)));
         }
-        
+
         let result_set = self
             .tree
             .range(start_key..end_key.as_slice())

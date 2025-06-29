@@ -52,7 +52,9 @@ pub fn impl_table(struct_ident: Ident, table_name: String, columns: Vec<Column>)
     let fields_idents3 = fields_idents.clone();
     let fields_idents4 = fields_idents.clone();
     let fields_idents5 = fields_idents.clone();
+    let fields_idents6 = fields_idents.clone();
     let get_all_as_strings2 = get_all_as_strings.clone();
+    let get_all_as_strings3 = get_all_as_strings.clone();
 
     q! {
         struct #schema_name;
@@ -79,6 +81,20 @@ pub fn impl_table(struct_ident: Ident, table_name: String, columns: Vec<Column>)
                     rows.push(row);
                 }
                 Ok(rows)
+            }
+            async fn get_as_strings_paginated(&self, offset: usize, limit: usize) -> prest::Result<(Vec<Vec<String>>, bool)> {
+                let mut rows = vec![];
+                let items = #struct_ident::get_paginated(offset, limit + 1).await?;
+                let has_more = items.len() > limit;
+                let items = if has_more { &items[..limit] } else { &items[..] };
+
+                for item in items {
+                    let #struct_ident { #(#fields_idents6 ,)* } = item;
+                    let mut row = vec![];
+                    #(#get_all_as_strings3)*
+                    rows.push(row);
+                }
+                Ok((rows, has_more))
             }
             async fn get_as_strings_by_id(&self, id: String) -> prest::Result<Vec<String>> {
                 #id_from_str
@@ -133,6 +149,14 @@ pub fn impl_table(struct_ident: Ident, table_name: String, columns: Vec<Column>)
         }
 
         impl #struct_ident {
+            pub async fn get_paginated(offset: usize, limit: usize) -> prest::Result<Vec<Self>> {
+                Self::select()
+                    .offset(offset as i64)
+                    .limit(limit as i64)
+                    .rows()
+                    .await
+            }
+
             #(#find_fns)*
             #(#range_fns)*
             #(#update_fns)*

@@ -61,7 +61,7 @@ impl Db {
         // This would eliminate the need for prefix scanning entirely but requires more changes:
         //
         // let route_stats_tree = storage.open_tree("RouteStat").expect("RouteStat tree");
-        // let system_stats_tree = storage.open_tree("SystemStat").expect("SystemStat tree"); 
+        // let system_stats_tree = storage.open_tree("SystemStat").expect("SystemStat tree");
         // let job_records_tree = storage.open_tree("ScheduledJobRecord").expect("JobRecord tree");
         //
         // Benefits:

@@ -94,6 +94,44 @@ impl Logs {
         }
         res
     }
+
+    /// Cleanup trace files older than 1 month
+    pub fn cleanup_old_traces(&self) -> Result<usize, std::io::Error> {
+        let cutoff_date = chrono::Utc::now().naive_utc().date() - chrono::Duration::days(30);
+        let mut deleted_count = 0;
+
+        let paths = std::fs::read_dir(&self.traces.0)?;
+        for path in paths {
+            if let Ok(entry) = path {
+                let pathbuf = entry.path();
+                let filename = pathbuf
+                    .file_name()
+                    .ok_or_else(|| {
+                        std::io::Error::new(
+                            std::io::ErrorKind::InvalidData,
+                            "Trace file entry must have a name",
+                        )
+                    })?
+                    .to_string_lossy();
+
+                if let Ok(date) = NaiveDate::parse_from_str(&filename, TRACES_DATE_FORMAT) {
+                    if date < cutoff_date {
+                        match std::fs::remove_file(&pathbuf) {
+                            Ok(()) => {
+                                deleted_count += 1;
+                                debug!(target: "gc", "Deleted old trace file: {}", filename);
+                            }
+                            Err(e) => {
+                                warn!(target: "gc", "Failed to delete trace file {}: {}", filename, e);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(deleted_count)
+    }
 }
 
 struct LogWriter;

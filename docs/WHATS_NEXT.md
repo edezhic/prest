@@ -1,10 +1,10 @@
 This is a hobby project and plans change on the fly, but there are things I'd likely work on or consider next:
 
-+ separate thread with a tracing subscriber with sled writer under the hood?
++ add runtimes(main and db) stats and db/sled storage_stats to system stats ([tokio](https://docs.rs/tokio/latest/tokio/runtime/struct.RuntimeMetrics.html)). Improve current reporting (RAM usage in mbs, ...) - add hover with mbs info.
++ finish custom storage impl: indexes, add/drop column methods & validations & automigrations
++ subdomains and multiple-services on single machine support. Maybe run bench on a subdomain?
 
-+ generate Default + Serialize method into_mock and maybe generate TS types?
-
-+ redo db editor in TS to avoid a need for htmx fork? Also it all about json, seems nicer this way
++ generate Default + Serialize method into_mock and maybe generate TS types? I forgot what this is about -_-
 
 + logs + metrics into db with 0x0(shared/localhost) owner?
 
@@ -23,15 +23,9 @@ This is a hobby project and plans change on the fly, but there are things I'd li
 + single ownership(fast path): only owner can write into **^^^** and must sign to send, 0x0 (localhost/root) owner by default, but host can have a keypair(lock?) to write data? => tables can be split between owners into shards, owners can share read and/or delegate write access to other owners for replication and other stuff
 + distributed ownership(slow path): no wide blockchain standard for address - use which or make custom? Any indexed value is ok? Has to be relevant to signatures etc? BIP44 and Hierarchical Deterministic (HD) wallets seem relevant for management of this stuff. Use most of the key derivation scheme but custom paths like `/{table_name}/{index_key}`?
 
-
-+ add runtimes(main and db) stats and db/sled storage_stats to system stats ([tokio](https://docs.rs/tokio/latest/tokio/runtime/struct.RuntimeMetrics.html)). Improve current reporting (RAM usage in mbs, ...) - add hover with mbs info.
-
-+ finish custom storage impl: indexes, add/drop column methods & validations & automigrations
 + auth upgrades - simpler UX + DX, support more providers/methods
-+ subdomains and multiple-services on single machine support
 + [rust-i18n](https://github.com/longbridgeapp/rust-i18n) or another i18n solution
 + `axum-valid`-like integration for `Vals` or smth alike
-+ fix sql indexes 
 
 Some ideas are more complex/crazy but interesting:
 + prest blogging about its own system monitoring stats etc using small llm

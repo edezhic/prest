@@ -29,6 +29,8 @@ pub use auth::*;
 #[doc(hidden)]
 pub mod logs;
 #[cfg(feature = "traces")]
+pub use logs::LOGS;
+#[cfg(feature = "traces")]
 use logs::*;
 
 #[cfg(feature = "db")]

@@ -2,10 +2,12 @@
   "exports": {
     "preset": "./ui/preset.ts",
     "stats": "./ui/stats.tsx",
-    "traces": "./ui/traces.tsx"
+    "traces": "./ui/traces.tsx",
+    "db": "./ui/db.tsx"
   },
   "dependencies": {
     "chart.js": "^4.4.7",
+    "htmx.org": "2.0.6",
     "hyperscript.org": "^0.9.14",
     "preact": "^10.25.4"
   }
